@@ -28,11 +28,12 @@ function rCrew(){
   const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%" title="拖人入嚟設立分部 · ${b.beds} 床 · 要 ${opNeed(id)} 人先守得住"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted type">${b.beds}床</span>${(G.idle||{})[id]?`<span class="idlew" title="無人駐守 ${G.idle[id]}/${IDLE_LOST} 日，夠鐘會被重新佔據">無人 ${G.idle[id]}/${IDLE_LOST}</span>`:''}</div>`}).join('');
   const mob=innerWidth<=760;
   $('#main').innerHTML=`
-  <div class="crewgrid">
+  <div class="crewgrid" style="--resw:${RESW}px">
     <section class="panel citywrap">
       <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去據點、分部、游擊隊或者後備；拖落主據點某人身上係換位；拖 ⛓ 去另一個據點拉補給線（撳線中間 ✕ 拆走）；撳 ♛ 揀隊長；拖 ⠿ 搬方塊</span><span class="row" style="gap:6px"><button class="btn sm pri" id="bulkjoin">一鍵分配／加入…</button><button class="btn sm" id="allres">全部放去後備</button><button class="btn sm" id="maplayout" title="主據點放中間，分部、游擊隊同候選地點排喺四邊">調整位置</button></span></div>
       <div class="city"><svg class="netsvg" aria-hidden="true"></svg><div class="netx"></div>${mob?`${main}${sqNode()}${opn}${cand.length?`<details class="candgrp" ${CAND_OPEN?'open':''}><summary>可設立分部（${cand.length}）</summary><div class="candl">${cn}</div></details>`:''}`:`${dots}${cn}${opn}${sqNode()}${main}`}</div>
     </section>
+    <div class="reszr" title="左右拖嚟調整地圖同後備名單闊度；雙擊還原"></div>
     <aside class="panel reservep" data-dz="reserve">
       <div class="row" style="justify-content:space-between"><h3>後備名單</h3><span class="muted type">${Rs.length} 人</span></div>
       <p class="muted" style="margin:0;font-size:11px">唔使食糧。拖去地圖上嘅據點或者分部。</p>
@@ -48,6 +49,7 @@ function rCrew(){
   document.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>nodeDrag(e,g.closest('.mnode')));
   document.querySelectorAll('[data-optg]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;toggleOp(b.dataset.optg)});
   const cg=document.querySelector('.candgrp');if(cg)cg.ontoggle=()=>CAND_OPEN=cg.open;
+  const rz=$('.reszr');if(rz){rz.onpointerdown=resDrag;rz.ondblclick=()=>{RESW=200;try{localStorage.removeItem('zomibee_resw')}catch(e){}render()}}
   const ml=$('#maplayout');if(ml)ml.onclick=()=>{arrangeMap();save();render();toast('已經調整好位置：主據點喺中間，其他據點排喺四邊')};
   document.querySelectorAll('[data-ctok]').forEach(b=>{
     b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}openUnit(b.dataset.ctok)};
@@ -57,6 +59,15 @@ function rCrew(){
   document.querySelectorAll('[data-opclose]').forEach(b=>{let armed=false;b.onclick=e=>{e.stopPropagation();if(!armed){armed=true;b.textContent='確認？';b.classList.add('armed');return}opMembers(G,b.dataset.opclose).forEach(u=>u.op=null);delete G.outposts[b.dataset.opclose];save();render();toast('分部已撤銷，人員返回後備名單')}});
 }
 let OPEN_OP=null,CAND_OPEN=false;
+// 後備名單闊度：拖中間條分隔線調整，記喺呢部機（唔入存檔）
+let RESW=(()=>{try{return +localStorage.getItem('zomibee_resw')||200}catch(e){return 200}})();
+function resDrag(e){
+  if(e.button>0)return;e.preventDefault();
+  const g=document.querySelector('.crewgrid'),x0=e.clientX,w0=RESW;g.classList.add('resizing');
+  const move=ev=>{RESW=Math.round(Math.min(Math.max(w0-(ev.clientX-x0),110),460));g.style.setProperty('--resw',RESW+'px')};
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);g.classList.remove('resizing');if(RESW===w0)return;try{localStorage.setItem('zomibee_resw',RESW)}catch(e){}render()};
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
 // 收起時嘅重疊頭像：有傷、感染、變種嘅排前，等佢哋嘅色圈一眼睇到
 function opStack(M){
   if(!M.length)return '<span class="muted" style="font-size:11px">拖人入嚟駐守</span>';
