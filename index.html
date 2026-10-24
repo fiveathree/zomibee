@@ -529,6 +529,14 @@ button.cell:hover{border-color:var(--sodium)}
 .bulkbar>div{background:#1d1813;padding:8px 12px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
 .bulkbar span{font-size:11px;color:var(--dust)}.bulkbar b{font-family:var(--f-disp);font-size:20px;color:var(--sodium2)}.bulkbar em{font-style:normal;font-size:11px;color:var(--dust)}.bulkbar em.ok{color:var(--calm)}
 @media (max-width:560px){.bulkbar{grid-template-columns:1fr}}
+.distg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.distb{display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 12px;border-radius:8px;border:1px solid var(--line2);background:#1d1813;color:var(--bone);cursor:pointer}
+.distb b{font-family:var(--f-disp);font-size:16px;color:var(--sodium2)}.distb span{font-size:11px;color:var(--dust);line-height:1.4}
+.distb:hover{border-color:var(--sodium);background:#2a2219}
+.idlew{font-size:10px;color:#ff9a8a}
+@media (max-width:560px){.distg{grid-template-columns:1fr}}
+.mnode:not(.main){width:max-content;max-width:260px}
+@media (max-width:760px){.mnode:not(.main){width:auto}}
 </style>
 </head>
 <body>
@@ -2092,9 +2100,9 @@ function weaponSVG(k){
   return '';
 }
 function animalSVG(u,job,bust){
-  const dog=u.id==='n_tofu',vb=bust?(dog?'18 18 22 22':'17 22 20 20'):'0 0 40 56';
+  const pc=PETC[u.id],dog=u.id==='n_tofu'||!!(pc&&pc[2]),vb=bust?(dog?'18 18 22 22':'17 22 20 20'):'0 0 40 56';
   const rest=!bust&&(job==='rest'||u.crit||u.iso);
-  const c=u.inf?'#8fa36a':dog?'#d6a24e':'#202024',lt=dog?'#efd09a':'#3a3a40';
+  const c=u.inf?'#8fa36a':pc?pc[0]:dog?'#d6a24e':'#202024',lt=pc?pc[1]:dog?'#efd09a':'#3a3a40';
   let s='';
   if(dog){
     s+= rest?`<ellipse cx="19" cy="46" rx="12" ry="5" fill="${c}"/><circle cx="30" cy="43" r="5.5" fill="${c}"/><path d="M27.5 38.5 L29 34 L32 38.5Z" fill="${shade(c,.65)}"/><ellipse cx="34.5" cy="45" rx="3" ry="2" fill="${lt}"/><path d="M8 45 Q3 43 5 39" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/><text x="33" y="34" font-size="6" fill="#86afcf">z</text>`
@@ -2207,6 +2215,86 @@ function tok(u){
   const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
   return `<button class="tok ${SEL===u.id?'sel':''}" data-tok="${u.id}" aria-label="${esc(c.n)}">${fig(u,j)}${isS(u,j)?'<i>S</i>':''}<small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }
+/* ================= 更多角色：每個陣形都有更多人 ================= */
+const CAST2=[
+ // 神州
+ ['x_yan','燕七','SR','中國','武館傳人',[15,16,12,7,8,6,13],[],'太極','保安 +25%，受傷風險 -30%',{job:{guard:1.25},risk:.7},'佛山武館第七代，佢話太極唔係慢，係等對方先郁。','燕','華'],
+ ['x_dama','王大媽','C','中國','廣場舞領隊',[8,9,10,5,6,11,12],['sunny'],'廣場舞','全隊每日意志 +2',{teamSan:2},'末日都要跳。佢話：「唔郁就真係死。」','媽','華'],
+ ['x_rider','李快遞','R','中國','外賣騎手',[10,15,13,8,4,6,10],[],'抄捷徑','搜括 +20%，受傷風險 -20%',{job:{scav:1.2},risk:.8},'識晒成個城每一條後巷，三十分鐘送唔到就唔收錢。','遞','華'],
+ ['x_zhao','趙工','R','中國','基建工程師',[11,7,11,15,4,5,11],[],'基建狂魔','維修 +25%',{job:{repair:1.25}},'佢起過橋、起過隧道，而家起圍牆。','工','華'],
+ // 和風
+ ['x_kagura','神樂','SR','日本','神社巫女',[6,12,16,6,12,8,16],['pious'],'祓除','全隊每日意志 +3，被咬機會 -20%',{teamSan:3,bite:.8},'京都小神社嘅巫女，佢話呢啲唔係鬼，係「穢」。','樂','日宗'],
+ ['x_sato','佐藤','C','日本','動漫宅',[5,8,13,12,4,7,7],['owl'],'秋葉原改造','維修 +15%，每日 +3 電池',{job:{repair:1.15},bat:3},'喪屍片睇得多，佢比任何人都早知道要做乜。','佐','日'],
+ ['x_yamamoto','山本','R','日本','壽司師傅',[9,10,12,8,5,15,10],[],'板前','煮飯 +25%',{job:{cook:1.25}},'銀座壽司店學徒十年，一把刀處理晒所有食材。','山','日廚'],
+ // 韓流
+ ['x_harin','尹 夏琳','R','韓國','偶像練習生',[8,15,11,6,6,8,10],['young'],'應援','全隊每日意志 +2',{teamSan:2},'練習生出道前一個月，世界完咗。佢仲係每朝練舞。','琳','韓'],
+ ['x_kang','姜 東元','SR','韓國','列車乘務員',[14,12,13,10,6,6,13],['tough'],'車廂守衛','保安 +20%，巡邏 +15%',{job:{guard:1.2,patrol:1.15}},'由首爾開往釜山嗰班車，佢係最後一個落車嘅人。','姜','韓軍'],
+ ['x_soonja','李 順子','C','韓國','泡菜店老闆娘',[9,8,9,6,6,14,11],[],'泡菜缸','煮飯 +20%',{job:{cook:1.2}},'屋企三十個泡菜缸，夠全條街食一個冬天。','順','韓廚'],
+ // 宗教
+ ['x_zhiming','釋 智明','SR','中國','少林武僧',[17,15,12,6,8,7,17],['pious'],'金鐘罩','保安 +30%',{job:{guard:1.3}},'嵩山少林嘅武僧，佢話出家人唔殺生，但呢啲已經唔算生。','智','華宗'],
+ ['x_pastor','陳牧師','C','香港','教會牧師',[7,7,11,6,9,8,15],['pious'],'禱告','全隊每日意志 +2',{teamSan:2},'教會變咗避難所，佢每晚都留一盞燈。','牧','港宗'],
+ ['x_temple','陳廟祝','C','香港','廟祝',[6,6,12,6,6,7,14],['old','lucky'],'香油錢','每日 +4 電池',{bat:4},'佢喺廟度幾十年，話神明保佑嘅唔係運氣，係識得避。','祝','港宗'],
+ // 毛孩
+ ['x_shiba','柴柴','C','港灣市','柴犬',[6,15,16,0,0,0,10],['animal'],'嗅覺','巡邏 +30%，夜間防禦 +3',{job:{patrol:1.3},def:3},'一隻好有主見嘅柴犬，唔鍾意嘅人佢會擰轉面。','柴','寵'],
+ ['x_husky','雪橇','C','港灣市','哈士奇',[12,16,14,0,0,0,8],['animal','restless'],'狼嚎','夜間防禦 +5',{def:5},'成日拆屋，但半夜一嚎，喪屍都會停一停。','雪','寵'],
+ ['x_orange','橘子','C','港灣市','橘貓',[3,12,13,0,0,0,9],['animal','glutton'],'暖肚','全隊每日意志 +2',{teamSan:2},'好肥，好暖，好鍾意坐喺人個肚上面。','橘','寵'],
+ ['x_calico','三花','C','港灣市','三色貓',[2,15,16,0,0,0,8],['animal','lucky'],'夜視','夜間防禦 +3，倉庫唔會有老鼠',{def:3,noRats:1},'三色貓聽講會帶嚟好運，佢自己都信。','花','寵'],
+ // 三國
+ ['x_zhaoyun','趙雲','SSR','蜀漢','常山趙子龍',[20,19,15,7,6,5,17],[],'七進七出','搜括 +30%，受傷風險 -50%',{job:{scav:1.3},risk:.5},'長坂坡單騎救主嘅白袍將軍，佢話屍群冇曹軍咁難殺。','雲','三'],
+ ['x_guanyu','關羽','SSR','蜀漢','武聖',[23,13,13,6,4,5,19],['pious'],'青龍偃月','保安 +45%',{job:{guard:1.45}},'溫酒斬華雄嘅關雲長，一把大刀守住門口，冇嘢過得去。','關','三'],
+ ['x_zhangfei','張飛','SR','蜀漢','猛張飛',[21,11,9,5,3,9,12],['hot','glutton'],'喝斷長板橋','夜間防禦 +12',{def:12},'佢喺門口大喝一聲，前排嘅喪屍真係會企定。','飛','三'],
+ ['x_caocao','曹操','SSR','曹魏','魏武帝',[13,12,17,14,8,8,19],['liar'],'挾天子','全隊效率 +5%，巡邏 +20%',{teamEff:.05,job:{patrol:1.2}},'寧我負人，毋人負我。末日入面，佢比任何人都識得用人。','曹','三'],
+ // 北歐神話
+ ['x_freya','芙蕾雅','SR','北歐神話','豐饒女神',[8,12,14,8,15,12,15],[],'豐饒','醫療 +25%，每日 +3 食物',{job:{medic:1.25},food:3},'佢行過嘅地方，天台菜園都會長得特別好。','芙','神'],
+ ['x_heimdall','海姆達爾','SSR','北歐神話','彩虹橋守門人',[17,14,24,8,6,5,17],[],'千里眼','巡邏 +40%，屍潮 -10%',{job:{patrol:1.4},horde:.9},'佢聽得到草生長嘅聲，亦都聽得到幾條街外嘅屍群。','海','神'],
+ ['x_bjorn','比約恩','R','挪威','維京後人',[16,11,9,8,4,8,11],['tough'],'盾牆','保安 +15%',{job:{guard:1.15}},'漁船船長，自稱維京人後代，一個人可以頂住一道門。','約','神西'],
+ // 西遊
+ ['x_sha','沙悟淨','SR','西遊','捲簾大將',[17,9,11,9,6,8,16],['tough'],'挑擔','搜括收穫 +20%，保安 +10%',{lootAll:1.2,job:{guard:1.1}},'取經路上一直挑擔嗰個，佢唔多講嘢，但乜都搬得返嚟。','沙','遊'],
+ ['x_bailong','白龍馬','R','西遊','西海龍三太子',[14,18,12,4,4,4,11],[],'馱經','搜括 +25%',{job:{scav:1.25}},'化成人形嘅白龍，跑得快，馱得重。','龍','遊'],
+ ['x_nezha','哪吒','SSR','陳塘關','三壇海會大神',[18,22,15,6,4,3,13],['young','restless'],'風火輪','巡邏 +40%，保安 +20%',{job:{patrol:1.4,guard:1.2}},'腳踏風火輪、手持火尖槍嘅少年神，佢覺得呢個世界好好玩。','吒','遊'],
+ ['x_tudi','土地公','C','西遊','土地公公',[5,5,14,6,8,8,14],['old'],'地頭蟲','搜括收穫 +15%',{lootAll:1.15},'邊度有嘢、邊度有屍，佢一摸地下就知。','土','遊宗'],
+ // 東方鬼話
+ ['x_ning','寧采臣','R','東方鬼話','書生',[6,8,12,8,8,8,14],[],'正氣','意志跌得慢 40%',{sanDecay:.6},'聊齋入面嗰個膽小書生，但佢由蘭若寺行出嚟，乜都唔再怕。','寧','鬼'],
+ ['x_jiangshi','小殭屍','SR','東方鬼話','民國殭屍',[16,6,10,4,2,2,10],['yin'],'貼符','被咬機會 -70%，保安 +20%',{bite:.3,job:{guard:1.2}},'額頭貼住黃符嘅小殭屍，喪屍當佢係自己人。','殭','鬼'],
+ ['x_cui','小翠','C','東方鬼話','狐仙丫鬟',[5,13,14,6,7,12,10],['yin'],'狐火','煮飯 +15%',{job:{cook:1.15}},'聊齋狐仙，扮成丫鬟留喺人間，煮得一手好糖水。','翠','鬼'],
+ ['x_xiebian','謝必安','SSR','冥府','白無常',[14,16,20,6,6,4,18],['yin'],'一見生財','每日 +12 電池，巡邏 +25%',{bat:12,job:{patrol:1.25}},'勾魂嘅白無常，最近冇乜魂可以勾，因為啲人死咗都唔肯走。','白','鬼宗'],
+ // 修仙
+ ['x_dinghe','丹鼎子','SR','修仙界','煉丹師',[6,8,14,14,18,10,15],['old'],'九轉丹火','醫療 +30%，藥品消耗 -30%',{job:{medic:1.3},medSave:.7},'丹鼎宗長老，佢話喪屍晶核入藥，比靈草仲好用。','丹','仙醫'],
+ ['x_guhong','葉孤鴻','SR','修仙界','散修劍客',[14,18,14,6,6,4,15],['loner'],'孤鴻劍','搜括 +35%',{job:{scav:1.35}},'冇門冇派嘅散修，一個人一把劍，行遍成個末日。','鴻','仙'],
+ ['x_stone','小石頭','C','修仙界','雜役弟子',[9,9,9,8,6,9,12],['young'],'勤力','所有工作 +5%',{job:{scav:1.05,patrol:1.05,guard:1.05,repair:1.05,cook:1.05,medic:1.05}},'宗門最低級嘅雜役，挑水斬柴樣樣做，從來唔怨。','石','仙'],
+ ['x_xuanji','玄機子','SSR','修仙界','宗門掌教',[12,12,18,14,14,8,22],['old'],'護山大陣','夜間防禦 +10%，全隊每日意志 +2',{defPct:.1,teamSan:2},'閉關三百年，一出關就見到末日。佢淡淡然話：「佈陣。」','玄','仙'],
+ // 魔幻
+ ['x_edwin','艾德溫','SR','魔幻','聖騎士',[18,10,11,8,12,5,17],['pious'],'聖光','保安 +25%，全隊每日 HP +2',{job:{guard:1.25},heal:2},'由王國淪陷之地一路斬過嚟嘅聖騎士，盔甲上全部係刀痕。','溫','魔宗'],
+ ['x_morgana','莫甘娜','SSR','阿瓦隆','湖之女巫',[6,12,18,14,18,8,18],[],'藥水','醫療 +40%，每日 10% 機會治好感染者',{job:{medic:1.4},cure:.1},'梅林嘅學生，亦係佢嘅對頭。佢嘅藥水可以令死人企唔起身。','莫','魔'],
+ ['x_tom','小湯','C','魔幻','侍從',[10,10,9,7,5,8,10],['young'],'擦盔甲','保安 +10%',{job:{guard:1.1}},'一直想做騎士嘅侍從，終於有機會證明自己。','湯','魔'],
+ ['x_rowan','洛溫','R','魔幻','遊俠',[11,15,15,7,7,6,11],['loner'],'追蹤','巡邏 +25%',{job:{patrol:1.25}},'森林遊俠，睇腳印就知屍群幾時嚟。','洛','魔'],
+ // 文藝復興
+ ['x_michel','米高安哲羅','SSR','意大利','雕塑家',[16,8,15,22,6,6,16],[],'大理石之手','維修 +50%',{job:{repair:1.5}},'佢話：「大衛一早喺石入面，我只係將多餘嘅鑿走。」圍牆都係咁起。','米','藝西'],
+ ['x_galileo','伽利略','SR','意大利','天文學家',[6,7,22,16,6,6,15],['old'],'望遠鏡','巡邏 +30%',{job:{patrol:1.3}},'佢用自製望遠鏡由天台睇屍群嘅移動軌跡，準過任何人。','伽','藝西'],
+ ['x_raphael','拉斐爾','R','意大利','畫家',[7,9,14,12,6,8,12],[],'雅典學院','全隊每日意志 +2',{teamSan:2},'佢喺據點面牆畫咗一幅壁畫，大家睇住都覺得仲有希望。','斐','藝西'],
+ ['x_medici','羅倫佐','SR','佛羅倫斯','美第奇家族',[8,8,14,10,6,10,16],['liar'],'贊助人','每日 +10 電池',{bat:10},'文藝復興最大嘅金主，末日都識得做生意。','羅','藝西'],
+ ['x_salai','薩萊','C','意大利','學徒',[8,12,10,11,4,6,8],['liar'],'小魔鬼','搜括 +10%',{job:{scav:1.1}},'達文西嘅學徒，手腳唔乾淨，但永遠搵到嘢返嚟。','萊','藝西'],
+ // 軍警消防 / 寶島
+ ['x_coast','林志豪','R','台灣','海巡隊員',[13,12,12,9,6,5,11],[],'海巡','保安 +20%',{job:{guard:1.2}},'高雄海巡隊員，船泊喺碼頭，佢一個人守住成條堤岸。','豪','台軍'],
+ ['x_fireman','蘇 sir','SR','香港','消防隊目',[17,12,12,12,10,5,15],['tough'],'破拆','維修 +20%，保安 +15%',{job:{repair:1.2,guard:1.15}},'消防處隊目，佢話一道門打唔開，只係因為工具唔啱。','蘇','港軍']
+];
+CAST2.forEach(r=>{const [id,n,g,o,job,s,tr,skn,skd,fx,bio,av,fa]=r;const row=[id,n,g,o,job,s,tr,skn,skd,fx,bio,av];CH_RAW.push(row);CH[id]={id,n,g,o,job,s,tr,sk:{n:skn,d:skd},fx,bio,av,fa:[...fa]};BY_G[g].push(id)});
+Object.assign(LOOK,{
+ x_yan:'topknot,#111,#e8e4dc,T,sash',x_dama:'curly,#3a2a20,#d0405a,T,',x_rider:'cap,#e8b020,#e8b020,T,vest',x_zhao:'hat,#e8c020,#4a6a8a,T,vest',
+ x_kagura:'long,#111,#f2f2f2,P,hakama',x_sato:'short,#222,#6a6a7a,P,glasses',x_yamamoto:'crop,#222,#f2f2f2,T,band apron',
+ x_harin:'long,#c08a5a,#f0a0c0,P,',x_kang:'cap,#222,#2a3a5a,T,tie',x_soonja:'curly,#2a1a10,#9a3a3a,T,apron',
+ x_zhiming:'bald,#000,#c8742a,T,robe',x_pastor:'short,#888,#222228,T,cross glasses',x_temple:'bald,#888,#8a6a3a,T,wbeard',
+ x_zhaoyun:'helm,#ddd,#e8e8ee,T,cape',x_guanyu:'guan,#1a3a1a,#2a6a3a,M,beard,#111',x_zhangfei:'crop,#111,#3a3a3a,M,band beard,#111',x_caocao:'guan,#2a1a10,#5a2a6a,T,beard,#333',
+ x_freya:'long,#e6c060,#3a8a5a,L,pin',x_heimdall:'helm,#d8c070,#c9a23a,L,cape',x_bjorn:'long,#c0612a,#5a4030,L,beard,#c0612a',
+ x_sha:'bald,#000,#4a5a7a,M,beard,#6a3a1a',x_bailong:'topknot,#eee,#f2f2f2,P,',x_nezha:'bun,#111,#c62a2a,F,sash',x_tudi:'hat,#ddd,#8a6a3a,T,wbeard',
+ x_ning:'topknot,#111,#7a8a9a,P,',x_jiangshi:'hat,#111,#2a3a5a,P,',x_cui:'bun,#111,#e68a3a,P,pin',x_xiebian:'hat,#f2f2f2,#f2f2f2,P,',
+ x_dinghe:'topknot,#bbb,#8a5a2a,T,wbeard',x_guhong:'long,#111,#3a3a44,T,sash',x_stone:'topknot,#222,#8a7a5a,T,',x_xuanji:'guan,#eee,#e8e4dc,L,wbeard',
+ x_edwin:'helm,#c9a23a,#c9d2da,L,cape',x_morgana:'long,#2a1a3a,#4a1a5a,P,',x_tom:'curly,#a0522d,#6a4a2a,L,',x_rowan:'wavy,#5a3a1a,#3f6a3a,L,cape',
+ x_michel:'curly,#3a2a1a,#7a6a5a,L,beard,#3a2a1a',x_galileo:'beret,#5a5a5a,#3a3a5a,L,wbeard',x_raphael:'beret,#2a1a10,#2a2a3a,L,',x_medici:'beret,#8a1a24,#8a1a24,L,',x_salai:'curly,#c08a3a,#c06a2a,L,',
+ x_coast:'cap,#222,#2a4a7a,T,vest',x_fireman:'helm,#e8c020,#3a3a3a,T,coat'
+});
+/* 寵物顏色 */
+const PETC={x_shiba:['#d98a3a','#f4e2c4',1],x_husky:['#8a8f98','#eef0f2',1],x_orange:['#e08a32','#f6d2a0',0],x_calico:['#e9e2d6','#3a3330',0]};
 /* ================= 裝備 ================= */
 /* w = 重量（力量要夠先發揮全效），aff = 專精角色（效果 ×1.5） */
 const ITEMS={
@@ -3254,7 +3342,7 @@ function rCrew(){
   const keys=Object.keys(ITEMS).filter(k=>!ITEMS[k].bind&&(G.inv[k]||used[k]));
   const shown=new Set([G.base,...ops,...cand]);
   const dots=Object.keys(MAPPOS).filter(k=>!shown.has(k)&&(LOCS.find(l=>l.id===k)||{ch:99}).ch<=G.ch).map(k=>{const l=LOCS.find(x=>x.id===k);const [x,y]=MAPPOS[k];return `<div class="mdot" style="left:${x}%;top:${y}%"><i></i><span>${esc(l.n)}${BASES[k]?` · 清場 ${Math.round(G.clear[k]||0)}%`:''}</span></div>`}).join('');
-  G.mapPos=G.mapPos||{};const pos=k=>G.mapPos[k]||MAPPOS[k]||[50,50];const fx=k=>G.mapPos[k]?'1':'';
+  G.mapPos=G.mapPos||{};const pos=k=>G.mapPos[k]||MAPPOS[k]||[50,50];if(!G.mapFix){G.mapFix={};Object.keys(G.mapPos).forEach(k=>G.mapFix[k]=1)}const fx=k=>G.mapFix[k]?'1':'';
   const main=(()=>{const [x,y]=pos(G.base);return ` <div class="mnode main" data-dz="base" data-key="base" data-loc="${G.base}" data-fixed="${fx(G.base)}" style="left:${x}%;top:${y}%">
       <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(BS(G).n)}</b><span class="chip good">主據點</span><span class="muted type">${beds(G)}/${bedCap(G)} 床</span>${capBtn('base')}${linkBtn('base')}</div>${nodeChips('base')}${linksRow('base')}
       <div class="mn-t">${A.map(crewTok).join('')||'<span class="muted">冇人</span>'}</div></div>`})();
@@ -3263,11 +3351,11 @@ function rCrew(){
       <div class="row" style="gap:4px;font-size:10px"><span class="muted">忠誠</span><span class="minibar" style="width:60px"><i style="width:${o.loy}%;background:${o.loy<35?'var(--blood)':o.loy<60?'var(--sodium)':'var(--calm)'}"></i></span><span class="type">${o.loy}</span>${capBtn(id)}${hops(G,id).base===undefined?'<span class="chip bad" title="冇補給線連返主據點：唔夠嘢冇人接濟，剩嘅物資只會存喺分部">未連主據點</span>':''}</div>${nodeChips(id)}${linksRow(id)}
       <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟駐守</span>'}</div>
       ${o.last?`<div class="mn-l" title="${esc(o.last)}">昨日：${esc(o.last)}</div>`:''}</div>`}).join('');
-  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted" style="font-size:10px">拖人入嚟設立分部 · ${b.beds} 床</span></div>`}).join('');
+  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted" style="font-size:10px">拖人入嚟設立分部 · ${b.beds} 床 · 要 ${opNeed(id)} 人先守得住</span>${(G.idle||{})[id]?`<span class="idlew">無人駐守 ${G.idle[id]}/${IDLE_LOST} 日，夠鐘會被重新佔據</span>`:''}</div>`}).join('');
   $('#main').innerHTML=`
   <div class="crewgrid">
     <section class="panel citywrap">
-      <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去據點、分部、游擊隊或者後備；拖落主據點某人身上係換位；拖 ⛓ 去另一個據點拉補給線（撳線中間 ✕ 拆走）；撳 ♛ 揀隊長；拖 ⠿ 搬方塊</span><span class="row" style="gap:6px"><button class="btn sm" id="bulkjoin" ${reserveFree(G).length?'':'disabled'}>一鍵加入…</button><button class="btn sm" id="allres">全部放去後備</button>${Object.keys(G.mapPos||{}).length?'<button class="btn sm" id="mapreset">重設位置</button>':''}</span></div>
+      <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去據點、分部、游擊隊或者後備；拖落主據點某人身上係換位；拖 ⛓ 去另一個據點拉補給線（撳線中間 ✕ 拆走）；撳 ♛ 揀隊長；拖 ⠿ 搬方塊</span><span class="row" style="gap:6px"><button class="btn sm pri" id="bulkjoin">一鍵分配／加入…</button><button class="btn sm" id="allres">全部放去後備</button><button class="btn sm" id="maplayout" title="主據點放中間，分部、游擊隊同候選地點排喺四邊">調整位置</button></span></div>
       <div class="city"><svg class="netsvg" aria-hidden="true"></svg><div class="netx"></div>${dots}${cn}${opn}${sqNode()}${main}</div>
     </section>
     <aside class="panel reservep" data-dz="reserve">
@@ -3283,7 +3371,7 @@ function rCrew(){
   ${D.length?`<details class="panel" style="margin-top:8px"><summary><b>離開咗嘅人</b> <span class="muted">${D.length}</span></summary><div class="cards" style="margin-top:8px">${D.map(id=>tag(id,true)).join('')}</div></details>`:''}`;
   fitNodes();drawNet();bindNet();
   document.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>nodeDrag(e,g.closest('.mnode')));
-  const mr=$('#mapreset');if(mr)mr.onclick=()=>{G.mapPos={};save();render()};
+  const ml=$('#maplayout');if(ml)ml.onclick=()=>{arrangeMap();save();render();toast('已經調整好位置：主據點喺中間，其他據點排喺四邊')};
   document.querySelectorAll('[data-ctok]').forEach(b=>{
     b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}openUnit(b.dataset.ctok)};
     b.onpointerdown=e=>crewDrag(e,b);
@@ -3380,8 +3468,7 @@ function nodeDrag(e,n){
     const w=n.offsetWidth,h=n.offsetHeight;
     n.style.left=Math.min(Math.max(x0+dx,w/2+4),cr.width-w/2-4)+'px';n.style.top=Math.min(Math.max(y0+dy,h/2+4),cr.height-h/2-4)+'px';drawNet()};
   const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);n.classList.remove('moving');
-    if(!moved)return;G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];n.dataset.fixed='1';save();
-    const mr=$('#mapreset');if(!mr)render()};
+    if(!moved)return;G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];G.mapFix=G.mapFix||{};G.mapFix[n.dataset.loc]=1;n.dataset.fixed='1';save();drawNet()};
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
 /* ---------- 新角色 / 新裝備：3D 旋轉登場 ---------- */
@@ -3497,6 +3584,15 @@ const CAPSK={
  s_huatuo:{b:{med:3},n:'麻沸散',d:'每日回復 HP +5',heal:5},
  s_brynhild:{b:{str:1,wil:1},n:'英靈殿',d:'游擊隊戰力 +40%；意志每日 +1',squad:.4,san:1},
  s_loki:{b:{per:2},n:'詭計',d:'搜括收穫 +25%；防禦 +5%',loot:.25,def:.05},
+ x_zhaoyun:{b:{agi:2,str:1},n:'常山之龍',d:'搜括收穫 +20%；游擊隊戰力 +30%',loot:.2,squad:.3},
+ x_guanyu:{b:{str:2,wil:1},n:'義薄雲天',d:'防禦 +25%；分部忠誠每日 +3',def:.25,loy:3},
+ x_caocao:{b:{per:1,tec:1,wil:1},n:'唯才是舉',d:'搜括收穫 +15%；經補給線派出嘅援兵 +30%',loot:.15,reinf:.3},
+ x_heimdall:{b:{per:3},n:'彩虹橋哨',d:'防禦 +15%；補給線唔會被截',def:.15,line:1},
+ x_nezha:{b:{agi:2},n:'三頭六臂',d:'游擊隊戰力 +45%',squad:.45},
+ x_xiebian:{b:{per:2},n:'勾魂令',d:'防禦 +15%；意志每日 +1',def:.15,san:1},
+ x_xuanji:{b:{wil:2,med:1},n:'護山大陣',d:'防禦 +25%；每日回復 HP +2',def:.25,heal:2},
+ x_morgana:{b:{med:2,per:1},n:'湖中秘藥',d:'每日回復 HP +4；意志每日 +1',heal:4,san:1},
+ x_michel:{b:{tec:2,str:1},n:'穹頂',d:'防禦 +20%；搜括收穫 +10%',def:.2,loot:.1},
  s_zhongkui:{b:{wil:2,str:1},n:'鎮宅',d:'防禦 +20%；意志每日 +2',def:.2,san:2}
 };
 function capSkOf(u){return CAPSK[u.id]||null}
@@ -3511,6 +3607,7 @@ function capDesc(u){const s=capSkOf(u),g=capGen(u);return `統率：防禦 +${Ma
 /* ---------- 網絡 ---------- */
 function netInit(g){
   g.outposts=g.outposts||{};
+  if(!g.fl_ob){g.fl_ob=1;[...(g.oldBases||[]),...Object.keys(g.outposts)].forEach(k=>{g.clear[k]=Math.max(g.clear[k]||0,100)})}
   if(!g.lines)g.lines=Object.keys(g.outposts).map(id=>'base|'+id);
   g.cap=g.cap||{};if(!g.sqT)g.sqT='auto';
   const ok=k=>k==='base'||!!g.outposts[k];
@@ -3557,7 +3654,8 @@ function simOutposts(g,H,L){
     const net={food:(got.food||0)-eat,water:(got.water||0)-M.length};delete got.food;delete got.water;
     // 先用自己存貨
     ['food','water'].forEach(r=>{if(net[r]<0&&o.stock[r]>0){const t=Math.min(-net[r],o.stock[r]);o.stock[r]-=t;net[r]+=t}});
-    const hz=hordeBase(g)*.28*(b.horde||1)*rf(.7,1.3);
+    const need=opNeed(id),have=M.filter(u=>!isAnimal(u)).length;
+    const hz=hordeBase(g)*.28*(b.horde||1)*rf(.7,1.3)*(have<need?1+.3*(need-have):1);
     const def=(b.wall*.4+gd+(b.def||0))*(1+capFx(id,'def'));
     st[id]={o,b,M,roles,md,got,net,hz,def,help:0,notes:[],sup:{}};
   });
@@ -3613,6 +3711,7 @@ function simOutposts(g,H,L){
     const s=st[id],{o,b,M,roles,md,got,net}=s;
     const short=net.food<0||net.water<0;
     const odef=N[id].def+N[id].help;
+    if(s.hz>odef*1.5&&R()<.45){opFall(g,id,L);return}
     if(s.hz>odef){const v=pick(M);const d=hurt(v,ri(10,25));s.notes.push(`夜晚被屍群衝擊，${nm(v)} 受傷（-${d}）`);o.loy=Math.max(0,o.loy-4);if(R()<.12){const t=infect(v,b.n);if(t)s.notes.push(t)}}
     else if(N[id].help&&s.hz>N[id].def)s.notes.push('靠援兵守住咗');
     const heal=3+md*.4+capFx(id,'heal'),sn=capFx(id,'san');
@@ -3637,7 +3736,7 @@ function simOutposts(g,H,L){
     else if(r<.19){const it=rollItem(pick(['C','R','R','SR']));addItem(it);L(`${b.n}執到一件${ITEMS[it].n}（${ITEMS[it].r}）送返嚟`,'g')}
     if(o.loy<35&&R()<.35&&opMembers(g,id).length)g.queue.push({id:'op_rebel',c:{op:id}});
   });
-  ids.filter(id=>st[id]&&st[id].empty).forEach(id=>L(`${BASES[id].n}：冇人駐守`));
+  siteDecay(g,L);
   helpLog.forEach(t=>L(t,'g'));
   // ---------- 游擊隊 ----------
   if(SQ.length){
@@ -3692,11 +3791,12 @@ function linkBtn(k){return `<button class="lnkb ${LINKFROM===k?'on':''}" data-li
 function linksRow(k){const n=nbrs(G,k);return `<div class="mn-links muted">補給線：${n.length?n.map(x=>esc(nodeName(x))).join('、'):'未有'}</div>`}
 function nodeChips(k){
   const s=suitFa(baseKeyId(k)),M=members(G,k),fit=M.filter(u=>suits(u,k)).length,co=cohesion(G,k);
-  return `<div class="mn-c">${s.length?`<span class="chip" title="呢類陣形嘅人喺度工作效率 +15%、意志每日 +1">宜：${s.map(f=>FA[f]).join('、')}${fit?` · ${fit}人`:''}</span>`:''}${co.pairs?`<span class="chip good" title="同陣形嘅人一齊：少啲嗌交、意志每日 +1；分部更忠誠、難叛變">友好 ${co.pairs} 對</span>`:''}</div>`;
+  const isOp=k!=='base'&&G.outposts[k],need=isOp?opNeed(k):0,have=isOp?M.filter(u=>!isAnimal(u)).length:0,idle=(G.idle||{})[k];
+  return `<div class="mn-c">${isOp?`<span class="chip ${have<need?'bad':''}" title="${have<need?'人手唔夠：今晚屍群壓力大增，有機會淪陷':'人手足夠'}">人手 ${have}/${need}</span>`:''}${idle?`<span class="chip bad" title="冇人駐守，${IDLE_LOST} 日會被喪屍重新佔據">無人 ${idle}/${IDLE_LOST} 日</span>`:''}${s.length?`<span class="chip" title="呢類陣形嘅人喺度工作效率 +15%、意志每日 +1">宜：${s.map(f=>FA[f]).join('、')}${fit?` · ${fit}人`:''}</span>`:''}${co.pairs?`<span class="chip good" title="同陣形嘅人一齊：少啲嗌交、意志每日 +1；分部更忠誠、難叛變">友好 ${co.pairs} 對</span>`:''}</div>`;
 }
 function sqNode(){
   const M=opMembers(G,'squad'),pos=G.mapPos.squad||MAPPOS.squad,ops=Object.keys(G.outposts);
-  return `<div class="mnode sq" data-dz="squad" data-key="squad" data-loc="squad" data-fixed="${G.mapPos.squad?'1':''}" style="left:${pos[0]}%;top:${pos[1]}%">
+  return `<div class="mnode sq" data-dz="squad" data-key="squad" data-loc="squad" data-fixed="${(G.mapFix||{}).squad?'1':''}" style="left:${pos[0]}%;top:${pos[1]}%">
     <div class="mn-h grip"><span class="gr">⠿</span><b>游擊隊</b><span class="muted type">${M.length}/${SQMAX}</span>${capBtn('squad')}</div>
     <select class="sqsel" id="sqsel" title="游擊隊今晚去邊度協防"><option value="auto" ${G.sqT==='auto'?'selected':''}>自動：去最危險嘅據點</option><option value="base" ${G.sqT==='base'?'selected':''}>守 ${esc(BS(G).n)}</option>${ops.map(id=>`<option value="${id}" ${G.sqT===id?'selected':''}>守 ${esc(BASES[id].n)}</option>`).join('')}</select>
     <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟組成游擊隊，每晚出去協防</span>'}</div>
@@ -3782,7 +3882,10 @@ function openBulk(){
     const sf=dest==='squad'?[]:suitFa(baseKeyId(dest));
     const pool=Rs.filter(u=>!fa.size||faOf(u).some(f=>fa.has(f))).sort((a,b)=>(suits(b,dest)-suits(a,dest))*(dest==='squad'?0:1)||RANK.indexOf(CH[a.id].g)-RANK.indexOf(CH[b.id].g));
     let room=dd.free();const go=[];pool.forEach(u=>{if(skip.has(u.id))return;if(dest==='base'&&isAnimal(u)){go.push(u);return}if(room>0){go.push(u);room--}});
-    modal(`<div class="modal dismiss" style="width:min(640px,100%)"><div class="eyebrow">一鍵加入</div>
+    modal(`<div class="modal dismiss" style="width:min(640px,100%)"><div class="eyebrow">一鍵分配全部人</div>
+      <p class="muted" style="margin:0;font-size:12px">由頭分配晒所有人：主據點、分部、游擊隊，連工作、裝備、隊長同補給線都會自動搞掂。感染者會留喺主據點。</p>
+      <div class="distg">${Object.keys(DIST).map(k=>`<button class="distb" data-dist="${k}"><b>${DIST[k].n}</b><span>${DIST[k].d}</span></button>`).join('')}</div>
+      <div class="eyebrow" style="margin-top:6px">或者自己揀 · 一鍵加入</div>
       <div class="bulkbar"><div><span>去</span><b>${esc(nodeName(dest))}</b><em>空位 ${Math.max(0,dd.free())}</em></div><div><span>陣形</span><b>${fa.size?[...fa].map(f=>esc(FA[f])).join('、'):'全部'}</b>${fa.size&&[...fa].every(f=>sf.includes(f))?'<em class="ok">適合呢度</em>':''}</div><div><span>人數</span><b>${go.length}</b><em>人</em></div></div>
       <div class="lbl">去邊度</div><div class="chips">${D.map(x=>`<button class="chip ${x.k===dest?'pk':''}" data-dest="${x.k}">${esc(x.n)} · 空位 ${Math.max(0,x.free())}</button>`).join('')}</div>
       ${sf.length?`<p class="muted" style="margin:0;font-size:12px">呢度適合：${sf.map(f=>FA[f]).join('、')}（綠框陣形；效率 +15%、意志 +1）</p>`:''}
@@ -3791,6 +3894,7 @@ function openBulk(){
       <div class="mn-t" style="max-height:38vh;overflow:auto">${pool.map(u=>`<button class="bpick ${go.includes(u)?'':'off'}" data-skip="${u.id}">${crewTok(u).replace('<button class="ctok"','<span class="ctok"').replace(/<\/button>$/,'</span>')}</button>`).join('')||'<span class="muted">後備名單冇呢個陣形嘅人</span>'}</div>
       <div class="row"><button class="btn sm" id="cx">取消</button><button class="btn pri" id="bgo" style="margin-left:auto" ${go.length?'':'disabled'}>${go.length} 人加入${esc(nodeName(dest))}</button></div></div>`,()=>{
       $('#cx').onclick=closeOv;
+      document.querySelectorAll('[data-dist]').forEach(b=>b.onclick=()=>{const r=autoDistribute(b.dataset.dist);closeOv();toast(`${DIST[b.dataset.dist].n}完成：主據點 ${r.main} 人${r.ops.length?'、'+r.ops.join('、'):''}${r.sq?`、游擊隊 ${r.sq}`:''}${r.res?`，後備 ${r.res}`:''}`)});
       document.querySelectorAll('[data-dest]').forEach(b=>b.onclick=()=>{dest=b.dataset.dest;skip.clear();draw()});
       document.querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>{const f=b.dataset.fa;if(f==='all')fa.clear();else fa.has(f)?fa.delete(f):fa.add(f);skip.clear();draw()});
       document.querySelectorAll('[data-skip]').forEach(b=>b.onclick=()=>{const id=b.dataset.skip;skip.has(id)?skip.delete(id):skip.add(id);draw()});
@@ -3798,6 +3902,90 @@ function openBulk(){
     });
   };
   draw();
+}
+
+/* ================= 人手、淪陷、無人駐守嘅場地會被重新佔據 ================= */
+const IDLE_LOST=7,IDLE_WARN=4;
+function opNeed(id){return Math.max(1,Math.ceil(BASES[id].beds/4))}
+function opFall(g,id,L){
+  const b=BASES[id],M=opMembers(g,id);let dead=[];
+  M.forEach(u=>{u.op=null;u.job='rest';const d=hurt(u,ri(10,30));if(u.hp<=0||(!isAnimal(u)&&R()<.12)){dead.push(u)}});
+  dead.forEach(u=>killUnit(u,`${b.n}分部淪陷時犧牲。`));
+  delete g.outposts[id];if(g.cap)delete g.cap[id];g.clear[id]=50;g.idle&&delete g.idle[id];
+  if(g.oldBases)g.oldBases=g.oldBases.filter(k=>k!==id);
+  L(`💀 ${b.n}分部守唔住，淪陷咗！${M.length-dead.length} 人帶傷撤返後備${dead.length?`，${dead.map(nm).join('、')} 犧牲`:''}。（清場度跌返 50%）`,'b');
+  addLog(`${b.n}分部淪陷。`);
+}
+function siteIdle(g,k){return k!==g.base&&(g.clear[k]||0)>=100&&!(g.outposts&&g.outposts[k]&&opMembers(g,k).some(u=>!isAnimal(u)))}
+function siteDecay(g,L){
+  g.idle=g.idle||{};
+  Object.keys(BASES).forEach(k=>{
+    if(!siteIdle(g,k)){delete g.idle[k];return}
+    const d=g.idle[k]=(g.idle[k]||0)+1,n=BASES[k].n;
+    if(d===IDLE_WARN)L(`${n}無人駐守 ${d} 日，開始有喪屍遊蕩返入去（再過 ${IDLE_LOST-d} 日會被重新佔據）`,'y');
+    if(d>=IDLE_LOST){g.clear[k]=60;delete g.idle[k];if(g.outposts&&g.outposts[k]){opMembers(g,k).forEach(u=>u.op=null);delete g.outposts[k]}if(g.oldBases)g.oldBases=g.oldBases.filter(x=>x!==k);L(`${n}無人駐守太耐，已經被喪屍重新佔據（清場度跌返 60%）`,'b');addLog(`${n}被喪屍重新佔據。`)}
+  });
+}
+/* 候選地點只計仍然清場嘅；舊據點搬走時當清場 100% */
+function opCands(g){return Object.keys(BASES).filter(k=>k!==g.base&&!(g.outposts||{})[k]&&(g.clear[k]||0)>=100)}
+{const _rel=relocate;relocate=function(id){const prev=G.base;const r=_rel(id);G.clear[prev]=Math.max(G.clear[prev]||0,100);return r}}
+
+/* ================= 調整位置：主據點中間，其他排四邊 ================= */
+function arrangeMap(){
+  netInit(G);
+  const slots=[[16,16],[84,16],[16,84],[84,84],[50,10],[50,90],[10,50],[90,50],[33,10],[67,10],[33,90],[67,90],[10,30],[90,30],[10,70],[90,70]];
+  const keys=[...Object.keys(G.outposts),'squad',...opCands(G)];
+  G.mapPos={[G.base]:[50,50]};G.mapFix={};
+  keys.forEach((k,i)=>{G.mapPos[k]=slots[i%slots.length]});
+}
+/* ================= 一鍵分配全部人 ================= */
+const DIST={
+  bal:{n:'均衡分配',d:'主據點按工種揀齊人，分部守到一半以上，游擊隊 3 人，剩低嘅人全部派去分部'},
+  main:{n:'主據點優先',d:'最強嘅人全部留喺主據點，分部只派最低人手，冇游擊隊'},
+  def:{n:'守衛型',d:'分部派到七成人手、揀最識打嘅人；游擊隊滿 6 人，邊度危險去邊度'},
+  fa:{n:'按陣形分配',d:'每個據點優先派適合佢嘅陣形，同陣形嘅人盡量放埋一齊'}
+};
+function autoDistribute(mode){
+  netInit(G);
+  const inf=G.units.filter(u=>u.act&&(u.inf||u.iso));
+  G.units.forEach(u=>{if(inf.includes(u))return;if(u.act){u.act=false;unequipAll(u)}u.op=null;u.job='rest'});
+  G.cap={};
+  let pool=G.units.filter(u=>!inf.includes(u)&&!isAnimal(u));
+  const pets=G.units.filter(u=>isAnimal(u)&&!inf.includes(u));
+  const power=u=>ST.reduce((s,k)=>s+stat(u,k),0)+(4-RANK.indexOf(CH[u.id].g))*8;
+  const take=u=>{pool=pool.filter(x=>x!==u);return u};
+  const ops=Object.keys(G.outposts);
+  const opT=id=>{const b=BASES[id].beds;return mode==='main'?opNeed(id):mode==='def'?Math.max(opNeed(id),Math.ceil(b*.7)):Math.max(opNeed(id),Math.ceil(b*.5))};
+  const sqN=mode==='def'?SQMAX:mode==='main'?0:3;
+  const hold=ops.reduce((s,id)=>s+opT(id),0)+sqN;
+  const room=bedCap(G)-beds(G);
+  const mainN=Math.max(0,Math.max(Math.min(room,6),Math.min(room,pool.length-hold)));
+  // 主據點：先揀齊工種
+  const jobScore=(u,j)=>canWork({...u,crit:0,iso:0},j)?apt(u,j)*(fxOf(u).job[j]||1)*(mode==='fa'&&suits(u,'base')?1.3:1):-1;
+  const main=[];
+  for(const j of ['guard','cook','medic','repair','scav','patrol','guard','scav']){if(main.length>=mainN||!pool.length)break;const u=pool.reduce((a,b)=>jobScore(b,j)>jobScore(a,j)?b:a);main.push(take(u))}
+  pool.sort((a,b)=>(mode==='fa'?(suits(b,'base')-suits(a,'base'))*50:0)+power(b)-power(a));
+  while(main.length<mainN&&pool.length)main.push(take(pool[0]));
+  main.forEach(u=>{u.act=true;u.op=null;u.job=bestJob(u)});
+  pets.forEach(u=>{u.act=true;u.op=null;u.job=bestJob(u)});
+  // 游擊隊：最識打
+  const fight=u=>apt(u,'guard')+stat(u,'str');
+  pool.sort((a,b)=>fight(b)-fight(a));
+  for(let i=0;i<sqN&&pool.length;i++){const u=take(pool[0]);u.op='squad'}
+  // 分部：輪流揀
+  const cnt=id=>opMembers(G,id).length;
+  const score=(u,id)=>(mode==='fa'||mode==='bal'?(suits(u,id)?40:0):0)+(mode==='fa'?opMembers(G,id).filter(x=>sameFa(x,u)).length*15:0)+(mode==='def'?fight(u)*2:power(u));
+  const fill=lim=>{let moved=true;while(moved&&pool.length){moved=false;for(const id of ops){if(!pool.length)break;if(cnt(id)>=lim(id))continue;const u=pool.reduce((a,b)=>score(b,id)>score(a,id)?b:a);take(u).op=id;moved=true}}};
+  fill(opT);
+  if(mode==='bal'||mode==='fa')fill(id=>BASES[id].beds);
+  // 隊長
+  const capScore=u=>(capSkOf(u)?100:0)+stat(u,'wil');
+  ['base',...ops,'squad'].forEach(k=>{const M=members(G,k).filter(u=>!isAnimal(u));if(M.length)G.cap[k]=M.reduce((a,b)=>capScore(b)>capScore(a)?b:a).id});
+  ops.forEach(id=>{if(hops(G,id).base===undefined)addLine('base',id)});
+  capCache();
+  autoAssign();const eqn=autoEquip();
+  save();
+  return {main:act(G).length,ops:ops.map(id=>`${BASES[id].n} ${cnt(id)}`),sq:opMembers(G,'squad').length,res:reserveFree(G).length,eqn};
 }
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
