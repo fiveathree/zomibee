@@ -351,7 +351,7 @@ main{padding-block:12px 40px}
 .mdot{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dust);opacity:.7;white-space:nowrap;pointer-events:none}
 .mdot i{width:7px;height:7px;border-radius:50%;background:var(--dust)}
 .mnode{position:absolute;transform:translate(-50%,-50%);background:rgba(28,23,18,.96);border:1px solid var(--line2);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;min-width:150px;max-width:250px;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.5)}
-.mnode.main{max-width:min(440px,62%);min-width:220px;border:2px solid var(--sodium);z-index:3}
+.mnode.main{width:min(470px,56%);max-width:none;min-width:220px;border:2px solid var(--sodium);z-index:3}
 .mnode.cand{border-style:dashed;align-items:center;min-width:130px;opacity:.9}
 .mn-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mn-h b{font-family:var(--f-disp);font-size:14px}
@@ -359,13 +359,24 @@ main{padding-block:12px 40px}
 .mn-x.armed{background:var(--blood);color:#fff}
 .mn-t{display:flex;flex-wrap:wrap;gap:2px 4px}
 .mn-l{font-size:10px;color:var(--dust);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.ctok{width:40px}.ctok svg{width:32px;height:44px}.ctok small{font-size:9px}
+.ctok{width:42px;display:flex;flex-direction:column;align-items:center;gap:1px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.chead{width:30px;height:30px;border-radius:50%;overflow:hidden;background:linear-gradient(160deg,var(--c1),var(--c2));box-shadow:0 0 0 2px var(--ring,transparent);display:block}
+.chead svg{width:100%;height:100%;display:block}
+.ctok small{font-size:9px;max-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctok.dragging{opacity:.25}
+.ctok.swaptarget .chead{box-shadow:0 0 0 2px #ff6a3a,0 0 10px #ff6a3a}
 .ctok.swaptarget svg{filter:drop-shadow(0 0 6px #ff6a3a) drop-shadow(0 0 2px #ff6a3a)}
 .reservep{display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 150px);overflow:auto}
 [data-dz].drop{outline:1px dashed rgba(255,162,58,.55);outline-offset:2px}
 [data-dz].hover{outline:2px solid var(--sodium)!important;background-color:rgba(60,42,20,.97)}
 details.panel summary{cursor:pointer}
 @media (max-width:760px){.crewgrid{grid-template-columns:minmax(0,1fr)}.city{height:auto;display:flex;flex-direction:column;gap:8px;padding:8px;background:var(--slab2)}.mnode{position:static;transform:none;max-width:none!important;min-width:0}.mdot{display:none}.reservep{max-height:none}}
+/* rarity name colours */
+.rn.UR{background:linear-gradient(90deg,#ffb3ef,#a8e4ff,#fff0a8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rn.SSR{color:#f2c552}.rn.SR{color:#c4a2ff}.rn.R{color:#8cb8ff}.rn.C{color:#d8d0c2}
+.tag .rn.UR,.modal.paper .rn.UR{background:none;color:#b03a9a}
+.tag .rn.SSR,.modal.paper .rn.SSR{color:#8a5a00}.tag .rn.SR,.modal.paper .rn.SR{color:#5a2fa8}.tag .rn.R,.modal.paper .rn.R{color:#2a5aa8}.tag .rn.C,.modal.paper .rn.C{color:#3a332a}
+.tag.gone .rn{color:#ccc!important;background:none}
 /* daily report */
 .modal.report{width:min(1400px,100%);max-height:calc(100vh - 32px);padding:14px 16px;gap:10px}
 .rephead{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -1650,7 +1661,7 @@ function rBase(){
       </div>
       <div class="panel">
         <h3>陣營加成</h3>
-        <div class="syn">${synList().map(x=>`<div><b>${FA[x.f]}</b> <span class="muted">${x.n} 人 · 全工作 +${x.b}%</span><div class="syn-m">${x.m.map(u=>esc(nm(u))).join('、')}</div></div>`).join('')||'<span class="muted" style="font-size:12px">同陣營嘅人有兩個或以上喺據點就有加成；做同一份工再加。</span>'}</div>
+        <div class="syn">${synList().map(x=>`<div><b>${FA[x.f]}</b> <span class="muted">${x.n} 人 · 全工作 +${x.b}%</span><div class="syn-m">${x.m.map(u=>`<span class="rn ${CH[u.id].g}">${esc(nm(u))}</span>`).join('、')}</div></div>`).join('')||'<span class="muted" style="font-size:12px">同陣營嘅人有兩個或以上喺據點就有加成；做同一份工再加。</span>'}</div>
         <p class="muted" style="margin:6px 0 0;font-size:11px">同陣營同做一份工：每個拍檔該工作再 +8%。</p>
       </div>
       <div class="panel">
@@ -1678,7 +1689,7 @@ function uRow(u){
   return `<div class="urow ${u.iso?'off':''}">
     <button data-open="${u.id}" aria-label="睇${esc(c.n)}資料">${av(u.id)}</button>
     <div style="min-width:0">
-      <div class="who"><b>${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.o)} · ${esc(c.job)}</span><div class="chips">${statusChips(u)}</div></div>
+      <div class="who"><b class="rn ${c.g}">${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.o)} · ${esc(c.job)}</span><div class="chips">${statusChips(u)}</div></div>
       <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     </div>
     <div class="jobs">${JK.map(j=>{const a=apt(u,j),ok=canWork(u,j);const g=j==='rest'?'':grade(a*(fxOf(u).job[j]||1));return `<button class="jb" data-u="${u.id}" data-j="${j}" aria-pressed="${u.job===j}" ${ok?'':'disabled'} title="${esc(JOBS[j].d)}${g==='S'?' · S 級能力【'+SPERK[j].n+'】'+SPERK[j].d:''}">${JOBS[j].n}<em class="g${g}">${j==='rest'?'—':g==='S'?'S★':g}</em></button>`}).join('')}</div>
@@ -1736,8 +1747,8 @@ function showEvent(id,c){
 /* ---------- 倖存者 ---------- */
 function tag(u,gone){
   const c=CH[u.id||u];
-  if(gone){const g=G.gone[c.id];return `<div class="tag gone"><div class="tt">${av(c.id,'dead')}<div><b>${esc(c.n)}</b><small>${g.dead?'第 '+g.d+' 日犧牲':'第 '+g.d+' 日離開'}</small></div></div><small>${esc(g.why)}</small></div>`}
-  return `<button class="tag ${u.act?'':'res'}" data-open="${c.id}"><div class="tt">${av(c.id)}<div><b>${esc(c.n)}</b>${stars(u.star)}<small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${statusChips(u)||`<span class="chip">${u.act?JOBS[u.job].n:'後備'}</span>`}</div></button>`;
+  if(gone){const g=G.gone[c.id];return `<div class="tag gone"><div class="tt">${av(c.id,'dead')}<div><b class="rn ${c.g}">${esc(c.n)}</b><small>${g.dead?'第 '+g.d+' 日犧牲':'第 '+g.d+' 日離開'}</small></div></div><small>${esc(g.why)}</small></div>`}
+  return `<button class="tag ${u.act?'':'res'}" data-open="${c.id}"><div class="tt">${av(c.id)}<div><b class="rn ${c.g}">${esc(c.n)}</b>${stars(u.star)}<small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${statusChips(u)||`<span class="chip">${u.act?JOBS[u.job].n:'後備'}</span>`}</div></button>`;
 }
 function rCrew(){
   const A=act(G),Rs=G.units.filter(u=>!u.act),D=Object.keys(G.gone);
@@ -1753,7 +1764,7 @@ function openUnit(id){
   const u=uOf(id);if(!u)return;const c=CH[id];
   const coreCost=2+u.star;let armed=false;
   modal(`<div class="modal">
-    <div class="row" style="align-items:flex-start;gap:14px">${av(id)}<div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${statusChips(u)}</div></div></div>
+    <div class="row" style="align-items:flex-start;gap:14px">${av(id)}<div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2 class="rn ${c.g}">${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${statusChips(u)}</div></div></div>
     <p style="margin:0">${esc(c.bio)}</p>
     <div class="bars">${bar('HP',u.hp,maxHp(u),'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
@@ -1795,7 +1806,7 @@ function pull(n){
   const lab={new:'NEW',star:'突破 +1★',dead:'已犧牲 · 電池 +30',max:'滿星 · 電池 +50'};
   modal(`<div class="modal dismiss" style="width:min(900px,100%)">
     <div class="eyebrow">廣播收到 ${n} 個回應</div>
-    <div class="pullgrid ${n===1?'one':''}">${out.map((o,k)=>{const c=CH[o.id];return `<div class="pc g-${c.g}" data-k="${k}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="tag" style="cursor:default;height:100%"><div class="tt">${av(o.id)}<div style="min-width:0"><b>${esc(c.n)}</b><small>${esc(c.job)}</small></div></div><span class="badge ${o.type==='new'?'':'dup'}">${lab[o.type]}</span>${o.type==='new'&&!o.act?'<small>床位滿，入咗後備</small>':''}</div></div></div></div>`}).join('')}</div>
+    <div class="pullgrid ${n===1?'one':''}">${out.map((o,k)=>{const c=CH[o.id];return `<div class="pc g-${c.g}" data-k="${k}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="tag" style="cursor:default;height:100%"><div class="tt">${av(o.id)}<div style="min-width:0"><b class="rn ${c.g}">${esc(c.n)}</b><small>${esc(c.job)}</small></div></div><span class="badge ${o.type==='new'?'':'dup'}">${lab[o.type]}</span>${o.type==='new'&&!o.act?'<small>床位滿，入咗後備</small>':''}</div></div></div></div>`}).join('')}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="again">再廣播 ${n} 次（${n===10?900:100} 電池）</button><button class="btn pri" id="ok">收到</button></div>
   </div>`,()=>{
     const cards=[...document.querySelectorAll('.pc')];const t=cards.map((c,i)=>setTimeout(()=>c.classList.add('open'),250+i*180));
@@ -1817,7 +1828,7 @@ function rRadio(){
     </div>
   </div>
   <div class="secth"><h2>倖存者圖鑑</h2><span class="muted type">${got}/${total}</span></div>
-  <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b>${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
+  <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b class="rn ${c.g}">${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
   $('#p1').onclick=()=>{spin();setTimeout(()=>pull(1),500)};
   $('#p10').onclick=()=>{spin();setTimeout(()=>pull(10),500)};
 }
@@ -1869,14 +1880,14 @@ function planHTML(){
       <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:12px">${esc(b.pd)}</div></div>
       <button class="btn sm" id="move">${mv.length?`搬據點（${mv.length} 個已清場）`:'搬據點'}</button>
     </div>
-    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>，撳一個區域派佢去；撳其他地方取消。`:'撳一個人睇佢嘅狀態同裝備；再撳一個區域就可以派佢去做嗰份工。'}</p>
+    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b class="rn ${CH[sel.id].g}">${esc(nm(sel))}</b>，撳一個區域派佢去；撳其他地方取消。`:'撳一個人睇佢嘅狀態同裝備；再撳一個區域就可以派佢去做嗰份工。'}</p>
     <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
   </section>`;
 }
 function tok(u){
   const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
   const ring=u.inf?'var(--bile)':u.crit||u.inj?'var(--blood)':u.sta<30?'var(--sodium)':'transparent';
-  return `<button class="tok r-${c.g} ${SEL===u.id?'sel':''}" data-tok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}"><span class="d" style="--ring:${ring}">${esc(c.av)}${isS(u,j)?'<i>S</i>':''}</span><small>${esc(c.n.split(' ')[0])}</small></button>`;
+  return `<button class="tok r-${c.g} ${SEL===u.id?'sel':''}" data-tok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}"><span class="d" style="--ring:${ring}">${esc(c.av)}${isS(u,j)?'<i>S</i>':''}</span><small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }
 function bindPlan(){
   document.querySelectorAll('[data-tok]').forEach(b=>b.onclick=e=>{e.stopPropagation();SEL=SEL===b.dataset.tok?null:b.dataset.tok;render()});
@@ -1918,7 +1929,7 @@ function peek(u){
     <div class="row" style="gap:10px;align-items:flex-start;flex-wrap:nowrap">
       ${av(u.id)}
       <div style="min-width:0;flex:1">
-        <div class="who row" style="gap:6px"><b>${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</span></div>
+        <div class="who row" style="gap:6px"><b class="rn ${c.g}">${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</span></div>
         <div class="chips" style="margin:3px 0">${statusChips(u)||'<span class="chip good">狀態正常</span>'}</div>
         <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
       </div>
@@ -2114,7 +2125,7 @@ function av(id,extra=''){
 }
 function tok(u){
   const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
-  return `<button class="tok ${SEL===u.id?'sel':''}" data-tok="${u.id}" aria-label="${esc(c.n)}">${fig(u,j)}${isS(u,j)?'<i>S</i>':''}<small>${esc(c.n.split(' ')[0])}</small></button>`;
+  return `<button class="tok ${SEL===u.id?'sel':''}" data-tok="${u.id}" aria-label="${esc(c.n)}">${fig(u,j)}${isS(u,j)?'<i>S</i>':''}<small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }
 /* ================= 裝備 ================= */
 /* w = 重量（力量要夠先發揮全效），aff = 專精角色（效果 ×1.5） */
@@ -2211,7 +2222,7 @@ function eqSummary(u){
 /* ---------- 浮窗 ---------- */
 function popHTML(u){
   const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest',es=eqS(u);
-  return `<div class="pop-h">${av(u.id)}<div style="min-width:0;flex:1"><b>${esc(c.n)}</b>${stars(u.star)}<div class="muted" style="font-size:11px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</div><div class="chips" style="margin-top:2px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${synergy(u,j)?`<span class="chip good">陣營 +${Math.round(synergy(u,j)*100)}%</span>`:''}</div></div><button class="pop-x" id="popx" aria-label="關閉">×</button></div>
+  return `<div class="pop-h">${av(u.id)}<div style="min-width:0;flex:1"><b class="rn ${c.g}">${esc(c.n)}</b>${stars(u.star)}<div class="muted" style="font-size:11px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</div><div class="chips" style="margin-top:2px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${synergy(u,j)?`<span class="chip good">陣營 +${Math.round(synergy(u,j)*100)}%</span>`:''}</div></div><button class="pop-x" id="popx" aria-label="關閉">×</button></div>
     <div class="chips">${statusChips(u)||'<span class="chip good">狀態正常</span>'}</div>
     <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     <div class="pkst">${ST.map(k=>`<div><span>${STN[k]}</span><b>${stat(u,k)}</b></div>`).join('')}<div><span>效率</span><b>${j==='rest'?'—':Math.round(eff(u,j))}</b></div></div>
@@ -2247,8 +2258,8 @@ function openUnit(id){
   const u=uOf(id);if(!u)return;const c=CH[id];
   const coreCost=Math.ceil((2+u.star)*(fxOf(u).coreHalf?.5:1));let armed=false;const es=eqS(u);
   modal(`<div class="modal dismiss">
-    <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap"><div class="bigfig">${fig(u,canWork(u,u.job)?u.job:'rest')}</div><div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${statusChips(u)}</div><p style="margin:6px 0 0;font-size:13px">${esc(c.bio)}</p>${u.mut?`<div class="mutline">變種人【${MUT[u.mut.t].n}】${esc(MUT[u.mut.t].d)}；對病毒免疫，食量 ×1.5</div>`:''}</div></div>
-    ${!u.act&&!isAnimal(u)?(()=>{const H=act(G).filter(x=>!isAnimal(x)&&!x.inf&&!x.iso);return H.length?`<div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">同據點入面嘅人換位</b><div class="muted" style="font-size:12px">揀一個人，佢會${u.op?`去${esc(BASES[u.op].n)}分部`:'去後備'}，${esc(c.n)} 接手佢嘅床位同工作</div><div class="chips" style="margin-top:6px">${H.map(x=>`<button class="chip swapc" data-swap="${x.id}">${esc(nm(x))} · ${JOBS[x.job].n}</button>`).join('')}</div></div>`:''})():''}
+    <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap"><div class="bigfig">${fig(u,canWork(u,u.job)?u.job:'rest')}</div><div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2 class="rn ${c.g}">${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${statusChips(u)}</div><p style="margin:6px 0 0;font-size:13px">${esc(c.bio)}</p>${u.mut?`<div class="mutline">變種人【${MUT[u.mut.t].n}】${esc(MUT[u.mut.t].d)}；對病毒免疫，食量 ×1.5</div>`:''}</div></div>
+    ${!u.act&&!isAnimal(u)?(()=>{const H=act(G).filter(x=>!isAnimal(x)&&!x.inf&&!x.iso);return H.length?`<div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">同據點入面嘅人換位</b><div class="muted" style="font-size:12px">揀一個人，佢會${u.op?`去${esc(BASES[u.op].n)}分部`:'去後備'}，${esc(c.n)} 接手佢嘅床位同工作</div><div class="chips" style="margin-top:6px">${H.map(x=>`<button class="chip swapc" data-swap="${x.id}"><span class="rn ${CH[x.id].g}">${esc(nm(x))}</span> · ${JOBS[x.job].n}</button>`).join('')}</div></div>`:''})():''}
     <div class="bars">${bar('HP',u.hp,maxHp(u),'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
     <div class="aptg">${JK.filter(j=>j!=='rest').map(j=>{const g=canWork({...u,crit:0,iso:0},j)?grade(apt(u,j)*(fxOf(u).job[j]||1)):'—';return `<div>${JOBS[j].n}<b class="g${g}">${g}</b>${es.job[j]?`<em class="eqp">裝備 +${Math.round(es.job[j]*100)}%</em>`:''}</div>`}).join('')}</div>
@@ -2284,7 +2295,7 @@ function openEquip(id,sl){
     <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}${cur?` · 而家用緊：${esc(ITEMS[cur].n)}`:''}</div>
     <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色用效果 ×1.5。其他人用緊嘅裝備都可以調過嚟，對方會即刻除低。</p>
     <div class="stack" style="gap:6px">
-      ${opts.map((o,i)=>{const it=ITEMS[o.k],note=eqNote(u,it),ow=o.from&&uOf(o.from);return `<button class="eqpick ${ow?'worn':''}" data-i="${i}"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${iw(u,it)}${o.from?'':` · 背包 ${G.inv[o.k]}`}</span></div>${ow?`<div class="wornby">${esc(nm(ow))}${ow.act?'':'（後備）'}用緊 · 撳一下調俾${esc(nm(u))}</div>`:''}<div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">冇${SLOTS[sl]}。去搜括或者物資空投會搵到。</p>`}
+      ${opts.map((o,i)=>{const it=ITEMS[o.k],note=eqNote(u,it),ow=o.from&&uOf(o.from);return `<button class="eqpick ${ow?'worn':''}" data-i="${i}"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${iw(u,it)}${o.from?'':` · 背包 ${G.inv[o.k]}`}</span></div>${ow?`<div class="wornby"><span class="rn ${CH[ow.id].g}">${esc(nm(ow))}</span>${ow.act?'':'（後備）'}用緊 · 撳一下調俾${esc(nm(u))}</div>`:''}<div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">冇${SLOTS[sl]}。去搜括或者物資空投會搵到。</p>`}
     </div>
     <div class="row">${cur?'<button class="btn sm" id="off">卸下</button>':''}<button class="btn pri sm" id="back" style="margin-left:auto">返回</button></div>
   </div>`,()=>{
@@ -2471,7 +2482,7 @@ function rRadio(){
       </div>
     </div>
     <div class="secth"><h2>倖存者圖鑑</h2><span class="muted type">${got}/${total}</span></div>
-    <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b>${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}</div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}" style="font-size:20px">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
+    <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b class="rn ${c.g}">${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}</div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}" style="font-size:20px">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
     $('#p1').onclick=()=>{spin();setTimeout(()=>pull(1),500)};
     $('#p10').onclick=()=>{spin();setTimeout(()=>pull(10),500)};
   }else{
@@ -2672,7 +2683,7 @@ function rBase(){
       <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select></div>
   </div>
   ${planHTML(A,res)}
-  <div class="synbar"><b>陣營加成</b>${syn.length?syn.map(x=>`<span><em>${FA[x.f]}</em> ${x.n}人 +${x.b}%（${x.m.map(u=>esc(nm(u))).join('、')}）</span>`).join(''):'<span>同陣營兩個或以上喺據點就有加成</span>'}<span class="muted">同陣營同做一份工，每個拍檔再 +8%</span></div>`;
+  <div class="synbar"><b>陣營加成</b>${syn.length?syn.map(x=>`<span><em>${FA[x.f]}</em> ${x.n}人 +${x.b}%（${x.m.map(u=>`<span class="rn ${CH[u.id].g}">${esc(nm(u))}</span>`).join('、')}）</span>`).join(''):'<span>同陣營兩個或以上喺據點就有加成</span>'}<span class="muted">同陣營同做一份工，每個拍檔再 +8%</span></div>`;
   $('#end').onclick=doEnd;
   $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
   $('#aeq2').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動（專屬裝備優先俾主人，休息嘅人除裝）`:'而家已經係最好配搭')};
@@ -2711,7 +2722,7 @@ function planHTML(A,res){
       <span class="bs"><span class="muted">犧牲</span> <b>${Object.values(G.gone).filter(x=>x.dead).length}</b></span>
       ${res.length?`<span class="bs"><span class="muted">後備</span> <b>${res.length}</b> <button class="linkbtn" data-go="crew">調動</button></span>`:''}
       ${Object.keys(G.outposts||{}).length?`<span class="bs"><span class="muted">分部</span> <b>${Object.keys(G.outposts).length}</b><span class="muted">· ${G.units.filter(u=>!u.act&&u.op).length} 人</span> <button class="linkbtn" data-go="crew">管理</button></span>`:''}
-      <span class="hint">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>：撳或者拖去區域派佢去`:'拖人去唔同區域調工；撳一下睇狀態同裝備'}</span>
+      <span class="hint">${sel?`揀咗 <b class="rn ${CH[sel.id].g}">${esc(nm(sel))}</b>：撳或者拖去區域派佢去`:'拖人去唔同區域調工；撳一下睇狀態同裝備'}</span>
     </div>
     <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
   </section>`;
@@ -2903,8 +2914,8 @@ function openOpAdd(id){
   const b=BASES[id];
   const draw=()=>{const M=opMembers(G,id),Rs=reserveFree(G);
     modal(`<div class="modal dismiss"><div class="eyebrow">${esc(b.n)}分部 · ${M.filter(x=>!isAnimal(x)).length}/${b.beds} 人</div><p class="muted" style="margin:0">撳後備人員派佢過去；撳分部入面嘅人召返後備。</p>
-      <div class="lbl">分部入面</div><div class="chips">${M.map(u=>`<button class="chip opm" data-back="${u.id}">${esc(nm(u))} ✕</button>`).join('')||'<span class="muted">冇人</span>'}</div>
-      <div class="lbl">後備名單</div><div class="stack" style="gap:4px">${Rs.map(u=>{const best=OPJOB.reduce((a,j)=>apt(u,j)>apt(u,a)?j:a,'scav');return `<button class="eqpick" data-send="${u.id}" ${M.filter(x=>!isAnimal(x)).length>=b.beds?'disabled':''}><div class="row" style="justify-content:space-between"><b>${esc(nm(u))}</b><span class="muted" style="font-size:12px">${esc(CH[u.id].job)} · 擅長${JOBS[best].n}</span></div></button>`}).join('')||'<span class="muted">冇後備人員</span>'}</div>
+      <div class="lbl">分部入面</div><div class="chips">${M.map(u=>`<button class="chip opm" data-back="${u.id}"><span class="rn ${CH[u.id].g}">${esc(nm(u))}</span> ✕</button>`).join('')||'<span class="muted">冇人</span>'}</div>
+      <div class="lbl">後備名單</div><div class="stack" style="gap:4px">${Rs.map(u=>{const best=OPJOB.reduce((a,j)=>apt(u,j)>apt(u,a)?j:a,'scav');return `<button class="eqpick" data-send="${u.id}" ${M.filter(x=>!isAnimal(x)).length>=b.beds?'disabled':''}><div class="row" style="justify-content:space-between"><b class="rn ${CH[u.id].g}">${esc(nm(u))}</b><span class="muted" style="font-size:12px">${esc(CH[u.id].job)} · 擅長${JOBS[best].n}</span></div></button>`}).join('')||'<span class="muted">冇後備人員</span>'}</div>
       <div class="row"><button class="btn pri sm" id="cx" style="margin-left:auto">完成</button></div></div>`,()=>{
       $('#cx').onclick=closeOv;
       document.querySelectorAll('[data-send]').forEach(x=>x.onclick=()=>{const u=uOf(x.dataset.send);u.op=id;u.job='rest';save();draw()});
@@ -3066,7 +3077,7 @@ function openUnit(id){
   const nCells=inf?Math.max(8,cells.length+4):Math.max(cap,0);
   modal(`<div class="modal dismiss sheet">
     <div class="sh-head">
-      <div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}${u.cult?`<span class="chip good">修為第${u.cult}層</span>`:''}</div>
+      <div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2 class="rn ${c.g}">${esc(c.n)}</h2>${stars(u.star)}${u.cult?`<span class="chip good">修為第${u.cult}層</span>`:''}</div>
       <div class="muted" style="font-size:12px">${esc(c.o)} · ${esc(c.job)} · 而家：${u.act?JOBS[j].n:u.op?`駐守${esc(BASES[u.op].n)}分部`:'後備'}</div>
       <div class="chips" style="margin-top:3px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${canGun(u)?'<span class="chip warn">槍械精通</span>':''}${statusChips(u)}</div></div>
       <button class="pop-x" id="cx" aria-label="關閉">×</button>
@@ -3100,7 +3111,7 @@ function openUnit(id){
       </section>
     </div>
     <div class="sh-foot">
-      ${H.length?`<div class="swaprow"><span class="lbl">同據點入面嘅人換位</span>${H.map(x=>`<button class="chip swapc" data-swap="${x.id}">${esc(nm(x))} · ${JOBS[x.job].n}</button>`).join('')}</div>`:''}
+      ${H.length?`<div class="swaprow"><span class="lbl">同據點入面嘅人換位</span>${H.map(x=>`<button class="chip swapc" data-swap="${x.id}"><span class="rn ${CH[x.id].g}">${esc(nm(x))}</span> · ${JOBS[x.job].n}</button>`).join('')}</div>`:''}
       <div class="row">
         ${u.act?`<button class="btn sm" id="mv">移去後備</button>`:`<button class="btn sm" id="mv" ${!isAnimal(u)&&beds(G)>=bedCap(G)?'disabled':''}>加入據點${isAnimal(u)?'（寵物唔佔床位）':beds(G)>=bedCap(G)?'（冇床位）':''}</button>`}
         <button class="btn sm" id="up" ${u.star>=5||G.res.core<coreCost?'disabled':''}>用 ${coreCost} 晶核強化${u.star>=5?'（滿星）':''}</button>
@@ -3132,7 +3143,7 @@ function openEquip(id,sl){
     <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}${cur?` · 而家用緊：${esc(ITEMS[cur].n)}`:''}</div>
     <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色效果 ×1.5。槍械只限有「槍械精通」嘅人（${GUNNERS.map(x=>CH[x].n).join('、')}）。</p>
     <div class="stack" style="gap:6px;max-height:60vh;overflow:auto">
-      ${opts.map((o,i)=>{const it=ITEMS[o.k],note=eqNote(u,it),ow=o.from&&uOf(o.from),lock=it.gun&&!canGun(u);return `<button class="eqpick ${ow?'worn':''}" data-i="${i}" ${lock?'disabled':''}><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="eqico" style="--rc:${RCOL[it.r]}">${itemIcon(it.k,RCOL[it.r])}</span><b>${rk(it.r)} ${esc(it.n)}</b></span><span class="muted type" style="font-size:12px">重 ${iw(u,it)}${o.from?'':` · 背包 ${G.inv[o.k]}`}</span></div>${lock?'<div style="font-size:11px;color:var(--blood)">需要槍械精通</div>':''}${ow?`<div class="wornby">${esc(nm(ow))}${ow.act?'':'（後備）'}用緊 · 撳一下調俾${esc(nm(u))}</div>`:''}<div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}</button>`}).join('')||`<p class="muted">冇${SLOTS[sl]}。去搜括或者物資空投會搵到。</p>`}
+      ${opts.map((o,i)=>{const it=ITEMS[o.k],note=eqNote(u,it),ow=o.from&&uOf(o.from),lock=it.gun&&!canGun(u);return `<button class="eqpick ${ow?'worn':''}" data-i="${i}" ${lock?'disabled':''}><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="eqico" style="--rc:${RCOL[it.r]}">${itemIcon(it.k,RCOL[it.r])}</span><b>${rk(it.r)} ${esc(it.n)}</b></span><span class="muted type" style="font-size:12px">重 ${iw(u,it)}${o.from?'':` · 背包 ${G.inv[o.k]}`}</span></div>${lock?'<div style="font-size:11px;color:var(--blood)">需要槍械精通</div>':''}${ow?`<div class="wornby"><span class="rn ${CH[ow.id].g}">${esc(nm(ow))}</span>${ow.act?'':'（後備）'}用緊 · 撳一下調俾${esc(nm(u))}</div>`:''}<div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}</button>`}).join('')||`<p class="muted">冇${SLOTS[sl]}。去搜括或者物資空投會搵到。</p>`}
     </div>
     <div class="row">${cur?'<button class="btn sm" id="off">卸下</button>':''}<button class="btn pri sm" id="back" style="margin-left:auto">返回</button></div>
   </div>`,()=>{
@@ -3147,8 +3158,9 @@ function openEquip(id,sl){
 /* ================= 倖存者頁：港灣市大地圖（據點＋分部），後備名單喺右邊，全部人可以拖放 ================= */
 const MAPPOS={store:[22,26],mall:[46,18],tenement:[14,52],market:[66,24],estate:[58,62],hardware:[34,74],clinic:[80,52],police:[10,14],metro:[42,44],school:[86,16],barracks:[88,84],lab:[10,86],train:[26,42],bunker:[66,88],prison:[92,38],hospital:[76,72],fortress:[50,86],museum:[30,8],dungeon:[56,46]};
 function crewTok(u){
-  const c=CH[u.id],j=u.act&&canWork(u,u.job)?u.job:'rest';
-  return `<button class="tok ctok" data-ctok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}">${fig(u,u.act?j:'idle')}<small>${esc(c.n.split(' ')[0])}</small></button>`;
+  const c=CH[u.id];
+  const ring=u.inf?'var(--bile)':u.crit||u.inj?'var(--blood)':u.mut?'#b07ad8':'transparent';
+  return `<button class="ctok" data-ctok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}${u.act?' · '+JOBS[u.job].n:''}"><span class="chead r-${c.g}" style="--ring:${ring}">${fig(u,null,true)}</span><small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }
 function rCrew(){
   G.outposts=G.outposts||{};
@@ -3184,6 +3196,7 @@ function rCrew(){
     <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="eqico" style="--rc:${RCOL[it.r]}">${itemIcon(it.k,RCOL[it.r])}</span><b>${rk(it.r)} ${esc(it.n)}</b></span><span class="chip">${SLOTS[it.slot]}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.gun?' · 需要槍械精通':''}</div></div>`}).join('')||'<span class="muted">背包空空。</span>'}</div>
   </details>
   ${D.length?`<details class="panel" style="margin-top:8px"><summary><b>離開咗嘅人</b> <span class="muted">${D.length}</span></summary><div class="cards" style="margin-top:8px">${D.map(id=>tag(id,true)).join('')}</div></details>`:''}`;
+  fitNodes();
   document.querySelectorAll('[data-ctok]').forEach(b=>{
     b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}openUnit(b.dataset.ctok)};
     b.onpointerdown=e=>crewDrag(e,b);
@@ -3233,6 +3246,30 @@ function crewDrag(e,b){
   };
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
+
+function fitNodes(){
+  const city=document.querySelector('.city');if(!city||innerWidth<=760)return;
+  const W=city.clientWidth,H=city.clientHeight,pad=6;
+  const nodes=[...city.querySelectorAll('.mnode')];
+  nodes.forEach(n=>{
+    const w=n.offsetWidth,h=n.offsetHeight;
+    let x=parseFloat(n.style.left)/100*W,y=parseFloat(n.style.top)/100*H;
+    x=Math.min(Math.max(x,w/2+pad),W-w/2-pad);y=Math.min(Math.max(y,h/2+pad),H-h/2-pad);
+    n.style.left=x+'px';n.style.top=y+'px';
+  });
+  // 主據點優先，其他方塊避開重疊（簡單推開）
+  for(let it=0;it<30;it++){let moved=false;
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j];
+      const ax=parseFloat(a.style.left),ay=parseFloat(a.style.top),bx=parseFloat(b.style.left),by=parseFloat(b.style.top);
+      const ox=(a.offsetWidth+b.offsetWidth)/2+6-Math.abs(ax-bx),oy=(a.offsetHeight+b.offsetHeight)/2+6-Math.abs(ay-by);
+      if(ox>0&&oy>0){moved=true;const mv=b.classList.contains('main')?a:b,st=mv===a?-1:1;
+        if(ox<oy){const nx=parseFloat(mv.style.left)+(bx>=ax?ox:-ox)*st;mv.style.left=Math.min(Math.max(nx,mv.offsetWidth/2+pad),W-mv.offsetWidth/2-pad)+'px'}
+        else{const ny=parseFloat(mv.style.top)+(by>=ay?oy:-oy)*st;mv.style.top=Math.min(Math.max(ny,mv.offsetHeight/2+pad),H-mv.offsetHeight/2-pad)+'px'}}
+    }
+    if(!moved)break;}
+}
+addEventListener('resize',()=>{if(VIEW==='crew')render()});
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
