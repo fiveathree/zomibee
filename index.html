@@ -1440,7 +1440,7 @@ function rBase(){
     <section class="stack">
       <div class="row" style="justify-content:space-between">
         <h2>今日分工 <span class="muted type" style="font-size:13px">${A.length}/${bedCap(G)} 床</span></h2>
-        <div class="row"><button class="btn sm" id="auto">自動分配</button><button class="btn pri" id="end" ${G.over?'disabled':''}>結束第 ${G.day} 日</button></div>
+        <div class="row"><button class="btn sm" id="aeq2">自動配裝</button><button class="btn sm" id="auto">自動分配</button><button class="btn pri" id="end" ${G.over?'disabled':''}>結束第 ${G.day} 日</button></div>
       </div>
       ${A.length?A.map(uRow).join(''):'<div class="panel muted">據點冇人。去「廣播」招募倖存者。</div>'}
       ${res.length?`<div class="panel row" style="justify-content:space-between"><span class="muted">後備名單有 ${res.length} 人等緊床位</span><button class="btn sm" data-go="crew">去調動</button></div>`:''}
@@ -1481,6 +1481,7 @@ function rBase(){
   </div>`;
   $('#end').onclick=doEnd;
   $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
+  $('#aeq2').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動（專屬裝備優先俾主人，休息嘅人除裝）`:'而家已經係最好配搭')};
   $('#loc').onchange=e=>{G.loc=e.target.value;save();render()};
   $('#proj').onchange=e=>{G.proj=e.target.value;save();render()};
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -2121,7 +2122,7 @@ function rCrew(){
    <div class="cards">${Rs.map(u=>tag(u)).join('')||'<span class="muted">冇人。升級床位可以收留更多人。</span>'}</div>
    ${D.length?`<div class="secth"><h2>離開咗嘅人</h2></div><div class="cards">${D.map(id=>tag(id,true)).join('')}</div>`:''}`;
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
-  $('#aeq').onclick=()=>{autoEquip();save();render();toast('已按各人而家嘅工作分配裝備')};
+  $('#aeq').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動`:'而家已經係最好配搭')};
 }
 /* ================= 擴展：裝備稀有度、專屬套裝、裝備抽獎 ================= */
 const IRAR={bat:'C',cleaver:'C',armguard:'C',spear:'C',shoes:'C',walkie:'R',pack:'R',medkit:'R',binoc:'R',wok:'R',crowbar:'R',leather:'R',toolbox:'SR',axe:'SR',pistol:'SR',firesuit:'SR',shield:'SR',katana:'SSR',rifle:'SSR'};
@@ -2307,6 +2308,49 @@ function rRadio(){
   document.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{RTAB=b.dataset.rt;render()});
 }
 function go(v){VIEW=v;SEL=null;render();window.scrollTo(0,0)}
+
+/* ---------- 自動配裝（覆寫） ----------
+   1. 專屬裝備優先俾主人（由背包或者其他人身上攞返）
+   2. 休息／後備／重傷／隔離嘅人除低非專屬裝備，俾其他人用
+   3. 其餘裝備按當日工作同能力值重新分配，有更好選擇就移裝 */
+function autoEquip(){
+  const before={};G.units.forEach(u=>before[u.id]=JSON.stringify(u.eq||{}));
+  const mine=(u,k)=>{const it=ITEMS[k];return it&&it.set&&SETS[it.set].owner===u.id};
+  const working=u=>u.act&&canEquip(u)&&canWork(u,u.job)&&u.job!=='rest';
+  // 1. 專屬裝備俾主人
+  G.units.filter(u=>canEquip(u)).forEach(u=>{
+    Object.values(SETS).filter(S=>S.owner===u.id).forEach(S=>S.items.forEach(k=>{
+      const sl=ITEMS[k].slot;if(u.eq&&u.eq[sl]===k)return;
+      const holder=G.units.find(o=>o!==u&&o.eq&&o.eq[sl]===k);
+      if(holder)equip(holder,sl,null);
+      if(G.inv[k]>0)equip(u,sl,k);
+    }));
+  });
+  // 2. 除低所有非專屬裝備，放返背包
+  G.units.forEach(u=>{if(!u.eq)return;for(const sl in u.eq){const k=u.eq[sl];if(k&&!mine(u,k))equip(u,sl,null)}});
+  // 3. 全局分配：每次揀「效果最好」嘅 人 × 格 × 裝備
+  const W=G.units.filter(working);
+  const jw={guard:1.25,scav:1.15,patrol:1,medic:1,repair:.95,cook:.9};
+  for(let guard=0;guard<200;guard++){
+    let best=null,bv=.8;
+    W.forEach(u=>{
+      const cw=eqS(u).w,cap=statB(u,'str')+gearSt(u,'str')+3,base=1+eff(u,u.job)/40;
+      Object.keys(SLOTS).forEach(sl=>{
+        if(u.eq&&u.eq[sl])return;
+        Object.keys(G.inv).forEach(k=>{
+          const it=ITEMS[k];if(!it||it.slot!==sl||!(G.inv[k]>0))return;
+          if(cw+iw(u,it)>cap)return;
+          if(it.set&&SETS[it.set].owner!==u.id&&G.units.some(o=>o.id===SETS[it.set].owner))return;
+          const v=eqScore(u,it,u.job)*(jw[u.job]||1)*base;
+          if(v>bv){bv=v;best={u,sl,k}}
+        });
+      });
+    });
+    if(!best)break;
+    equip(best.u,best.sl,best.k);
+  }
+  return G.units.filter(u=>JSON.stringify(u.eq||{})!==before[u.id]).length;
+}
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
