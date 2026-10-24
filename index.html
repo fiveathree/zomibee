@@ -20,6 +20,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{min-height:100%}
 body{margin:0;background:radial-gradient(90% 55% at 50% -12%,rgba(255,162,58,.16),transparent 70%) fixed,var(--ash);color:var(--bone);font-family:var(--f-body);font-size:14px;line-height:1.55}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ash)}
@@ -279,6 +280,21 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .invi{background:var(--slab);border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
 .plan{grid-auto-rows:minmax(104px,auto)}
 @media (max-width:560px){.tok{width:38px}.tok svg{width:34px;height:47px}}
+/* expansion */
+.subtabs{display:flex;gap:4px;margin-bottom:14px}
+.subtabs button{padding:6px 14px;border-radius:5px;border:1px solid var(--line2);color:var(--dust);font-weight:700}
+.subtabs button[aria-pressed="true"]{background:var(--slab2);color:var(--sodium2);border-color:var(--sodium)}
+.dial.airdrop{display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#4a3b28,#1b1510)}
+.crate{width:46%;aspect-ratio:1.3;background:repeating-linear-gradient(90deg,#7a5c34 0 14%,#6a4e2c 14% 15%);border:4px solid #4a3620;border-radius:4px;display:grid;place-items:center;box-shadow:0 -40px 0 -18px #c9c2b4;position:relative}
+.crate span{font-family:var(--f-type);color:#f2d9a6;letter-spacing:.2em;font-size:13px;background:#3a2a16;padding:2px 8px}
+.gcard{height:100%;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;background:linear-gradient(160deg,var(--c1),var(--c2));color:#fff;min-height:130px}
+.gcard b{font-size:15px}.gcard small{font-size:11px;opacity:.9}.gcard .chip{color:#fff;border-color:rgba(255,255,255,.5)}
+.setn{color:#fff3c4}
+.setline{font-size:12px;background:rgba(242,197,82,.12);border:1px solid rgba(242,197,82,.5);border-radius:5px;padding:5px 8px;color:#f2d38a}
+.invi.off{opacity:.5}
+.syn{display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:13px}
+.syn-m{font-size:11px;color:var(--dust)}
+.pc.g-UR .back{box-shadow:0 0 18px #f2a6e6}.pc.g-SSR .back{box-shadow:0 0 14px #f2c552}
 @media (prefers-reduced-motion:reduce){.pc .in,.needle{transition:none}}
 </style>
 </head>
@@ -480,6 +496,155 @@ const SPERK={
  cook:{n:'盛宴',d:'食物消耗再 -15%，全隊意志額外 +3'},
  medic:{n:'妙手回春',d:'冇藥都照樣醫到傷，每日 15% 機會治好一個感染者'}
 };
+/* ================= 擴展：傳奇角色、陣營、後期章節、副本 ================= */
+const CNUM=['一','二','三','四','五','六','七','八','九','十','十一','十二','十三'];
+Object.assign(TR,{
+  legend:{n:'傳奇',d:'食量 ×2；據點有 3 個或以上傳奇時，佢哋互相唔服，每日意志 -4',fx:{eat:2,legend:1}},
+  traitor:{n:'反骨',d:'意志低過 40 時有機會背叛離隊（有貂蟬喺據點就唔會）',fx:{traitor:1}},
+  restless:{n:'好動',d:'休息時意志唔升反跌（有唐三藏喺據點就冇事）',fx:{restless:1}},
+  yin:{n:'陰氣',d:'全隊每日意志 -2（有宗教陣營或者鍾馗喺據點就冇事）',fx:{yin:1}},
+  frail:{n:'體弱',d:'HP 上限 -20',fx:{frailHp:-20}}
+});
+/* 舊 UR 降為 SSR：UR 留俾傳奇人物 */
+['u_shen','u_mio','u_grace','u_han'].forEach(id=>{CH[id].g='SSR';CH_RAW.find(r=>r[0]===id)[2]='SSR'});
+const NEW_CH=[
+ // ---------- UR 傳奇 ----------
+ ['u_lubu','呂布','UR','東漢','溫侯 · 三國第一猛將',[25,19,15,4,2,1,12],['legend','traitor'],'無雙','保安 ×1.8，夜間防禦 +20',{job:{guard:1.8},def:20},'人中呂布，馬中赤兔。佢由三國嘅虎牢關一覺醒嚟，發現周圍全部都係行屍。佢只問一句：「邊個最強？」','呂'],
+ ['u_wukong','孫悟空','UR','花果山','齊天大聖',[21,25,23,6,3,2,11],['legend','restless'],'火眼金睛','巡邏 ×2、搜括 +30%，屍潮 -15%，幾乎唔會被咬',{job:{patrol:2,scav:1.3},horde:.85,bite:.05},'五行山壓咗五百年，出嚟又係一個要降妖伏魔嘅世界。佢一眼就分得出邊個係人、邊個已經唔係。','悟'],
+ ['u_thor','索爾','UR','阿斯加德','雷神',[25,13,12,8,2,3,18],['legend','glutton'],'雷霆','保安 ×1.6；每晚守夜時 25% 機會引雷劈散屍潮（-35%）',{job:{guard:1.6},thunder:.25},'北歐神話入面嘅雷神，諸神黃昏之後跌落人間。佢唔明點解呢度啲死人唔肯死透。','雷'],
+ ['u_davinci','達文西','UR','意大利','文藝復興全才',[6,8,18,25,16,10,15],['legend','frail'],'萬能天才','維修 ×1.8，零件消耗 -40%，解藥研究 ×1.5',{job:{repair:1.8},partsSave:.6,research:1.5},'佢喺手稿入面畫過飛行器、戰車同解剖圖。末日對佢嚟講，係一張最大嘅畫布。','達'],
+ ['u_bride','鬼新娘','UR','民國鬼話','紅衣厲鬼',[8,18,22,5,6,12,20],['legend','yin'],'陰兵借道','喪屍唔會攻擊佢，搜括巡邏幾乎零風險；每晚屍潮 -10%',{risk:.05,bite:.02,horde:.9,job:{patrol:1.3,scav:1.2}},'出嫁嗰晚死喺花轎入面，紅蓋頭仲未揭。喪屍見到佢都會讓路，因為佢比佢哋死得更耐。','嫁'],
+ ['u_chenmo','陳墨','UR','修仙界','廢柴逆襲',[16,18,16,10,14,8,22],['legend'],'吞噬','晶核強化成本減半；每過 10 日自動突破 +1★；保安 +30%',{coreHalf:1,autoStar:1,job:{guard:1.3}},'宗門公認嘅廢柴，丹田碎咗三次。末日降臨，佢發現喪屍腦入面嘅晶核，竟然可以修補經脈。','墨'],
+ ['u_liu','柳如烟','UR','修仙界','冰山仙子',[8,20,18,8,20,14,16],['legend'],'冰心訣','醫療 ×1.6，全隊每日意志 +4、HP +4',{job:{medic:1.6},teamSan:4,heal:4},'天劍宗最年輕嘅長老，一身白衣從來唔沾血。佢唔多講嘢，但佢喺嘅地方，傷口都好得特別快。','烟'],
+ ['u_merlin','梅林','UR','阿瓦隆','大魔法師',[6,8,20,16,14,8,22],['legend','old'],'預言','夜間防禦 +15%（預知屍潮方向），全隊效率 +5%',{defPct:.15,teamEff:.05},'亞瑟王傳說入面嘅魔法師，喺水晶球入面見過呢個末日。佢一直等緊有人敢面對。','梅'],
+ // ---------- SSR ----------
+ ['s_zhuge','諸葛亮','SSR','蜀漢','臥龍',[6,8,20,18,10,8,20],['pious'],'空城計','防線被破時 50% 機會冇人受傷；巡邏 +30%',{breachSafe:.5,job:{patrol:1.3}},'羽扇綸巾，談笑間檣櫓灰飛煙滅。佢嘅計謀對喪屍都一樣有用。','亮'],
+ ['s_diaochan','貂蟬','SSR','東漢','閉月',[7,16,14,8,8,14,15],['liar'],'連環計','全隊每日意志 +3；有佢喺度呂布唔會背叛',{teamSan:3,tameLubu:1},'四大美人之一。佢知道點樣令最危險嘅男人聽話。','貂'],
+ ['s_huatuo','華佗','SSR','東漢','神醫',[8,8,14,12,22,10,15],['old'],'麻沸散','醫療 ×1.5，截肢必定成功，每日 15% 機會治好感染者',{job:{medic:1.5},cure:.15,surgeon:1},'三國神醫，佢話：「刮骨療毒都試過，截肢算乜。」','佗'],
+ ['s_brynhild','布倫希爾德','SSR','北歐神話','女武神',[18,18,15,8,10,6,16],['tough'],'英靈殿','保安 +40%；同伴傷重將死時 30% 機會被佢救返（HP 留 1）',{job:{guard:1.4},valkyrie:.3},'挑選陣亡英雄嘅女武神。佢今次揀咗唔俾任何人死。','布'],
+ ['s_loki','洛基','SSR','北歐神話','詭計之神',[9,17,18,15,6,8,12],['liar'],'變形','搜括收穫 +40%，每日 +10 電池',{lootAll:1.4,bat:10},'雷神嘅兄弟，亦係佢最大嘅麻煩。佢可以扮成喪屍行入屍群，攞完嘢就走。','洛'],
+ ['s_zhongkui','鍾馗','SSR','東方鬼話','捉鬼天師',[18,10,16,8,8,6,20],['pious'],'斬鬼','保安 +35%；鬼陣營嘅陰氣唔會影響全隊',{job:{guard:1.35},antiYin:1},'門神畫像入面嗰個黑面虬髯嘅天師。佢話：「鬼我捉得多，呢啲唔算鬼。」','馗'],
+ // ---------- SR ----------
+ ['r_bajie','豬八戒','SR','西遊','天蓬元帥',[16,8,10,6,4,18,10],['glutton','sunny'],'高老莊大廚','煮飯 +40%',{job:{cook:1.4}},'取經路上最識食嘅一個，亦都最識煮。佢話末日最慘係冇宵夜。','豬'],
+ ['r_tang','唐三藏','SR','西遊','取經人',[5,6,12,6,12,8,22],['pious'],'緊箍咒','全隊每日意志 +4；有佢喺度孫悟空唔會亂嚟',{teamSan:4,tame:1},'佢由長安行到天竺都冇放棄，末日都一樣。佢每晚為死去嘅人唸經。','僧'],
+ ['r_xiaoqian','聶小倩','SR','東方鬼話','蘭若寺女鬼',[5,16,18,6,6,10,14],['yin'],'夜行','巡邏 +40%，夜間防禦 +5',{job:{patrol:1.4},def:5},'聊齋入面嘅女鬼，蘭若寺被屍群佔咗，佢唯有出嚟搵人幫手。','倩'],
+ ['r_brokk','布洛克','SR','北歐神話','矮人鐵匠',[16,6,10,19,4,8,14],['tough'],'鍛造','維修 +30%；每 5 日打造一件隨機裝備',{job:{repair:1.3},forge:1},'有份打造雷神之鎚嘅矮人鐵匠。佢覺得人類嘅工具全部都整得太差。','矮'],
+ ['r_elin','艾琳','SR','魔幻','精靈射手',[9,18,20,8,8,6,12],[],'精靈之眼','保安唔使彈藥，巡邏 +20%',{noAmmo:1,job:{patrol:1.2,guard:1.1}},'由迷霧森林行出嚟嘅精靈，箭從來唔會射空。','艾'],
+ ['r_linfan','林凡','SR','修仙界','外門弟子',[11,13,12,9,9,9,15],['young'],'苟道','搜括受傷風險 -50%；每升一星全能力 +2',{risk:.5,starPlus:1},'資質平平，最叻係保命。佢深信：活得耐就係贏。','凡'],
+ ['r_su','蘇清寒','SR','修仙界','劍宗師姐',[12,17,15,7,10,8,16],[],'御劍','搜括 +30%，保安 +20%',{job:{scav:1.3,guard:1.2}},'天劍宗大師姐，柳如烟嘅同門。佢嘅劍快到喪屍未倒，佢已經收劍。','寒'],
+ // ---------- R ----------
+ ['c_lam','阿Lam','R','香港','電工',[9,9,11,15,5,6,9],[],'駁電','維修 +15%，每日 +3 電池',{job:{repair:1.15},bat:3},'屋邨電工，識得由街燈駁電返嚟。','林'],
+ ['c_yun','小芸','R','台灣','夜更護士',[7,9,11,8,13,8,10],['owl'],'夜更','醫療 +15%',{job:{medic:1.15}},'高雄醫院夜更護士，連續返咗三十六個鐘。','芸'],
+ ['c_ken','阿Ken','R','香港','貨車司機',[12,9,11,10,4,6,9],[],'搬運','搜括收穫 +15%',{lootAll:1.15},'開咗十年五噸半，識得點樣將一車嘢塞到盡。','K'],
+ ['c_frank','Frank','R','美國','退役老兵',[13,8,12,9,8,6,12],['old'],'老兵','保安 +20%',{job:{guard:1.2}},'打過仗嘅老兵，退休嚟亞洲養老，點知又要打。','F'],
+ ['c_sze','阿詩','R','香港','社工',[6,8,11,7,8,8,15],['sunny'],'輔導','全隊每日意志 +3',{teamSan:3},'做開青年外展，最識同崩潰邊緣嘅人傾偈。','詩'],
+ ['c_wai','阿威','R','香港','廚師學徒',[9,10,10,7,5,13,8],['young'],'新手','煮飯 +15%',{job:{cook:1.15}},'酒樓學徒，執了三年碼終於可以揸鑊，世界就完咗。','威'],
+ ['c_jieun','智恩','R','韓國','偶像練習生',[7,14,11,6,5,7,10],['young','sunny'],'練習生','全隊每日意志 +2，巡邏 +10%',{teamSan:2,job:{patrol:1.1}},'練咗六年舞，跑得快兼識得喺屍群之間轉身。','恩'],
+ ['c_pang','龐師傅','R','香港','跌打師傅',[12,7,10,8,11,6,12],['old'],'跌打','冇藥都醫到傷，醫療 +10%',{herbal:1,job:{medic:1.1}},'油麻地跌打館館主，一樽藥酒醫晒所有扭傷。','龐'],
+ // ---------- C ----------
+ ['n_b','阿B','C','香港','茶餐廳伙記',[8,10,9,6,4,11,8],[],'鴛鴦','煮飯 +10%',{job:{cook:1.1}},'凍檸茶少甜少冰，末日都照沖。','B'],
+ ['n_fong','芳姐','C','香港','清潔姐姐',[8,8,10,7,5,8,11],['iron'],'好眼力','搜括收穫 +10%',{lootAll:1.1},'掃咗廿年街，邊個垃圾桶有好嘢佢最清楚。','芳'],
+ ['n_agent','何生','C','香港','地產經紀',[7,9,10,7,4,6,8],['liar'],'口才','交易同談判更著數',{},'末日之前賣樓，末日之後賣乜都得。','何'],
+ ['n_tom','Tom','C','英國','背包客',[9,11,10,8,6,7,9],['young'],'窮遊','搜括 +10%',{job:{scav:1.1}},'環遊亞洲窮遊到一半，旅程突然變成求生。','T'],
+ ['n_lin','小琳','C','台灣','中學生',[6,11,10,8,5,7,9],['young'],'細心','醫療 +10%',{job:{medic:1.1}},'讀護理科嘅中學生，筆記抄得比老師仲齊。','琳'],
+ ['n_leung','梁老師','C','香港','退休教師',[6,6,10,8,7,8,13],['old'],'教學','全隊每日意志 +1',{teamSan:1},'教咗三十年中文，講故事可以令全屋人唔記得驚。','梁'],
+ ['n_fisher','阿財','C','香港','釣魚佬',[8,8,13,8,4,9,10],[],'釣魚','每日 +2 食物',{food:2},'海旁釣咗二十年魚，末日之後佢係唯一有新鮮食物嘅人。','財'],
+ ['n_hawker','炳叔','C','香港','小販',[9,8,11,8,4,10,9],['liar'],'走鬼','搜括受傷風險 -15%',{risk:.85},'走鬼走咗半世，走喪屍一樣咁熟手。','炳']
+];
+NEW_CH.forEach(r=>{CH_RAW.push(r);const [id,n,g,o,job,s,tr,skn,skd,fx,bio,av]=r;CH[id]={id,n,g,o,job,s,tr,sk:{n:skn,d:skd},fx,bio,av:av||n[0]}});
+RANK.forEach(g=>BY_G[g]=CH_RAW.filter(r=>CH[r[0]].g===g).map(r=>r[0]));
+
+/* 陣營 */
+const FA={港:'港灣街坊',台:'寶島',華:'神州',日:'和風',韓:'韓流',西:'西方',軍:'軍警消防',醫:'醫者仁心',廚:'食神',宗:'宗教',寵:'毛孩',三:'三國',神:'北歐神話',遊:'西遊',鬼:'東方鬼話',仙:'修仙',魔:'魔幻',藝:'文藝復興'};
+const SUPER=['三','神','遊','鬼','仙','魔','宗'];
+const CFA={u_shen:'華軍',u_mio:'日',u_grace:'西醫',u_han:'韓軍',s_ho:'港',s_lin:'台廚',s_olga:'西',s_hawk:'西軍',s_park:'韓醫',s_fei:'港',s_mao:'華宗',s_sofia:'西',
+ r_rin:'日',r_dale:'西軍',r_choi:'韓',r_hung:'港',r_mei:'台醫',r_hannah:'西',r_kenji:'日',r_darnell:'西',r_maria:'西宗',r_lee:'港軍',r_lulu:'華',r_zhou:'台醫軍',
+ c_may:'台',c_cheung:'港',c_wong:'港',c_keung:'港',c_emily:'西醫',c_david:'西',c_mrwong:'港',c_chan:'港廚',c_minho:'韓',c_igor:'西廚',c_ana:'港',c_tang:'港',c_ng:'台',
+ n_tanaka:'日',n_ashley:'西醫',n_dou:'港',n_tofu:'寵',n_kuro:'寵',n_fat:'台',n_brad:'西',n_rosa:'西廚',n_kwok:'港',n_sun:'華醫',
+ u_lubu:'三',u_wukong:'遊',u_thor:'神',u_davinci:'藝西',u_bride:'鬼',u_chenmo:'仙',u_liu:'仙醫',u_merlin:'魔',
+ s_zhuge:'三',s_diaochan:'三',s_huatuo:'三醫',s_brynhild:'神',s_loki:'神',s_zhongkui:'鬼宗',
+ r_bajie:'遊廚',r_tang:'遊宗',r_xiaoqian:'鬼',r_brokk:'神',r_elin:'魔',r_linfan:'仙',r_su:'仙',
+ c_lam:'港',c_yun:'台醫',c_ken:'港',c_frank:'西軍',c_sze:'港',c_wai:'港廚',c_jieun:'韓',c_pang:'港醫',
+ n_b:'港廚',n_fong:'港',n_agent:'港',n_tom:'西',n_lin:'台',n_leung:'港',n_fisher:'港',n_hawker:'港'};
+Object.keys(CH).forEach(id=>{CH[id].fa=[...(CFA[id]||'')]});
+const isMortal=u=>!CH[u.id].fa.some(f=>SUPER.includes(f));
+
+/* 第 8–13 章：大陸末日文 */
+CHAPS.push(
+ {n:8,day:50,t:'末日列車',src:'大陸末日文',p:'一列加裝鐵甲嘅列車「北斗號」沿住環城鐵路不停行駛，車頂架住機槍。車長喺電台話：清走車廂入面嘅屍群，車就係你哋嘅。',goal:'清場「北斗號」列車',ok:g=>(g.clear.train||0)>=100,r:{bat:400,core:2},gear:'SSR',hm:1.66},
+ {n:9,day:57,t:'地洞',src:'大陸末日文',p:'城西地底有個冷戰時期嘅防空洞「深淵避難所」，入面幾百人用地洞種菇養魚，從來唔見天日。佢哋要物資，換佢哋嘅地底技術。',goal:'囤積 100 食物同 100 水',ok:g=>g.res.food>=100&&g.res.water>=100,r:{bat:400,parts:30},gear:'SSR',hm:1.68},
+ {n:10,day:64,t:'監獄風雲',src:'大陸末日文',p:'海邊嘅舊監獄成為全城最大勢力。典獄長死咗，囚犯「刀疤強」自封監獄王，要所有據點歸順。',goal:'擊退監獄幫（或者收服佢哋）',ok:g=>!!g.flags.prisonWon,r:{bat:450,ammo:40},gear:'SSR',hm:1.7},
+ {n:11,day:71,t:'喪屍醫院',src:'大陸末日文',p:'聖瑪利醫院地庫傳出心跳監察器嘅聲音。有人喺度用活人做實驗——「零號病人」已經唔係喪屍，而係另一種嘢。',goal:'清場聖瑪利醫院',ok:g=>(g.clear.hospital||0)>=100,r:{bat:500,med:20,serum:2},gear:'SSR',hm:1.72},
+ {n:12,day:78,t:'屍王地宮',src:'大陸末日文',p:'實驗紀錄指向地鐵最深處嘅舊礦坑。全城喪屍嘅「屍王」就喺地宮入面，佢一日唔死，屍潮一日唔停。',goal:'攻破屍王地宮',ok:g=>(g.clear.dungeon||0)>=100,r:{bat:600,core:5},gear:'UR',hm:1.75},
+ {n:13,day:85,t:'末日堡壘',src:'大陸末日文',p:'屍王死咗，但屍群失控，最後一波屍潮正湧向全城僅存嘅倖存者。起一座真正嘅堡壘，撐過屍潮之夜。',goal:'撐過屍潮之夜',ok:g=>!!g.flags.finalWon,r:{},hm:1.78}
+);
+LOCS.push(
+ {id:'train',n:'北斗號列車',ch:8,dg:.48,loot:{parts:1.4,ammo:1,bat:1}},
+ {id:'bunker',n:'深淵避難所',ch:9,dg:.4,loot:{food:1.6,water:1.6,parts:.6}},
+ {id:'prison',n:'舊監獄',ch:10,dg:.58,loot:{ammo:1.8,food:1,parts:.8}},
+ {id:'hospital',n:'聖瑪利醫院',ch:11,dg:.62,loot:{med:2.4,serum:.08,bat:1}},
+ {id:'dungeon',n:'屍王地宮',ch:12,dg:.78,loot:{core:1,bat:2,parts:1}},
+ {id:'fortress',n:'堡壘工地',ch:13,dg:.42,loot:{parts:2.2,food:.6}}
+);
+LSCALE.core=.35;
+Object.assign(BASES,{
+ train:{n:'北斗號列車',beds:10,wall:80,horde:.7,d:'會郁嘅據點，屍群好難追上。',perk:{bat:10,parts:2},pd:'沿途收集：每日電池 +10、零件 +2；屍潮 -30%',areas:A4,
+  z:{scav:['沿線月台','搜括'],guard:['車頂機槍','保安'],patrol:['車尾瞭望','巡邏'],rest:['臥鋪車廂','休息','上下鋪'],cook:['餐卡','煮飯','燃氣爐'],repair:['機車頭','維修','柴油引擎'],medic:['醫療車廂','醫療','吊床']}},
+ bunker:{n:'深淵避難所',beds:16,wall:110,horde:.7,dark:1,d:'地底防空洞，屍群難搵，但長期唔見天日。',perk:{food:3,water:3},pd:'菇場同地下水：每日食物 +3、水 +3；屍潮 -30%；全隊每日意志 -2',areas:A4,
+  z:{scav:['通風井出口','搜括'],guard:['防爆門','保安'],patrol:['舊隧道','巡邏'],rest:['宿舍區','休息','碌架床 × 20'],cook:['菇場廚房','煮飯','大蒸籠'],repair:['發電機房','維修','柴油發電機'],medic:['防疫室','醫療','消毒池']}},
+ prison:{n:'舊監獄',beds:18,wall:120,def:15,d:'高牆、鐵絲網、哨塔，天生嘅堡壘。',perk:{ammo:2,food:1},pd:'槍房同農場：每日彈藥 +2、食物 +1；夜間防禦 +15',areas:A3,
+  z:{scav:['監獄外圍','搜括'],guard:['哨塔','保安'],patrol:['放風場','巡邏'],rest:['囚倉','休息','鐵床'],cook:['監獄飯堂','煮飯','大鑊'],repair:['工場','維修','車床 · 燒焊'],medic:['醫療室','醫療','手術床']}},
+ hospital:{n:'聖瑪利醫院',beds:12,wall:70,medic:1.5,d:'設備最齊嘅醫院，醫療效率極高。',perk:{med:3},pd:'藥房：每日藥品 +3；醫療效率 +50%',areas:A3,
+  z:{scav:['醫院停車場','搜括'],guard:['急症室大門','保安'],patrol:['天橋走廊','巡邏'],rest:['病房','休息','病床'],cook:['員工飯堂','煮飯','蒸櫃'],repair:['機電房','維修','後備發電機'],medic:['手術室','醫療','無影燈']}},
+ fortress:{n:'末日堡壘',beds:24,wall:150,def:25,d:'你哋親手起嘅堡壘，末日入面最後一道牆。',perk:{food:4,water:4,parts:2},pd:'自給自足：每日食物 +4、水 +4、零件 +2；夜間防禦 +25',areas:A4,
+  z:{scav:['堡壘外圍','搜括'],guard:['城牆炮台','保安'],patrol:['瞭望塔','巡邏'],rest:['宿舍樓','休息','新床位'],cook:['大食堂','煮飯','中央廚房'],repair:['兵工廠','維修','鍛造爐'],medic:['戰地醫院','醫療','手術室']}}
+});
+
+/* 副本：抽到特定陣營角色就解鎖 */
+const DUNS=[
+ {id:'d_sanguo',n:'三國本 · 虎牢關',key:'三',bonus:['三','軍'],dg:.5,loot:{bat:1.6,ammo:1,food:.8},mortal:{risk:1.3,san:5},items:['spear','shield','pistol'],
+  st:['虎牢關嘅城樓上面插住殘破嘅「呂」字旗。城門外係十八路諸侯嘅屍骸——佢哋都已經站起身。','關內有一間被封咗嘅軍械庫，牆上刻住「誰敢與我一戰」。','你哋喺關頂搵到一副仲有溫度嘅鎧甲。遠處，千軍萬馬嘅屍群跪低咗。']},
+ {id:'d_norse',n:'神話本 · 諸神黃昏',key:'神',bonus:['神','西'],dg:.55,loot:{bat:1.6,parts:1.2,core:.5},mortal:{risk:1.4,san:6},items:['axe','shield','firesuit'],
+  st:['雪原上有道彩虹橋嘅殘骸。冰巨人嘅屍體被病毒感染，喺雪入面慢慢爬緊。','矮人嘅熔爐仲有火。牆上嘅盧恩文字寫住：「世界樹嘅根已經腐爛。」','你哋喺英靈殿嘅廢墟搵到神器碎片。烏鴉喺頭頂盤旋，好似喺度記錄。']},
+ {id:'d_xiyou',n:'西遊本 · 火焰山',key:'遊',bonus:['遊','宗'],dg:.5,loot:{food:1.4,water:1.4,bat:1.2},mortal:{risk:1.3,san:5},items:['spear','wok','shoes'],
+  st:['火焰山燒咗八百里，喪屍一行入去就變成焦炭，但更多嘅仲喺度湧過嚟。','牛魔王嘅洞府入面堆滿妖怪嘅屍骸，有啲仲識得講人話。','芭蕉扇一撥，成座山嘅火都熄咗。山腳出現一條路。']},
+ {id:'d_ghost',n:'鬼故事本 · 蘭若寺',key:'鬼',bonus:['宗','鬼','仙'],dg:.55,loot:{bat:1.4,med:1,core:.4},mortal:{risk:1.6,san:10},items:['armguard','medkit','walkie'],
+  st:['荒廢嘅蘭若寺，簷角掛住褪色嘅白燈籠。凡人行入去，耳邊會聽到有人叫自己個名。','樹妖姥姥嘅根爬滿成座寺，佢食咗嘅唔止人，仲有喪屍。','天光嗰刻，寺內嘅鐘自己響咗三下。所有冤魂同屍體一齊倒低。']},
+ {id:'d_xian',n:'修仙本 · 萬魔窟',key:'仙',bonus:['仙'],dg:.55,loot:{core:.8,bat:1.4,med:.8},mortal:{risk:1.4,san:6},items:['katana','medkit','binoc'],
+  st:['萬魔窟入口有塊石碑：「凡人止步」。入面嘅喪屍吸收咗靈氣，識得御物。','窟中有座破陣，陣眼係一粒拳頭咁大嘅晶核，四周跪滿屍體。','陣法破咗，靈氣湧出。晶核嘅光照亮成個洞窟。']},
+ {id:'d_magic',n:'魔幻本 · 阿瓦隆迷霧',key:'魔',bonus:['魔','宗'],dg:.5,loot:{bat:1.4,med:1,food:.8},mortal:{risk:1.3,san:6},items:['binoc','leather','medkit'],
+  st:['迷霧之中有個湖，湖面浮住一把劍嘅倒影。霧入面嘅喪屍行起嚟冇聲。','精靈嘅古樹被屍群包圍，樹上掛滿求救嘅絲帶。','湖中仙女伸出手，霧散咗。你哋喺湖邊搵到古老嘅魔法道具。']},
+ {id:'d_renaiss',n:'文藝復興本 · 米蘭密室',key:'藝',bonus:['藝','西'],dg:.38,loot:{parts:2,bat:1.2},mortal:{risk:1,san:2},items:['toolbox','crowbar','binoc'],
+  st:['米蘭一間修道院嘅地下，牆上畫住《最後的晚餐》嘅草稿，旁邊係一部未完成嘅機器。','密室入面全部都係機關，齒輪轉動嘅聲音引嚟咗屍群。','你哋喺最後一個房搵到手稿：飛行器、裝甲車同一張解剖圖，旁邊寫住「人體嘅結構可以修補」。']}
+];
+const DUNBYID={};DUNS.forEach(d=>{d.ch=0;d.dun=1;DUNBYID[d.id]=d});
+function allLocs(g){return LOCS.filter(l=>l.ch<=g.ch&&l.id!==g.base).concat(DUNS.filter(d=>g.dun&&g.dun[d.id]))}
+function onRecruit(g,id){
+  if(!g.dun)g.dun={};
+  CH[id].fa.forEach(f=>{const d=DUNS.find(x=>x.key===f);if(d&&!g.dun[d.id]){g.dun[d.id]=1;g.queue.push({id:'dun_open',c:{d:d.id,by:id}})}});
+}
+function dunMod(u,loc){
+  if(!loc.dun)return{p:1,r:1,san:0};
+  if(CH[u.id].fa.some(f=>loc.bonus.includes(f)))return{p:1.4,r:.5,san:0};
+  if(isMortal(u))return{p:.85,r:loc.mortal.risk,san:loc.mortal.san};
+  return{p:1,r:1,san:0};
+}
+/* 陣營加成 */
+function synergy(u,j){
+  if(!G||!u.act)return 0;
+  const A=G.units.filter(x=>x.act&&!x.iso);let b=0,jb=0;
+  CH[u.id].fa.forEach(f=>{
+    const mem=A.filter(x=>CH[x.id].fa.includes(f));
+    if(mem.length>=2)b+=Math.min(.14,.05+(mem.length-2)*.03);
+    if(j&&j!=='rest'){const same=mem.filter(x=>x!==u&&x.job===j).length;jb+=Math.min(.24,same*.08)}
+  });
+  return Math.min(.4,Math.min(.2,b)+jb);
+}
+function synList(){
+  const A=G.units.filter(x=>x.act&&!x.iso),out=[];
+  Object.keys(FA).forEach(f=>{const m=A.filter(x=>CH[x.id].fa.includes(f));if(m.length>=2)out.push({f,n:m.length,b:Math.round(Math.min(.14,.05+(m.length-2)*.03)*100),m})});
+  return out.sort((a,b)=>b.n-a.n);
+}
 /* ================= 引擎 ================= */
 const R=Math.random, ri=(a,b)=>a+Math.floor(R()*(b-a+1)), rf=(a,b)=>a+R()*(b-a), cl=(v,a,b)=>Math.max(a,Math.min(b,v)), pick=a=>a[Math.floor(R()*a.length)];
 let G=null;
@@ -498,8 +663,9 @@ function fxOf(u){
   return FXC[u.id]=f;
 }
 const nm=u=>CH[u.id].n;
-const stat=(u,k)=>{const b=CH[u.id].s[ST.indexOf(k)];return b?Math.min(25,b+u.star):0};
-const maxHp=u=>60+stat(u,'str')*2+u.star*4;
+const statB=(u,k)=>{const b=CH[u.id].s[ST.indexOf(k)];return b?Math.min(25,b+u.star*(fxOf(u).starPlus?2:1)):0};
+const stat=(u,k)=>{const b=statB(u,k);return b?Math.min(30,b+gearSt(u,k)):0};
+const maxHp=u=>60+stat(u,'str')*2+u.star*4+(fxOf(u).frailHp||0);
 const BS=g=>BASES[g.base]||BASES.store;
 const bedCap=g=>BS(g).beds+g.fac.beds*2;
 const act=g=>g.units.filter(u=>u.act);
@@ -526,7 +692,7 @@ function condMult(u){
 }
 function eff(u,j){
   if(!canWork(u,j)||j==='rest')return 0;
-  const f=fxOf(u);let e=apt(u,j)*condMult(u)*(f.job[j]||1)*(1+(eqS(u).job[j]||0));
+  const f=fxOf(u);let e=apt(u,j)*condMult(u)*(f.job[j]||1)*(1+(eqS(u).job[j]||0))*(1+synergy(u,j)+teamAdd('teamEff'));
   if(f.berserk&&j==='guard'&&u.hp<maxHp(u)/2)e*=1.5;
   return e;
 }
@@ -544,19 +710,25 @@ function teamFx(g,k,mode){ // mode: 'sum' | 'mul' | 'max' | 'any'
 }
 function hordeBase(g){
   const d=g.day;
-  return (5+d*1.3+Math.max(0,d-25)*.55)*CHAPS.filter(c=>c.day<=d).pop().hm*(BS(g).horde||1)*teamFx(g,'horde','mul')*g.warn;
+  return (5+d*1.3+Math.max(0,d-25)*.55-Math.max(0,d-45)*.95)*CHAPS.filter(c=>c.day<=d).pop().hm*(BS(g).horde||1)*teamMul('horde')*g.warn;
 }
-function raidTonight(g){return !!g.flags.raidDay&&g.day===g.flags.raidDay&&!g.flags.allied&&!g.flags.paid}
+function raidTonight(g){
+  const f=g.flags;
+  if(f.raidDay&&g.day===f.raidDay&&!f.allied&&!f.paid)return{n:'獵人幫',add:38+(f.angry?10:0),win:'raidWon',spoil:{ammo:15,med:4,food:10},txt:'獵人幫趁住屍潮夜襲，車頭燈照住成個據點！'};
+  if(f.prisonDay&&g.day===f.prisonDay&&!f.prisonWon)return{n:'監獄幫',add:60+(f.prisonAngry?15:0),win:'prisonWon',spoil:{ammo:30,food:20,parts:15},txt:'監獄幫開住改裝囚車撞埋嚟，車頭焊住鐵板！',again:6};
+  if(f.finalDay&&g.day===f.finalDay&&!f.finalWon)return{n:'屍潮之夜',add:Math.round(hordeBase(g)*1.2),win:'finalWon',spoil:{core:5,bat:500},txt:'地平線上全部都係喪屍。屍潮之夜嚟咗！',again:5,final:1};
+  return null;
+}
 function forecast(g){
   const by=groups(g);
   const P=by.patrol.reduce((s,u)=>s+eff(u,'patrol'),0);
   const sP=by.patrol.filter(u=>isS(u,'patrol')).length;
   const red=Math.min(.4+(sP?.15:0),P*.012+sP*.1);
-  let horde=hordeBase(g)*(1-red);
-  if(raidTonight(g))horde+=38+(g.flags.angry?10:0);
+  let horde=hordeBase(g)*(1-red)*(by.patrol.length?1:1.1);
+  {const rd=raidTonight(g);if(rd)horde+=rd.add}
   let ammo=g.res.ammo,gp=0;
-  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
-  const def=g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+act(g).filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0);
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo||setFx(u,'noAmmo'))e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
+  const def=(g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+act(g).filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0))*(1+teamAdd('defPct'));
   const A=act(g);
   const eat=A.reduce((s,u)=>s+fxOf(u).eat,0);
   const K=by.cook.reduce((s,u)=>s+eff(u,'cook'),0)*(1+.25*g.fac.kitchen)*by.cook.reduce((s,u)=>Math.max(s,fxOf(u).feed),1);
@@ -577,10 +749,11 @@ function addUnit(g,id){
   delete g.gone[id];
   const u=newUnit(id);u.joined=g.day;u.act=act(g).length<bedCap(g);g.units.push(u);
   u.job=bestJob(u);
+  onRecruit(g,id);
   return{type:'new',u};
 }
 function bestJob(u){let b='rest',v=0;JK.forEach(j=>{if(j==='rest')return;const a=apt(u,j)*(fxOf(u).job[j]||1);if(a>v){v=a;b=j}});return b}
-function hurt(u,d){d=Math.round(d*fxOf(u).tough);u.hp-=d;u.inj=1;if(u.hp<maxHp(u)*.25&&u.hp>0)u.crit=1;return d}
+function hurt(u,d){if(setFx(u,'noHurt'))return 0;d=Math.round(d*fxOf(u).tough);u.hp-=d;u.inj=1;if(u.hp<maxHp(u)*.25&&u.hp>0)u.crit=1;return d}
 function infect(u,src){
   if(fxOf(u).immune)return `${nm(u)} 被咬咗一啖……但傷口好快就埋口，佢對病毒免疫。`;
   if(u.inf>0)return '';
@@ -611,9 +784,9 @@ function endDay(){
   H('白天');
   // 搜括
   if(by.scav.length){
-    const loc=LOCS.find(l=>l.id===g.loc&&l.ch<=g.ch&&l.id!==g.base)||LOCS.find(l=>l.id!==g.base);
+    const AL=allLocs(g);const loc=AL.find(l=>l.id===g.loc)||AL[0];
     const sc=by.scav;
-    let pw=sc.reduce((s,u)=>s+eff(u,'scav')*fxOf(u).lootAll*(1+eqS(u).loot),0);
+    let pw=sc.reduce((s,u)=>s+eff(u,'scav')*fxOf(u).lootAll*(1+eqS(u).loot)*dunMod(u,loc).p,0);
     if(sc.length===1&&fxOf(sc[0]).loner)pw*=1.4;
     const sS=sc.some(u=>isS(u,'scav'));if(sS)pw*=1.3;
     const dep=g.dep[loc.id]??1;const got={};
@@ -625,19 +798,22 @@ function endDay(){
     }
     if(sS&&!got.serum&&R()<.05)got.serum=1;
     const txt=addRes(got);
-    const li=LOCITEM[loc.id]||[];let found=null;if(li.length&&R()<(sS?.45:.32)){found=pick(li);addItem(found)}
+    const li=loc.items||LOCITEM[loc.id]||[];let found=null;if(li.length&&R()<(sS?.45:.32)+(loc.dun?.15:0)){found=pick(li);addItem(found)}
     L(`${sc.map(nm).join('、')} 去咗${loc.n}搜括：${txt||'乜都搵唔到'}${dep<.6?'（呢度已經畀人搜得七七八八）':''}`,txt?'g':'');
     g.dep[loc.id]=Math.max(.35,dep*.85);
     if(found)L(`仲搵到裝備：${ITEMS[found].n}（${SLOTS[ITEMS[found].slot]}）`,'g');
     const tf=Math.max(.7,1-.07*(sc.length-1));
     sc.forEach(u=>{
-      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf*(isS(u,'scav')?.5:1)*eqS(u).risk;
+      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf*(isS(u,'scav')?.5:1)*eqS(u).risk*dunMod(u,loc).r;
+      const dm=dunMod(u,loc);if(dm.san){sanD(u,-dm.san);if(R()<.4)L(`${nm(u)} 喺${loc.n}入面心神不寧（意志 -${dm.san}）`,'y')}
       if(R()<base){const d=hurt(u,ri(12,28));L(`${nm(u)} 喺${loc.n}受傷（-${d} HP）${u.crit?'，傷勢嚴重！':''}`,'b')}
       if(R()<base*.3*fxOf(u).bite*eqS(u).bite){const t=infect(u,loc.n);if(t)L(t,fxOf(u).immune?'':'y')}
     });
-    const pc=g.clear[loc.id]||0;g.clear[loc.id]=Math.min(100,pc+pw*.8);
+    const pc=g.clear[loc.id]||0;g.clear[loc.id]=Math.min(100,pc+pw*(loc.dun?.45:loc.id==='dungeon'?.35:.8));
+    if(loc.dun){[34,67,100].forEach((t,i)=>{if(pc<t&&g.clear[loc.id]>=t)g.queue.push({id:'dun_stage',c:{d:loc.id,s:i}})});if(g.clear[loc.id]<100)L(`${loc.n}探索進度 ${Math.round(g.clear[loc.id])}%`)}
+    if(loc.id==='dungeon'&&pc<100&&g.clear.dungeon>=100)g.queue.push({id:'s_kingdead'});
     if(pc<100&&g.clear[loc.id]>=100){addLog(`${loc.n}已經清場。`);if(BASES[loc.id])g.queue.push({id:'cleared',c:{loc:loc.id}})}
-    else if(BASES[loc.id])L(`${loc.n}清場進度 ${Math.round(g.clear[loc.id])}%`);
+    else if(BASES[loc.id]||loc.id==='dungeon')L(`${loc.n}清場進度 ${Math.round(g.clear[loc.id])}%`);
     if(loc.id==='museum'&&!g.flags.codex&&!g.flags.codexQ){g.flags.codexQ=1;g.queue.push({id:'codex'})}
     if(loc.id==='lab'&&!g.flags.labSeen){g.flags.labSeen=1;g.queue.push({id:'labfind'})}
   }
@@ -664,7 +840,7 @@ function endDay(){
         L(`${by.repair.map(nm).join('、')} 修補圍牆 +${add}（用咗 ${cost} 零件）${add===0?'——冇零件，乜都做唔到':''}`,add?'g':'b');
       }
     }else{
-      const lv=g.fac[pj],need=FAC[pj].work(lv);
+      const lv=g.fac[pj],need=Math.round(FAC[pj].work(lv)*(teamAdd('workHalf')?.5:1));
       g.prog[pj]=Math.min(need,(g.prog[pj]||0)+W);
       if(g.prog[pj]>=need){
         const cost=Math.round(FAC[pj].cost(lv)*ps);
@@ -704,11 +880,12 @@ function endDay(){
   const pas={water:g.fac.rain*4,food:g.fac.garden*3+teamFx(g,'food','sum'),bat:g.fac.radio*10+teamFx(g,'bat','sum')};
   const bp=BS(g).perk||{};for(const k in bp)pas[k]=(pas[k]||0)+bp[k];
   const pt=addRes(pas);if(pt)L(`${BS(g).n}、設施同專長每日產出：${pt}`);
-  const th=teamFx(g,'heal','sum');if(th)A.forEach(u=>u.hp=Math.min(maxHp(u),u.hp+th));
+  const th=teamFx(g,'heal','sum')+teamAdd('teamHeal');if(th)A.forEach(u=>u.hp=Math.min(maxHp(u),u.hp+th));
   // 食飯
   H('晚飯');
   const need=fc.food,wneed=fc.water;
-  if(!by.cook.length){L('冇人煮飯，大家乾啃罐頭，意志 -3');allSan(-3)}
+  if(!by.repair.length&&g.fort>0){g.fort=Math.max(0,g.fort-4);L('冇人維修，圍牆自然損耗 -4','b')}
+  if(!by.cook.length){L('冇人煮飯，大家乾啃罐頭，意志 -5','b');allSan(-5)}
   else{L(`${by.cook.map(nm).join('、')} 煮咗晚飯（慳咗 ${Math.round(35*fc.ratio)}% 食物）${fc.ratio>=.6?'，大家食得開心，意志 +3':''}`,'g');if(fc.ratio>=.6)allSan(3);if(fc.sC){allSan(3);L('【盛宴】今晚嘅飯餸好似太平年代咁，意志再 +3','g')}}
   A.forEach(u=>u.hungry=0);
   if(g.res.food>=need)g.res.food-=need;
@@ -719,46 +896,53 @@ function endDay(){
   // 夜晚
   H('夜晚');
   const raid=raidTonight(g);
-  let horde=Math.round(hordeBase(g)*(1-fc.red)*rf(.85,1.2));
-  if(raid)horde+=38+(g.flags.angry?10:0);
+  let horde=Math.round(hordeBase(g)*(1-fc.red)*rf(.85,1.2)*(by.patrol.length?1:1.1));
+  if(!by.patrol.length)L('冇人巡邏，屍群越聚越多（+10%）','b');
+  if(raid)horde+=raid.add;
+  {const thc=by.guard.reduce((s,u)=>Math.max(s,(fxOf(u).thunder||0)+(setFx(u,'thunder')||0)),0);if(thc&&R()<thc){horde=Math.round(horde*.65);L('⚡ 雷霆劈落屍群，燒焦咗一大片！（屍潮 -35%）','g')}}
+  {const gw=teamAdd('ghostwed');if(gw&&R()<gw){horde=Math.round(horde*.65);L('紅蓋頭下傳出笑聲，屍群開始自相殘殺（屍潮 -35%）','g')}}
   let ammo=g.res.ammo,gp=0;
-  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo||setFx(u,'noAmmo'))e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
   const used=g.res.ammo-ammo;g.res.ammo=ammo;
-  const def=Math.round(g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0));
+  const def=Math.round((g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0))*(1+teamAdd('defPct')));
   const night={horde,def,raid,used};
   if(g.ch>=5)L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
-  if(raid)L('獵人幫趁住屍潮夜襲，車頭燈照住成個據點！','b');
+  if(raid)L(raid.txt,'b');
   if(!by.guard.length)L('今晚冇人守夜……','b');
   if(def>=horde){
     const dmg=Math.round(horde*rf(.05,.15));g.fort=Math.max(0,g.fort-dmg);g.kills+=horde;
     const bat=10+Math.floor(g.day*.8);const extra={bat};
-    if(g.ch>=5){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0);if(c)extra.core=c}
+    if(g.ch>=5){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0)+(teamAdd('coreNight')?1:0);if(c)extra.core=c}
     L(`守住咗！擊退 ${horde} 隻（${used?`用咗 ${used} 發彈藥，`:''}圍牆 -${dmg}）。天光後喺屍堆搵到 ${addRes(extra)}`,'g');
     night.ok=true;allSan(1);
-    if(raid){g.flags.raidWon=1;addRes({ammo:15,med:4,food:10});L('獵人幫丟低車同物資逃走：彈藥 +15、藥品 +4、食物 +10','g');addLog('擊退咗獵人幫嘅夜襲。')}
+    if(raid){g.flags[raid.win]=1;L(`擊退${raid.n}！戰利品：${addRes(raid.spoil)}`,'g');addLog(`擊退咗${raid.n}。`)}
     by.guard.forEach(u=>{if(R()<.08*horde/Math.max(1,def)){const d=hurt(u,ri(5,12));L(`${nm(u)} 守夜時輕傷（-${d} HP）`,'b')}});
   }else{
     const diff=horde-def;night.ok=false;
     const dmg=Math.round(diff*.8+horde*.08);g.fort=Math.max(0,g.fort-dmg);g.kills+=def;
     L(`防線被衝破！屍潮 ${horde} 對防禦 ${def}，圍牆 -${dmg}`,'b');
     const sG=by.guard.filter(u=>isS(u,'guard'));
-    const n=Math.max(0,Math.min(A.length,Math.ceil(diff/15)+(g.fort===0?1:0)-sG.length));
+    let n=Math.max(0,Math.min(A.length,Math.ceil(diff/15)+(g.fort===0?1:0)-sG.length));
+    {const bs=teamMaxFx('breachSafe');if(bs&&R()<bs){n=0;L('【空城計】城門大開，屍群竟然猶豫咗，冇人受傷','g')}}
     if(sG.length)L(`${sG.map(nm).join('、')}【一夫當關】頂住咗缺口`,'g');
     const pool=[...A];const vs=[];
     for(let i=0;i<n&&pool.length;i++){const w=pool.map(u=>u.job==='guard'?2:1);let r=R()*w.reduce((a,b)=>a+b,0),k=0;while(r>w[k]){r-=w[k];k++}vs.push(pool.splice(k,1)[0])}
     vs.forEach(u=>{const d=hurt(u,Math.min(45,ri(10,20)+diff*.5));L(`${nm(u)} 喺混戰中受傷（-${d} HP）`,'b');if(!isS(u,'guard')&&R()<(.15+diff/250)*fxOf(u).bite*eqS(u).bite){const t=infect(u,'夜襲');if(t)L(t,'y')}});
-    const lost={food:-ri(0,Math.ceil(diff*.2))};if(raid){lost.ammo=-Math.round(g.res.ammo*.3);lost.med=-Math.round(g.res.med*.3);lost.food-=Math.round(g.res.food*.25)}
+    const lost={food:-ri(0,Math.ceil(diff*.2))};if(raid&&!raid.final){lost.ammo=-Math.round(g.res.ammo*.3);lost.med=-Math.round(g.res.med*.3);lost.food-=Math.round(g.res.food*.25)}
     const lt=addRes(lost);if(lt)L(`損失：${lt}`,'b');
     allSan(-6);
-    if(raid){g.flags.raidLost=1;addLog('獵人幫夜襲得手，搶走咗大批物資。')}
+    if(raid){if(raid.again){const k=raid.final?'finalDay':'prisonDay';g.flags[k]=g.day+raid.again;addLog(`${raid.n}得手……佢哋 ${raid.again} 日後會再嚟。`)}else{g.flags.raidLost=1;addLog(`${raid.n}夜襲得手，搶走咗大批物資。`)}}
   }
   // 狀態
   H('狀態');
   const calm=teamFx(g,'calm','any');
+  if(teamFx(g,'yin','any')&&!teamFx(g,'antiYin','any')&&!A.some(u=>CH[u.id].fa.includes('宗'))){allSan(-2);L('陰氣好重，大家夜晚都瞓得唔安樂（意志 -2）','y')}
+  {const lg=A.filter(u=>fxOf(u).legend);if(lg.length>=3){lg.forEach(u=>sanD(u,-4));L(`一山不能藏${CNUM[lg.length-1]}虎：${lg.map(nm).join('、')} 互相唔服（意志 -4）`,'y')}}
+  if(BS(g).dark){allSan(-2);L('地底唔見天日（意志 -2）','y')}
   const teamSan=teamFx(g,'teamSan','sum');
   [...A].forEach(u=>{
     const f=fxOf(u),j=u.worked;
-    if(j==='rest'){u.sta=cl(u.sta+40*f.staRec,0,100);sanD(u,10);u.hp=Math.min(maxHp(u),u.hp+6);if(u.inj&&R()<.2)u.inj=0}
+    if(j==='rest'){u.sta=cl(u.sta+40*f.staRec,0,100);sanD(u,f.restless&&!teamFx(g,'tame','any')?-5:10);u.hp=Math.min(maxHp(u),u.hp+6);if(u.inj&&R()<.2)u.inj=0}
     else{u.sta=cl(u.sta-JOBS[j].sta-eqS(u).over*1.2,0,100);sanD(u,-JOBS[j].san)}
     if(j!=='guard'){u.sta=cl(u.sta+15*f.staRec,0,100);u.hp=Math.min(maxHp(u),u.hp+2)}
     sanD(u,-(2+g.ch*.3));sanD(u,teamSan);
@@ -781,27 +965,33 @@ function endDay(){
     }
   });
   // 死亡
+  [...act(g)].forEach(u=>{if(u.hp<=0&&!u.inf){const vk=teamMaxFx('valkyrie');const sv=act(g).find(x=>x!==u&&fxOf(x).valkyrie);if(sv&&R()<vk){u.hp=1;u.crit=1;L(`${nm(sv)}【英靈殿】將 ${nm(u)} 由死亡邊緣拉返嚟`,'g')}}});
   [...act(g)].forEach(u=>{if(u.hp<=0){killUnit(u,u.inf?'傷重不治，佢喺屍變之前斷咗氣。':'傷重不治。');L(`${nm(u)} 傷重不治……`,'b')}});
   // 崩潰
   act(g).forEach(u=>{if(u.san<=0&&!u.bd){u.bd=1;g.queue.push({id:'breakdown',c:{u:u.id}})}});
   if(rep[rep.length-1].h)L('大家都撐住。','g');
   // 新一日
   g.day++;g.warn=1;
-  LOCS.forEach(l=>{if(g.dep[l.id]!==undefined)g.dep[l.id]=Math.min(1,g.dep[l.id]+.04)});
+  LOCS.concat(DUNS).forEach(l=>{if(g.dep[l.id]!==undefined)g.dep[l.id]=Math.min(1,g.dep[l.id]+.04)});
   if(!act(g).length){const res=g.units.filter(u=>!u.act).slice(0,bedCap(g));res.forEach(u=>u.act=true);if(res.length)addLog(`據點冇人，後備名單上嘅 ${res.map(nm).join('、')} 收到訊號趕嚟。`)}
   if(!g.units.length){g.over='dead';addLog('最後一個人都倒下咗。');save();return{rep,night}}
   checkObj();
   let sd=false;
+  act(g).forEach(u=>{if(fxOf(u).autoStar&&g.day%10===0&&u.star<5){u.star++;addLog(`${nm(u)} 吸收晶核，突破到 ${u.star} 星。`)}});
+  if(act(g).some(u=>fxOf(u).forge)&&g.day%5===0){const it=rollItem(pick(['R','SR','SR','SSR']));addItem(it);addLog(`布洛克打造咗一件${ITEMS[it].n}（${ITEMS[it].r}）。`)}
+  if(g.flags.cured&&g.day%3===0)addRes({serum:1});
+  {const tr=act(g).find(u=>fxOf(u).traitor&&u.san<40&&!teamFx(g,'tameLubu','any'));if(tr&&R()<.12)g.queue.push({id:'betray',c:{u:tr.id}})}
+  {const cd=teamAdd('cureDaily');if(cd){const inf=act(g).find(u=>u.inf>0);if(inf){inf.inf=0;inf.iso=0;addLog(`冰心訣化解咗 ${nm(inf)} 嘅屍毒。`)}}}
   const since=g.day-(g.chDay[g.ch]||1);
-  if(g.ch<7&&((g.obj[g.ch]&&since>=MINCH)||since>=MAXCH||(g.ch===3&&g.flags.schoolGone&&since>=MINCH))){
+  if(g.ch<CHAPS.length&&((g.obj[g.ch]&&since>=MINCH)||since>=MAXCH||(g.ch===3&&g.flags.schoolGone&&since>=MINCH))){
     if(!g.obj[g.ch])addLog(`時間唔等人，「${CHAPS[g.ch-1].goal}」未完成，劇情繼續推進。`);
-    g.ch++;g.chDay[g.ch]=g.day;addLog(`第${'一二三四五六七'[g.ch-1]}章「${CHAPS[g.ch-1].t}」開始。`);
+    g.ch++;g.chDay[g.ch]=g.day;addLog(`第${CNUM[g.ch-1]}章「${CHAPS[g.ch-1].t}」開始。`);
     g.queue.push({id:CHEV[g.ch]});sd=true;
   }
   BEATS.forEach(b=>{if(g.ch===b.ch&&g.day-(g.chDay[b.ch]||1)===b.off){g.queue.push({id:b.id});sd=true}});
-  if(raidTonight(g)){g.queue.push({id:'s_raidwarn'});sd=true}
-  if(g.research>=100&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_cure'})}
-  else if(g.day>ENDDAY&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_fort'})}
+  {const rd=raidTonight(g);if(rd){g.queue.push({id:'s_raidwarn',c:{n:rd.n}});sd=true}}
+  if(g.research>=100&&!g.flags.cured){g.flags.cured=1;g.queue.push({id:'s_cured'})}
+  if(g.obj[CHAPS.length]&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_fortress'})}
   else if(R()<(sd?.3:.6))randomEvent();
   addLog(`第 ${g.day-1} 晚：屍潮 ${horde}，防禦 ${def}，${night.ok?'守住':'失守'}。`);
   // 自動清走唔可以再做嘅工作
@@ -811,7 +1001,7 @@ function endDay(){
 }
 const MINCH=4,MAXCH=12;
 function checkObj(){
-  CHAPS.forEach(c=>{if(c.n<=G.ch&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;const t=addRes(c.r);if(t){addLog(`完成目標「${c.goal}」：${t}`);toast(`目標完成：${c.goal}　${t}`)}}});
+  CHAPS.forEach(c=>{if(c.n<=G.ch&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;let t=addRes(c.r);if(c.gear){const it=rollItem(c.gear);addItem(it);t+=(t?'、':'')+`${c.gear} 裝備「${ITEMS[it].n}」`}if(t){addLog(`完成目標「${c.goal}」：${t}`);toast(`目標完成：${c.goal}　${t}`)}}});
 }
 function autoAssign(){
   const A=act(G).filter(u=>!u.crit&&!u.iso);act(G).forEach(u=>u.job='rest');
@@ -1102,9 +1292,94 @@ function randomEvent(){
   if(!pool.length)return;
   let r=R()*pool.reduce((s,p)=>s+p.w,0);for(const p of pool){r-=p.w;if(r<=0){G.queue.push({id:p.id,c:p.c});return}}
 }
+/* ================= 擴展事件 ================= */
+Object.assign(CHEV,{8:'s_train8',9:'s_bunker',10:'s_prison',11:'s_hospital',12:'s_dungeon',13:'s_final'});
+const gearGift=r=>{const it=rollItem(r);addItem(it);return `${r} 裝備「${ITEMS[it].n}」`};
+function dunReward(d){
+  const sets=Object.keys(SETS).filter(k=>CH[SETS[k].owner].fa.includes(d.key));
+  const own=i=>(G.inv[i]||0)+G.units.filter(u=>u.eq&&Object.values(u.eq).includes(i)).length;
+  const miss=sets.flatMap(k=>SETS[k].items).filter(i=>!own(i));
+  const pool=miss.length?miss:sets.flatMap(k=>SETS[k].items);
+  if(!pool.length)return gearGift('SSR');
+  const it=pick(pool);addItem(it);return `${ITEMS[it].r} 專屬裝備「${ITEMS[it].n}」`;
+}
+Object.assign(EV,{
+ s_raidwarn:{story:1,t:'今晚',txt:c=>`${c.n||'獵人幫'}今晚會嚟。
+
+多啲人守夜，彈藥同圍牆係關鍵。`,opts:[{l:'準備迎戰',fx:()=>{allSan(2);return '大家將所有可以用嘅嘢頂住大門。\n全隊意志 +2'}}]},
+ s_cured:{story:1,t:'解藥',txt:()=>`第一支解藥喺凌晨三點完成。
+
+佢救唔返已經變咗嘅人，但可以令被咬嘅人唔再變。
+
+你用最後嘅電池向全城廣播藥方。三日後，你聽到一陣唔同嘅引擎聲——唔係直升機，係火車。`,opts:[{l:'繼續',fx:()=>{addRes({serum:5});return '血清 +5，之後每 3 日自動製成 1 支。\n\n故事未完。'}}]},
+ s_train8:{story:1,t:'第八章 · 末日列車',txt:()=>`一列加裝鐵甲嘅列車沿住環城鐵路駛過，車頂架住機槍，車身噴住「北斗號」三個大字。
+
+車長喺電台講：「車上爆咗感染，後面幾卡車廂全部係屍。邊個幫我清走佢哋，呢架車就係邊個嘅。」
+
+【新地點】北斗號列車可以搜括，清場之後可以搬上車做據點（屍潮 -30%）。`,opts:[{l:'接受',fx:()=>`車長留低一箱補給。\n${addRes({ammo:10,parts:10})}`}]},
+ s_bunker:{story:1,t:'第九章 · 地洞',txt:()=>`無線電收到一段由地底傳上嚟嘅訊號：「深淵避難所」，冷戰時期嘅防空洞，入面住咗幾百人。
+
+佢哋用菇種糧、用地下河洗水，已經二十年冇見過太陽。佢哋願意用地底技術交換物資。
+
+【新地點】深淵避難所可以搜括，清場後可以搬落去（床位 16、屍潮 -30%，但每日意志 -2）。`,opts:[
+  {l:'送 20 食物過去建立關係',req:()=>G.res.food>=20,fx:()=>{addRes({food:-20});return `避難所長老回贈：${addRes({water:30,parts:15})}\n仲有一件${gearGift('SR')}`}},
+  {l:'記低位置',fx:()=>'你喺地圖上圈咗避難所入口。'}]},
+ s_prison:{story:1,t:'第十章 · 監獄風雲',txt:()=>`十幾架改裝囚車停喺門口。帶頭嘅光頭男人面上有條刀疤，自稱「監獄王」。
+
+「全城據點都要歸順。交一半物資、派兩個人過嚟做苦工。六日後我再嚟。唔肯？我哋有三百人。」`,opts:[
+  {l:'派最強嘅人單挑佢',d:'保安效率最高嗰個出手；夠強就收服監獄幫',req:()=>able().some(talker),fx:()=>{G.flags.prisonMet=1;const b=bestTalker(u=>eff(u,'guard'));const p=eff(b,'guard')*rf(.8,1.2);if(p>=45){G.flags.prisonWon=1;checkObj();return `${nm(b)} 行出去，三招之內將刀疤強打到跪低。\n\n監獄幫收咗聲。佢哋願意歸順，以後每日送物資過嚟。\n${addRes({ammo:20,food:20})}`}G.flags.prisonDay=G.day+6;G.flags.prisonAngry=1;const d=hurt(b,ri(15,30));return `${nm(b)} 輸咗（-${d} HP）。\n刀疤強笑住講：「六日後，我帶晒全部人嚟。」`}},
+  {l:'假意歸順，交出三分一物資',fx:()=>{G.flags.prisonMet=1;G.flags.prisonDay=G.day+10;const f=Math.floor(G.res.food/3),a=Math.floor(G.res.ammo/3);addRes({food:-f,ammo:-a});return `你交咗 ${f} 食物同 ${a} 彈藥，爭取多啲時間。\n佢哋十日後會再嚟收數——到時候唔會再咁客氣。`}},
+  {l:'叫佢哋滾',fx:()=>{G.flags.prisonMet=1;G.flags.prisonDay=G.day+6;allSan(3);return '刀疤強冇講嘢，只係揮手叫人上車。\n全隊意志 +3。六日後監獄幫會大舉進攻。'}}]},
+ s_hospital:{story:1,t:'第十一章 · 喪屍醫院',txt:()=>`聖瑪利醫院地庫嘅實驗室燈仲著。監察器上面嘅心跳曲線好規律——但病床上嘅「病人」頭顱已經裂開，入面嘅晶體不斷發光。
+
+紀錄寫住：「零號病人可以指揮周圍嘅感染者。」
+
+【新地點】聖瑪利醫院可以搜括（危險），清場後可以做據點（醫療 +50%）。`,opts:[{l:'記低',fx:()=>`你喺醫院門口執到：${addRes({med:6})}`}]},
+ s_dungeon:{story:1,t:'第十二章 · 屍王地宮',txt:()=>`實驗紀錄最後一頁畫住一張地圖：地鐵最深處嘅舊礦坑，標住一個字——「王」。
+
+全城喪屍嘅行動模式，原來全部由一個源頭控制。佢一日唔死，屍潮一日唔停。
+
+【新地點】屍王地宮可以搜括。極度危險，派最強嘅人去。清場就係擊殺屍王。`,opts:[{l:'準備討伐',fx:()=>`大家將最好嘅裝備集中。\n全隊意志 +4`+(allSan(4),'')}]},
+ s_kingdead:{story:1,t:'屍王',txt:()=>`地宮最深處，一個三米高嘅身影坐喺由屍骸砌成嘅王座上，胸口嵌住一粒拳頭大嘅晶核。
+
+佢企起身嗰刻，全城嘅喪屍同時停咗落嚟。
+
+一場惡戰之後，佢倒低咗。晶核碎裂，紫光散去。`,opts:[{l:'結束佢',fx:()=>{checkObj();return `屍王已死。\n${addRes({core:5,bat:300})}\n但係，失去控制嘅屍群開始瘋狂湧向全城……`}}]},
+ s_final:{story:1,t:'第十三章 · 末日堡壘',txt:()=>`屍王死咗，屍群失去控制，由四方八面湧嚟。全城僅存嘅倖存者開始向你哋嘅據點集中。
+
+七日之後，最後一波屍潮——「屍潮之夜」——會到。
+
+【新地點】堡壘工地可以搜括，清場後可以搬入末日堡壘（床位 24、圍牆 150、夜間防禦 +25）。`,opts:[{l:'起堡壘',fx:()=>{G.flags.finalDay=G.day+7;const t=recruitText(randomRecruit(['R','SR'])||'n_b','（佢帶住一班倖存者投靠你哋。）');return `第 ${G.flags.finalDay} 晚就係屍潮之夜。\n${t}`}}]},
+ end_fortress:{story:1,end:'fortress',t:'結局 · 末日堡壘',txt:()=>`天光嗰陣，堡壘外面嘅屍堆高過城牆。
+
+但係城牆冇倒，城入面嘅人都仲喺度。
+
+有人喺城頭升起一面用床單整嘅旗。遠處，其他倖存者嘅據點都相繼升旗回應。
+
+末日冇完。但人類喺入面起咗一座城。`,opts:[{l:'完',fx:()=>{G.over='fortress';return `你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍，招募咗 ${Object.keys(G.dex).length} 個倖存者。\n\n喺設定可以開始新一局。`}}]},
+ dun_open:{story:1,t:'副本解鎖',pre:c=>DUNBYID[c.d]?c:null,txt:c=>{const d=DUNBYID[c.d];return `${CH[c.by].n} 加入之後，帶嚟一段只有${FA[d.key]}中人先知道嘅往事。
+
+「${d.n}」已經可以喺搜括地點揀。
+
+陣營加成：${d.bonus.map(f=>FA[f]).join('、')} 嘅人去會更強、更安全。
+普通人去會${d.mortal.risk>1?`受傷風險 ×${d.mortal.risk}、`:''}每次意志 -${d.mortal.san}。
+
+完成副本可以攞到專屬裝備。`},opts:[{l:'記低',fx:c=>`「${DUNBYID[c.d].n}」已解鎖。`}]},
+ dun_stage:{story:1,t:'副本',pre:c=>DUNBYID[c.d]?c:null,txt:c=>{const d=DUNBYID[c.d];return `【${d.n}】${['第一幕','第二幕','終幕'][c.s]}
+
+${d.st[c.s]}`},opts:[{l:'繼續',fx:c=>{const d=DUNBYID[c.d];if(c.s===0)return `入口搵到：${addRes({bat:80})}`;if(c.s===1)return `搵到：${dunReward(d)}`;addLog(`完成副本「${d.n}」。`);return `副本完成！\n${dunReward(d)}\n${addRes({bat:300,core:3})}`}}]},
+ betray:{t:'反骨',pre:c=>uOf(c.u)?c:null,txt:c=>`${nm(uOf(c.u))} 半夜執好兵器，眼神好冷。
+
+「我呂奉先，豈能屈居人下？」佢企喺門口，好似要帶住物資自立門戶。`,opts:[
+  {l:'俾佢更多物資留住佢',d:'食物 -10、彈藥 -10',req:()=>G.res.food>=10&&G.res.ammo>=10,fx:c=>{addRes({food:-10,ammo:-10});const u=uOf(c.u);u.san=60;return `${nm(u)} 收低物資，冷笑一聲返入房。\n佢暫時唔會走。`}},
+  {l:'搵人同佢講道理',fx:c=>{const u=uOf(c.u),b=bestTalker(x=>stat(x,'wil'),x=>x.id!==c.u);if(b&&stat(b,'wil')+rf(0,10)>=22){u.san=55;return `${nm(b)} 同佢講咗成晚。\n${nm(u)} 終於放低兵器。`}const it=u.eq&&Object.values(u.eq).filter(Boolean);leaveUnit(u,'背叛離隊，帶走咗佢嘅裝備同物資。');if(it&&it.length)it.forEach(i=>{G.inv[i]--;if(G.inv[i]<=0)delete G.inv[i]});addRes({food:-Math.min(G.res.food,10)});return `講唔掂。${nm(u)} 帶住佢嘅兵器同 10 份食物揚長而去。`}},
+  {l:'由佢走',fx:c=>{const u=uOf(c.u);leaveUnit(u,'背叛離隊。');return `${nm(u)} 頭都唔回。\n（有貂蟬喺據點，呂布就唔會背叛。）`}}]}
+});
+/* 截肢：華佗必定成功 */
+{const b=EV.bitten.opts.find(o=>o.l==='搵醫生截肢');const fx0=b.fx;b.fx=c=>{if(teamFx(G,'surgeon','any')){const u=uOf(c.u);u.inf=0;u.crit=1;u.inj=1;u.hp=Math.max(1,Math.round(maxHp(u)*.3));return `華佗用麻沸散令 ${nm(u)} 瞓著，刮骨去毒，手起刀落。\n感染止住咗，佢而家重傷，要人照顧。`}return fx0(c)};}
 /* ================= 存檔 ================= */
 function fresh(){
-  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},base:'store',clear:{},chDay:{1:1},inv:{bat:1,cleaver:1,armguard:1},proj:'fort',prog:{},loc:'market',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
+  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},base:'store',clear:{},chDay:{1:1},dun:{},gpity:0,inv:{bat:1,cleaver:1,armguard:1},proj:'fort',prog:{},loc:'market',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
   ['c_chan','c_keung','c_cheung'].forEach(id=>addUnit(G,id));
   G.units.forEach(u=>u.job=bestJob(u));
   G.queue.push({id:'s_intro'});
@@ -1135,7 +1410,7 @@ function statusChips(u){
 }
 function renderHead(){
   const c=CHAPS[G.ch-1];
-  $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${'一二三四五六七'[G.ch-1]}章 ${c.t} · ${BS(G).n}`;
+  $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${CNUM[G.ch-1]}章 ${c.t} · ${BS(G).n}`;
   const fc=forecast(G);
   const low={food:G.res.food<fc.food*2,water:G.res.water<fc.water*2,med:G.res.med<2,ammo:G.res.ammo<2};
   $('#supply').innerHTML=Object.keys(RES).map(k=>`<div class="sp ${low[k]?'low':''}" title="${RES[k].n}"><i style="background:${RES[k].c}">${RES[k].s}</i>${RES[k].n}<b>${G.res[k]}</b></div>`).join('');
@@ -1146,15 +1421,15 @@ function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,men
 /* ---------- 據點 ---------- */
 function rBase(){
   const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act);
-  const avail=LOCS.filter(l=>l.ch<=G.ch&&l.id!==G.base);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
+  const avail=allLocs(G);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
   const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
   const done=!!G.obj[c.n];
   $('#main').innerHTML=`
   <section class="chap">
     <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
       <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
-      <span class="nxt">${c.n<7?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${'一二三四五六七'[c.n]}章`:`完成目標解鎖第${'一二三四五六七'[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
-      <details class="chd"><summary>劇情（已解鎖 ${c.n}/7 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${'一二三四五六七'[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
+      <span class="nxt">${c.n<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${CNUM[c.n]}章`:`完成目標解鎖第${CNUM[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
+      <details class="chd"><summary>劇情（已解鎖 ${c.n}/${CHAPS.length} 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${CNUM[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
     </div>
     ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
   </section>
@@ -1172,7 +1447,7 @@ function rBase(){
       <div class="panel stack">
         <h3>今晚預報</h3>
         <div class="fc">
-          <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>預計屍潮${raidTonight(G)?'＋獵人幫':''}${G.warn>1?' ⚠':''}</span></div>
+          <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>預計屍潮${raidTonight(G)?'＋'+raidTonight(G).n:''}${G.warn>1?' ⚠':''}</span></div>
           <div class="${danger}"><b>${fc.def}</b><span>預計防禦</span></div>
           <div class="${G.res.food<fc.food?'bad':''}"><b>${fc.food}/${fc.water}</b><span>今晚食物/水</span></div>
         </div>
@@ -1180,13 +1455,18 @@ function rBase(){
       </div>
       <div class="panel stack">
         <div class="field"><label class="lbl" for="loc">搜括地點</label>
-          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.n} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]?` · ${(G.clear[l.id]||0)>=100?'已清場':'清場 '+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select>
-          <span class="muted" style="font-size:12px">${(()=>{const l=LOCS.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、')+(BASES[l.id]?`。清場後可以搬去做據點（${BASES[l.id].beds} 床）`:''):''})()}</span>
+          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.dun?'【副本】':''}${l.n} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]||l.dun||l.id==='dungeon'?` · ${(G.clear[l.id]||0)>=100?'已完成':(l.dun?'進度 ':'清場 ')+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select>
+          <span class="muted" style="font-size:12px">${(()=>{const l=avail.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、')+(BASES[l.id]?`。清場後可以搬去做據點（${BASES[l.id].beds} 床）`:'')+(l.dun?`。${l.bonus.map(f=>FA[f]).join('、')}陣營有加成；普通人去會受傷風險 ×${l.mortal.risk}、意志 -${l.mortal.san}`:''):''})()}</span>
         </div>
         <div class="field"><label class="lbl" for="proj">維修項目</label>
           <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select>
           <span class="muted" style="font-size:12px">${G.proj==='fort'?'用零件修補圍牆':esc(FAC[G.proj].d)}</span>
         </div>
+      </div>
+      <div class="panel">
+        <h3>陣營加成</h3>
+        <div class="syn">${synList().map(x=>`<div><b>${FA[x.f]}</b> <span class="muted">${x.n} 人 · 全工作 +${x.b}%</span><div class="syn-m">${x.m.map(u=>esc(nm(u))).join('、')}</div></div>`).join('')||'<span class="muted" style="font-size:12px">同陣營嘅人有兩個或以上喺據點就有加成；做同一份工再加。</span>'}</div>
+        <p class="muted" style="margin:6px 0 0;font-size:11px">同陣營同做一份工：每個拍檔該工作再 +8%。</p>
       </div>
       <div class="panel">
         <h3>據點</h3>
@@ -1367,7 +1647,7 @@ function rMenu(){
     <div class="panel stack"><h3>點玩</h3>
       <p style="margin:0">每日幫每個倖存者揀一份工作。卡上嘅字母代表佢做呢份工嘅適合程度（S 最好，D 最差），數值、狀態同專長都會影響。</p>
       <p style="margin:0" class="muted">搜括帶返物資但有機會受傷被咬；巡邏減少今晚屍潮；保安守夜；維修修圍牆同起設施；煮飯慳食物兼提升意志；醫療醫傷者。疲勞、受傷、恐慌都會令效率下降。被咬嘅人三日內會屍變。</p>
-      <p style="margin:0" class="muted">跟住七章劇情行：完成解藥研究或者撐到第 ${ENDDAY} 日就係結局。</p>
+      <p style="margin:0" class="muted">跟住十三章劇情行：港產、韓式、日式、朝鮮古疫、國產網文、美式，到後期大陸末日文嘅列車、地洞、監獄、醫院、地宮同堡壘。撐過最後嘅屍潮之夜就係結局。傳奇角色好強，但據點都要有人煮飯、巡邏、維修，否則一樣會死。</p>
     </div>
     <div class="panel stack"><h3>兌換碼</h3><div class="row"><input class="sel" id="code" style="flex:1;min-width:0" placeholder="輸入兌換碼" autocomplete="off"><button class="btn" id="redeem">兌換</button></div><span class="muted" id="cmsg"></span></div>
     <div class="panel stack"><h3>重新開始</h3><p class="muted" style="margin:0">清走而家嘅進度，由第 1 日再嚟。</p><div><button class="btn" id="reset">開新一局</button></div></div>
@@ -1427,7 +1707,7 @@ function openMove(){
     <p class="muted" style="margin:0">床位 ${bedCap(G)}、圍牆上限 ${fortMax(G)}。搬走會留低約四分一食物、水同零件，所有設施各跌 1 級。去搜括一個地點就會累積清場進度。</p>
     <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=l.ch>G.ch;
       return `<div class="panel row" style="background:var(--slab2);justify-content:space-between">
-        <div style="min-width:0;flex:1"><b>${lock?'？？？':esc(b.n)}</b> <span class="muted" style="font-size:12px">${lock?`第${'一二三四五六七'[l.ch-1]}章解鎖`:`${b.beds} 床 · 圍牆 ${b.wall}`}</span>
+        <div style="min-width:0;flex:1"><b>${lock?'？？？':esc(b.n)}</b> <span class="muted" style="font-size:12px">${lock?`第${CNUM[l.ch-1]}章解鎖`:`${b.beds} 床 · 圍牆 ${b.wall}`}</span>
         ${lock?'':`<div class="muted" style="font-size:12px">${esc(b.d)} ${esc(b.pd)}</div>`}</div>
         ${ok?`<button class="btn pri sm" data-mv="${k}">搬過去</button>`:lock?'':`<span class="type muted" style="font-size:12px">清場 ${cp}%</span>`}
       </div>`}).join('')}</div>
@@ -1461,7 +1741,7 @@ function peek(u){
 }
 /* ================= 人物繪圖 ================= */
 /* 髮型,髮色(或帽色),衫色,膚色,配件 */
-const SKIN={L:'#f2d3b6',T:'#e2b98f',M:'#c48d63',D:'#7a4b2f'};
+const SKIN={L:'#f2d3b6',T:'#e2b98f',M:'#c48d63',D:'#7a4b2f',P:'#f1e6df',F:'#efcb98',K:'#f2b8c6'};
 const LOOK={
  u_shen:'crop,#161616,#4b5a3a,T,vest',u_mio:'pony,#111,#efe9dd,T,band hakama',u_grace:'wavy,#d1a96a,#4a6a8a,L,coat glasses',u_han:'helm,#d8a52a,#2e3a52,T,stripe',
  s_ho:'short,#202020,#8a1f2e,T,shades',s_lin:'crop,#2a2a2a,#f3f1ea,T,band apron',s_olga:'bun,#c9bb9c,#c2662a,L,stripe',s_hawk:'cap,#4d5a33,#5b6a3c,M,vest',
@@ -1480,6 +1760,9 @@ function hairBack(hs,hc){
   if(hs==='long')return `<path d="M12.5 12 Q12 4 20 4 Q28 4 27.5 12 L28.5 25 L24 24 L24 13 L16 13 L16 24 L11.5 25Z" fill="${hc}"/>`;
   if(hs==='wavy')return `<path d="M12.5 12 Q12 4 20 4 Q28 4 27.5 12 Q29 16 27 19 L24 18 L24 13 L16 13 L16 18 L13 19 Q11 16 12.5 12Z" fill="${hc}"/>`;
   if(hs==='pony')return `<path d="M25 8 Q32 9 31 20 Q29 15 26 12Z" fill="${hc}"/>`;
+  if(hs==='redveil')return `<path d="M10.5 14 Q10 2.5 20 2.5 Q30 2.5 29.5 14 L32 30 L8 30Z" fill="${hc}"/>`;
+  if(hs==='topknot')return `<path d="M12.5 12 Q12 4 20 4 Q28 4 27.5 12 L28.5 27 L24 26 L24 13 L16 13 L16 26 L11.5 27Z" fill="${hc}"/>`;
+  if(hs==='monkey')return `<circle cx="20" cy="12" r="8.8" fill="${hc}"/><circle cx="11.6" cy="12.5" r="2.2" fill="${hc}"/><circle cx="28.4" cy="12.5" r="2.2" fill="${hc}"/>`;
   if(hs==='veil')return `<path d="M11 13 Q11 3 20 3 Q29 3 29 13 L31 26 L9 26Z" fill="${hc}"/>`;
   return '';
 }
@@ -1494,6 +1777,16 @@ function hairFront(hs,hc){
     case 'cap':return `<path d="M12.6 10.5 Q13 3.6 20 3.6 Q27 3.6 27.4 10.5Z" fill="${hc}"/><rect x="19" y="9" width="12" height="2.2" rx="1" fill="${shade(hc,.75)}"/>`;
     case 'helm':return `<path d="M11.6 11 Q12 2.2 20 2.2 Q28 2.2 28.4 11Z" fill="${hc}"/><rect x="18.6" y="2.4" width="2.8" height="8.5" fill="${shade(hc,.8)}"/><ellipse cx="20" cy="11" rx="10.5" ry="1.8" fill="${shade(hc,.85)}"/>`;
     case 'hat':return `<path d="M13.2 10 Q13.5 6 20 6 Q26.5 6 26.8 10Z" fill="#222"/><path d="M14 7 L15.5 1.5 L24.5 1.5 L26 7Z" fill="#111"/><rect x="14.5" y="4" width="11" height="1.2" fill="#c33"/>`;
+    case 'feather':return `<path d="M16 4 Q9 -4 1 1" stroke="#b33a2a" stroke-width="1.6" fill="none"/><path d="M24 4 Q31 -4 39 1" stroke="#b33a2a" stroke-width="1.6" fill="none"/><path d="M11.8 11 Q12 2.8 20 2.8 Q28 2.8 28.2 11Z" fill="${hc}"/><circle cx="20" cy="4.2" r="1.6" fill="#c33"/><rect x="11.5" y="9.6" width="17" height="1.8" fill="${shade(hc,.75)}"/>`;
+    case 'monkey':return `<path d="M13 11 Q13 6 20 5.5 Q27 6 27 11 Q24 8.5 20 9 Q16 8.5 13 11Z" fill="${hc}"/><rect x="12.6" y="6.6" width="14.8" height="1.8" rx=".9" fill="#e8c34a"/>`;
+    case 'wing':return `<path d="M12 11 Q12 3 20 3 Q28 3 28 11Z" fill="${hc}"/><path d="M12 7 L4 2 L7 7 L3 6 L12 10Z M28 7 L36 2 L33 7 L37 6 L28 10Z" fill="#f4f4f4"/>`;
+    case 'horn':return `<path d="M12 11 Q12 3 20 3 Q28 3 28 11Z" fill="${hc}"/><path d="M15 5 Q10 -2 13 -4 Q13 1 17 4Z M25 5 Q30 -2 27 -4 Q27 1 23 4Z" fill="#d8b03a"/>`;
+    case 'wizard':return `<path d="M10 9.5 L30 9.5 L27 8 L21 -6 L19.5 -6 L13 8Z" fill="${hc}"/><circle cx="18" cy="3" r=".9" fill="#f2d38a"/><circle cx="22" cy="6" r=".7" fill="#f2d38a"/><ellipse cx="20" cy="9.6" rx="11" ry="1.6" fill="${shade(hc,.8)}"/>`;
+    case 'beret':return `<ellipse cx="19" cy="6.5" rx="9" ry="3.6" fill="${hc}"/><circle cx="19" cy="3" r=".8" fill="${hc}"/>`;
+    case 'redveil':return `<path d="M12.5 10 Q13 3.5 20 3.5 Q27 3.5 27.5 10Z" fill="${shade(hc,.85)}"/><path d="M14 9 L26 9 L25.5 11 L14.5 11Z" fill="#e8c34a"/>`;
+    case 'topknot':return `<circle cx="20" cy="2.8" r="2.6" fill="${hc}"/><line x1="16" y1="2.2" x2="24" y2="3.4" stroke="#c9a23a" stroke-width=".8"/><path d="M12.8 11 Q12.5 4.5 20 4.5 Q27.5 4.5 27.2 11 Q24 7 20 7.3 Q16 7 12.8 11Z" fill="${hc}"/>`;
+    case 'guan':return `<path d="M12.6 10 Q13 3.5 20 3.5 Q27 3.5 27.4 10Z" fill="${hc}"/><path d="M26 6 Q31 8 30 13" stroke="${hc}" stroke-width="1.4" fill="none"/>`;
+    case 'monkcap':return `<path d="M13 8.5 L14 3 L17 5 L20 2 L23 5 L26 3 L27 8.5Z" fill="${hc}"/><rect x="13" y="7.6" width="14" height="1.6" fill="#c33"/>`;
     case 'veil':return `<rect x="12.6" y="6.4" width="14.8" height="2.4" rx="1" fill="#f2f2f2"/>`;
   }
   return '';
@@ -1507,6 +1800,12 @@ function weaponSVG(k){
     case 'bar':return `<path d="M33.5 15 L38 3 L39.5 3.8" stroke="#6b7480" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
     case 'knife':return `<path d="M33 14 L36.5 6 L38.2 7 L35 14.5Z" fill="#d9dde2"/>`;
     case 'gun':return `<rect x="33" y="19.2" width="6" height="2.6" fill="#1b1b1b"/><rect x="33.6" y="21" width="1.8" height="3" fill="#1b1b1b"/>`;
+    case 'halberd':return `<line x1="31" y1="32" x2="38.5" y2="0" stroke="#7a2a1a" stroke-width="1.6"/><path d="M37 1 L40 -1 L39.5 5Z" fill="#dfe3e8"/><path d="M36.3 6 Q32 4 33.5 9 Q35 7.5 37.3 8.5Z" fill="#dfe3e8"/>`;
+    case 'staff':return `<line x1="30" y1="34" x2="39" y2="0" stroke="#c9302a" stroke-width="2"/><rect x="37.2" y="0" width="2.4" height="3" fill="#e8c34a" transform="rotate(15 38 1)"/><rect x="29.5" y="31" width="2.4" height="3" fill="#e8c34a" transform="rotate(15 30.5 32)"/>`;
+    case 'hammer':return `<line x1="33.5" y1="16" x2="36.5" y2="6" stroke="#6a4a2a" stroke-width="2"/><rect x="31.5" y="0" width="9" height="6.5" rx="1" fill="#8b939c" transform="rotate(15 36 3)"/>`;
+    case 'xbow':return `<line x1="30" y1="22" x2="39" y2="20" stroke="#6a4a2a" stroke-width="2"/><path d="M37 15 Q34 20 37 25" stroke="#3a2a1a" stroke-width="1.2" fill="none"/>`;
+    case 'sword':return `<line x1="33" y1="15" x2="38.5" y2="0.5" stroke="#e8f0f4" stroke-width="1.4" stroke-linecap="round"/><line x1="31.6" y1="13.6" x2="34.8" y2="15.4" stroke="#c9a23a" stroke-width="1.4"/><path d="M33 15 L31 19" stroke="#c33" stroke-width=".8"/>`;
+    case 'wand':return `<line x1="32" y1="30" x2="37" y2="3" stroke="#6a4a2a" stroke-width="1.6"/><circle cx="37.2" cy="2.6" r="2.2" fill="#8ad0f0"/>`;
     case 'rifle':return `<line x1="22" y1="24.5" x2="40" y2="19.5" stroke="#1b1b1b" stroke-width="2.2"/><rect x="27" y="20" width="4" height="1.6" fill="#1b1b1b"/>`;
   }
   return '';
@@ -1529,7 +1828,7 @@ function animalSVG(u,job,bust){
 function fig(u,job,bust){
   const c=CH[u.id];
   if(c.tr.includes('animal'))return animalSVG(u,job,bust);
-  const [hs,hc,oc0,sk,exs]=(LOOK[u.id]||'short,#222,#667788,T,').split(',');
+  const [hs,hc,oc0,sk,exs,bc]=(LOOK[u.id]||'short,#222,#667788,T,').split(',');
   const X=(exs||'').split(' ');
   const eq=u.eq||{},arm=eq.armor&&ITEMS[eq.armor],wpn=eq.weapon&&ITEMS[eq.weapon],tool=eq.tool&&ITEMS[eq.tool];
   let oc=oc0;if(arm&&arm.k==='suit')oc='#c9a227';if(arm&&arm.k==='jacket')oc='#2a2523';
@@ -1538,6 +1837,7 @@ function fig(u,job,bust){
   let back='',body='',front='';
   // 背包
   if(tool&&tool.k==='pack'&&!bust)back+=`<rect x="9.5" y="20" width="21" height="15" rx="4" fill="#6b5232"/>`;
+  if(X.includes('cape'))back+=`<path d="M11 20 L29 20 L33 48 L7 48Z" fill="#a32a24"/>`;
   back+=hairBack(hs,hc);
   // 腳
   if(pose==='sit')body+=`<rect x="13" y="35" width="17" height="5" rx="2.4" fill="${pants}"/><rect x="13" y="40" width="17" height="4" rx="2" fill="${shade(pants,.85)}"/><rect x="28" y="35" width="4" height="9" rx="1.5" fill="#1a1a1a"/>`;
@@ -1546,6 +1846,7 @@ function fig(u,job,bust){
   body+=`<rect x="11" y="19" width="18" height="19" rx="5" fill="${oc}"/>`;
   if(X.includes('coat'))body+=`<path d="M11 21 Q11 19 15 19 L18 19 L17 44 L11.5 44Z M29 21 Q29 19 25 19 L22 19 L23 44 L28.5 44Z" fill="#f4f3ef"/>`;
   if(X.includes('robe'))body+=`<path d="M11.5 30 L28.5 30 L30 46 L10 46Z" fill="${oc}"/><path d="M20 19 L16 27 M20 19 L24 27" stroke="${dark}" stroke-width="1"/>`;
+  if(X.includes('sash'))body+=`<path d="M11.5 24 L28.5 30 L28.5 32 L11.5 26Z" fill="#c9a23a"/>`;
   if(X.includes('apron'))body+=`<rect x="14" y="24" width="12" height="15" rx="1.5" fill="#f2efe6"/><path d="M14.5 24 L17 19.5 M25.5 24 L23 19.5" stroke="#f2efe6" stroke-width="1"/>`;
   if(X.includes('vest'))body+=`<rect x="13" y="21" width="14" height="12" rx="2" fill="${shade(oc,.75)}"/><rect x="15" y="24" width="3" height="3" fill="${shade(oc,.6)}"/><rect x="22" y="24" width="3" height="3" fill="${shade(oc,.6)}"/>`;
   if(X.includes('stripe')||(arm&&arm.k==='suit'))body+=`<rect x="11" y="30" width="18" height="2" fill="#dfe6d0"/>`;
@@ -1555,13 +1856,18 @@ function fig(u,job,bust){
   const sleeve=X.includes('coat')?'#f4f3ef':oc;
   if(pose==='lie'||pose==='sit'||pose==='idle'||pose==='scav'||pose==='medic'||pose==='repair'||pose==='guard'||pose==='patrol'){
     body+=`<rect x="7.6" y="20" width="4" height="14" rx="2" fill="${sleeve}"/><circle cx="9.6" cy="35" r="1.9" fill="${skin}"/>`;
+    if(X.includes('fan')&&!bust)body+=`<path d="M9.5 35 L4 27 Q7 24.5 10 25.5Z" fill="#f4f2ea" stroke="#bbb" stroke-width=".4"/>`;
     if(X.includes('cross'))body+=`<rect x="7.9" y="23" width="3.4" height="3.4" fill="#fff"/><path d="M9.6 23.5 V26 M8.4 24.7 H10.8" stroke="#d33" stroke-width=".9"/>`;
     if(arm&&arm.k==='arm')body+=`<rect x="7.4" y="26" width="4.4" height="5" fill="#d8d2c2"/>`;
   }
   // 頭
   body+=`<rect x="18" y="16.5" width="4" height="3.5" fill="${shade(skin,.9)}"/><circle cx="20" cy="12" r="7" fill="${skin}"/>`;
   body+=`<circle cx="17.6" cy="12.6" r=".95" fill="#1b1410"/><circle cx="22.4" cy="12.6" r=".95" fill="#1b1410"/><path d="M18.6 15.6 Q20 16.4 21.4 15.6" stroke="#6a3a2a" stroke-width=".6" fill="none"/>`;
-  if(X.includes('beard'))body+=`<path d="M13.6 13 Q14.5 20.5 20 20.2 Q25.5 20.5 26.4 13 Q24.5 16.8 20 16.6 Q15.5 16.8 13.6 13Z" fill="${hc}"/>`;
+  if(X.includes('beard'))body+=`<path d="M13.6 13 Q14.5 20.5 20 20.2 Q25.5 20.5 26.4 13 Q24.5 16.8 20 16.6 Q15.5 16.8 13.6 13Z" fill="${bc||hc}"/>`;
+  if(X.includes('wbeard'))body+=`<path d="M13.4 13 Q13.5 25 20 26 Q26.5 25 26.6 13 Q24.5 17 20 16.8 Q15.5 17 13.4 13Z" fill="#ecebe6"/>`;
+  if(X.includes('snout'))body+=`<ellipse cx="20" cy="14.6" rx="3.2" ry="2.2" fill="#e89aac"/><circle cx="19" cy="14.6" r=".6" fill="#8a4a5a"/><circle cx="21" cy="14.6" r=".6" fill="#8a4a5a"/><path d="M12 6 L10 12 L15 9Z M28 6 L30 12 L25 9Z" fill="#e89aac"/>`;
+  if(X.includes('ears'))body+=`<path d="M13.2 11 L8.5 7.5 L13 13.5Z M26.8 11 L31.5 7.5 L27 13.5Z" fill="${skin}"/>`;
+  if(X.includes('pin'))body+=`<line x1="23" y1="4" x2="29" y2="1.5" stroke="#e8c34a" stroke-width=".9"/><circle cx="29" cy="1.5" r="1" fill="#7ad0e0"/>`;
   if(X.includes('glasses'))body+=`<circle cx="17.4" cy="12.5" r="2.1" stroke="#222" stroke-width=".7" fill="none"/><circle cx="22.6" cy="12.5" r="2.1" stroke="#222" stroke-width=".7" fill="none"/><line x1="19.5" y1="12.4" x2="20.5" y2="12.4" stroke="#222" stroke-width=".6"/>`;
   if(X.includes('shades'))body+=`<rect x="15" y="11.2" width="10" height="2.6" rx="1" fill="#0d0d0d"/>`;
   body+=hairFront(hs,hc);
@@ -1593,11 +1899,24 @@ function fig(u,job,bust){
   }
   if(pose==='sit')front+=`<text x="29" y="8" font-size="6" fill="#86afcf" font-family="sans-serif">z</text><text x="33" y="4.5" font-size="4.5" fill="#86afcf" font-family="sans-serif">z</text>`;
   let inner=back+body+front;
+  if(X.includes('dwarf'))inner=`<g transform="translate(3 9.5) scale(.85)">${inner}</g>`;
   if(X.includes('kid'))inner=`<g transform="translate(4.4 12.3) scale(.78)">${inner}</g>`;
   if(pose==='lie')inner=`<g transform="translate(2 54) rotate(-90) scale(.72)">${inner}</g><rect x="1" y="47" width="38" height="6" rx="2" fill="#4a3f36"/>`+(u.crit?`<path d="M33 40 V46 M30 43 H36" stroke="#e0503b" stroke-width="1.6"/>`:'');
   const vb=bust?'6.5 0.5 27 27':'0 0 40 56';
   return `<svg viewBox="${vb}" aria-hidden="true">${!bust&&pose!=='lie'?'<ellipse cx="20" cy="53" rx="10" ry="2" fill="rgba(0,0,0,.35)"/>':''}${inner}</svg>`;
 }
+Object.assign(LOOK,{
+ u_lubu:'feather,#c9a23a,#9b2a22,T,cape',u_wukong:'monkey,#c98a2a,#c9a23a,F,',u_thor:'long,#c0612a,#4a5a78,L,beard cape',u_davinci:'beret,#5a1a24,#6a2a34,L,wbeard',
+ u_bride:'redveil,#b01e22,#b01e22,P,',u_chenmo:'topknot,#111,#1d1d24,T,sash',u_liu:'long,#111,#dfe9f2,P,pin sash',u_merlin:'wizard,#2a3a7a,#2a3a7a,L,wbeard',
+ s_zhuge:'guan,#2a3f6a,#e9e6dc,T,beard fan,#222',s_diaochan:'bun,#111,#c23a6a,P,pin',s_huatuo:'topknot,#ddd,#6a5a3a,T,beard,#ddd',s_brynhild:'wing,#cfd6de,#8a95a3,L,cape',
+ s_loki:'horn,#3c7a3a,#2f5a2f,L,cape',s_zhongkui:'guan,#222,#9b2a22,M,beard,#111',
+ r_bajie:'bald,#000,#3a4a6a,K,snout',r_tang:'monkcap,#d8b03a,#c8742a,L,robe',r_xiaoqian:'long,#111,#f0eeee,P,',r_brokk:'bald,#7a4a22,#5a4030,L,dwarf beard,#a0522d',
+ r_elin:'long,#e6d28a,#3f6a3a,L,ears',r_linfan:'topknot,#111,#4a5a6a,T,',r_su:'pony,#111,#e6eef4,L,pin sash',
+ c_lam:'short,#222,#3a6a8a,T,',c_yun:'bun,#111,#e8a8c0,T,cross',c_ken:'crop,#222,#7a5a3a,T,',c_frank:'crop,#9a9a9a,#5a6a3a,L,beard',c_sze:'wavy,#2a1a10,#d8a040,T,',
+ c_wai:'short,#111,#f2f2f2,T,apron',c_jieun:'long,#3a2018,#f0a0c0,T,',c_pang:'bald,#555,#e8e8e0,T,beard,#888',
+ n_b:'short,#111,#f2f2f2,T,',n_fong:'curly,#333,#4a8a6a,T,',n_agent:'short,#111,#2a3a5a,T,tie',n_tom:'wavy,#c9a060,#4a7a9a,L,',n_lin:'pony,#111,#ffffff,T,tie',
+ n_leung:'short,#bbb,#7a6a5a,T,glasses',n_fisher:'cap,#4a6a3a,#8a9a6a,T,',n_hawker:'crop,#444,#c0a060,T,'
+});
 /* 覆寫：頭像同棋子改用人物圖 */
 function av(id,extra=''){
   const c=CH[id],u=(G&&G.units.find(x=>x.id===id))||{id};
@@ -1702,12 +2021,12 @@ function eqSummary(u){
 /* ---------- 浮窗 ---------- */
 function popHTML(u){
   const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest',es=eqS(u);
-  return `<div class="pop-h">${av(u.id)}<div style="min-width:0;flex:1"><b>${esc(c.n)}</b>${stars(u.star)}<div class="muted" style="font-size:11px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</div></div><button class="pop-x" id="popx" aria-label="關閉">×</button></div>
+  return `<div class="pop-h">${av(u.id)}<div style="min-width:0;flex:1"><b>${esc(c.n)}</b>${stars(u.star)}<div class="muted" style="font-size:11px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</div><div class="chips" style="margin-top:2px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${synergy(u,j)?`<span class="chip good">陣營 +${Math.round(synergy(u,j)*100)}%</span>`:''}</div></div><button class="pop-x" id="popx" aria-label="關閉">×</button></div>
     <div class="chips">${statusChips(u)||'<span class="chip good">狀態正常</span>'}</div>
     <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     <div class="pkst">${ST.map(k=>`<div><span>${STN[k]}</span><b>${stat(u,k)}</b></div>`).join('')}<div><span>效率</span><b>${j==='rest'?'—':Math.round(eff(u,j))}</b></div></div>
     <div class="pkst g6">${JK.filter(x=>x!=='rest').map(x=>{const g=canWork({...u,crit:0,iso:0},x)?grade(apt(u,x)*(fxOf(u).job[x]||1)):'—';const b=es.job[x]?`<em>+${Math.round(es.job[x]*100)}%</em>`:'';return `<div><span>${JOBS[x].n}</span><b class="g${g}">${g}</b>${b}</div>`}).join('')}</div>
-    <div class="eqline">${eqSummary(u)}</div>
+    <div class="eqline">${eqSummary(u)}</div>${es.set?`<div class="setline">套裝【${esc(es.set.n)}】${esc(es.set.d)}</div>`:''}
     <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:11px">撳區域派佢去做嘢</span><button class="btn sm" id="popmore">詳細／換裝備</button></div>`;
 }
 function showPop(){
@@ -1736,15 +2055,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&SEL){SEL=null;rende
 /* ---------- 人物頁（加裝備） ---------- */
 function openUnit(id){
   const u=uOf(id);if(!u)return;const c=CH[id];
-  const coreCost=2+u.star;let armed=false;const es=eqS(u);
+  const coreCost=Math.ceil((2+u.star)*(fxOf(u).coreHalf?.5:1));let armed=false;const es=eqS(u);
   modal(`<div class="modal">
-    <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap"><div class="bigfig">${fig(u,canWork(u,u.job)?u.job:'rest')}</div><div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${statusChips(u)}</div><p style="margin:6px 0 0;font-size:13px">${esc(c.bio)}</p></div></div>
+    <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap"><div class="bigfig">${fig(u,canWork(u,u.job)?u.job:'rest')}</div><div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${statusChips(u)}</div><p style="margin:6px 0 0;font-size:13px">${esc(c.bio)}</p></div></div>
     <div class="bars">${bar('HP',u.hp,maxHp(u),'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
     <div class="aptg">${JK.filter(j=>j!=='rest').map(j=>{const g=canWork({...u,crit:0,iso:0},j)?grade(apt(u,j)*(fxOf(u).job[j]||1)):'—';return `<div>${JOBS[j].n}<b class="g${g}">${g}</b>${es.job[j]?`<em class="eqp">裝備 +${Math.round(es.job[j]*100)}%</em>`:''}</div>`}).join('')}</div>
     <div class="panel" style="background:var(--slab2)">
+      ${(()=>{const S=Object.values(SETS).find(x=>x.owner===id);if(!S)return '';const has=S.items.filter(i=>u.eq&&Object.values(u.eq).includes(i)).length;return `<div class="setline" style="margin-bottom:6px">${has===S.items.length?'✓ ':''}專屬套裝【${esc(S.n)}】${has}/${S.items.length}：${S.items.map(i=>esc(ITEMS[i].n)).join('、')}<br><span class="muted">${esc(S.d)}</span></div>`})()}
       <div class="row" style="justify-content:space-between"><b style="color:var(--sodium2)">裝備</b>${canEquip(u)?`<span class="muted type" style="font-size:12px;${es.over?'color:var(--blood)':''}">負重 ${es.w} / 力量 ${stat(u,'str')}${es.over?` · 每日多耗 ${Math.round(es.over*1.2)} 體力`:''}</span>`:''}</div>
-      ${canEquip(u)?Object.keys(SLOTS).map(sl=>{const it=u.eq&&u.eq[sl]&&ITEMS[u.eq[sl]];return `<div class="eqrow"><span class="lbl">${SLOTS[sl]}</span><div style="min-width:0;flex:1">${it?`<b>${esc(it.n)}</b> <span class="muted" style="font-size:12px">重 ${it.w}</span><div style="font-size:12px">${esc(itemFx(u,it))}</div>${eqNote(u,it)?`<div style="font-size:11px;color:var(--sodium2)">${esc(eqNote(u,it))}</div>`:''}`:'<span class="muted">未裝備</span>'}</div><button class="btn sm" data-eq="${sl}">換</button></div>`}).join(''):'<p class="muted" style="margin:6px 0 0">動物唔用裝備。</p>'}
+      ${canEquip(u)?Object.keys(SLOTS).map(sl=>{const it=u.eq&&u.eq[sl]&&ITEMS[u.eq[sl]];return `<div class="eqrow"><span class="lbl">${SLOTS[sl]}</span><div style="min-width:0;flex:1">${it?`${rk(it.r)} <b>${esc(it.n)}</b> <span class="muted" style="font-size:12px">重 ${it.w}</span><div style="font-size:12px">${esc(itemFx(u,it))}</div>${eqNote(u,it)?`<div style="font-size:11px;color:var(--sodium2)">${esc(eqNote(u,it))}</div>`:''}`:'<span class="muted">未裝備</span>'}</div><button class="btn sm" data-eq="${sl}">換</button></div>`}).join(''):'<p class="muted" style="margin:6px 0 0">動物唔用裝備。</p>'}
     </div>
     <div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">專長 · ${esc(c.sk.n)}</b><div style="font-size:13px">${esc(c.sk.d)}</div>
       ${c.tr.map(t=>`<div style="font-size:13px;margin-top:4px"><span class="chip">${TR[t].n}</span> <span class="muted">${esc(TR[t].d)}</span></div>`).join('')}
@@ -1770,7 +2090,7 @@ function openEquip(id,sl){
     <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}</div>
     <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色用效果 ×1.5。</p>
     <div class="stack" style="gap:6px">
-      ${opts.map(k=>{const it=ITEMS[k],note=eqNote(u,it);return `<button class="eqpick" data-k="${k}"><div class="row" style="justify-content:space-between"><b>${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${it.w} · 背包 ${G.inv[k]}</span></div><div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">背包入面冇${SLOTS[sl]}。去搜括會搵到。</p>`}
+      ${opts.map(k=>{const it=ITEMS[k],note=eqNote(u,it);return `<button class="eqpick" data-k="${k}"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${it.w} · 背包 ${G.inv[k]}</span></div><div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">背包入面冇${SLOTS[sl]}。去搜括會搵到。</p>`}
     </div>
     <div class="row">${cur?'<button class="btn sm" id="off">卸下</button>':''}<button class="btn pri sm" id="back" style="margin-left:auto">返回</button></div>
   </div>`,()=>{
@@ -1789,17 +2109,201 @@ function rCrew(){
    <div class="secth"><h2>據點內</h2><span class="muted type">${A.length}/${bedCap(G)}</span></div>
    <div class="cards">${A.map(u=>tag(u)).join('')||'<span class="muted">冇人</span>'}</div>
    <div class="secth"><h2>裝備背包</h2><button class="btn sm" id="aeq">按工作自動配裝</button></div>
-   <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between"><b>${esc(it.n)}</b><span class="chip">${SLOTS[it.slot]} · 重 ${it.w}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.aff?` · 專精：${it.aff.map(a=>esc(CH[a].n)).join('、')}`:''}</div></div>`}).join('')||'<span class="muted">背包空空。搜括時有機會搵到武器、防具同道具。</span>'}</div>
+   <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="chip">${SLOTS[it.slot]} · 重 ${it.w}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.aff?` · 專精：${it.aff.map(a=>esc(CH[a].n)).join('、')}`:''}</div></div>`}).join('')||'<span class="muted">背包空空。搜括時有機會搵到武器、防具同道具。</span>'}</div>
    <div class="secth"><h2>後備名單</h2><span class="muted">無線電聯絡中，有床位先可以加入；唔使食糧</span></div>
    <div class="cards">${Rs.map(u=>tag(u)).join('')||'<span class="muted">冇人。升級床位可以收留更多人。</span>'}</div>
    ${D.length?`<div class="secth"><h2>離開咗嘅人</h2></div><div class="cards">${D.map(id=>tag(id,true)).join('')}</div>`:''}`;
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
   $('#aeq').onclick=()=>{autoEquip();save();render();toast('已按各人而家嘅工作分配裝備')};
 }
+/* ================= 擴展：裝備稀有度、專屬套裝、裝備抽獎 ================= */
+const IRAR={bat:'C',cleaver:'C',armguard:'C',spear:'C',shoes:'C',walkie:'R',pack:'R',medkit:'R',binoc:'R',wok:'R',crowbar:'R',leather:'R',toolbox:'SR',axe:'SR',pistol:'SR',firesuit:'SR',shield:'SR',katana:'SSR',rifle:'SSR'};
+Object.keys(IRAR).forEach(k=>ITEMS[k].r=IRAR[k]);
+Object.assign(ITEMS,{
+ umbrella:{n:'長柄遮',slot:'weapon',w:2,k:'club',r:'C',job:{guard:.06,patrol:.04},d:'港灣市人人都有一把'},
+ helmet:{n:'電單車頭盔',slot:'armor',w:3,k:'arm',r:'C',bite:.85,risk:.9,d:'起碼個頭唔會被咬'},
+ apron:{n:'廚師圍裙',slot:'tool',w:1,k:'apron',r:'C',job:{cook:.12},d:'有圍裙先似樣'},
+ torch:{n:'強光電筒',slot:'tool',w:1,k:'torch',r:'C',job:{patrol:.12},d:'照得遠先見到嘢'},
+ chainsaw:{n:'電鋸',slot:'weapon',w:13,k:'axe',r:'SR',job:{guard:.3,scav:.1,repair:.15},d:'好嘈，但好有效'},
+ vest:{n:'軍用防彈衣',slot:'armor',w:10,k:'suit',r:'SSR',job:{guard:.1},bite:.5,risk:.6,aff:['u_shen','s_hawk','c_frank'],d:'防彈都防咬'},
+ assault:{n:'突擊步槍',slot:'weapon',w:9,k:'rifle',r:'SSR',job:{guard:.45},def:10,aff:['u_shen','s_hawk','r_dale','c_frank'],d:'軍營搵返嚟，連發'},
+ nvg:{n:'夜視鏡',slot:'tool',w:1,k:'bino',r:'SSR',job:{guard:.2,patrol:.35},d:'夜晚都睇得一清二楚'},
+ surgkit:{n:'戰地手術包',slot:'tool',w:4,k:'med',r:'SSR',job:{medic:.5},aff:['s_huatuo','u_grace','s_park'],d:'可以喺任何地方開刀'},
+ bike:{n:'越野電單車',slot:'tool',w:0,k:'pack',r:'SSR',job:{scav:.25},loot:.5,risk:.7,aff:['s_sofia','s_fei'],d:'一日搜三條街'},
+ /* UR 專屬 */
+ halberd:{n:'方天畫戟',slot:'weapon',w:16,k:'halberd',r:'UR',set:'lubu',aff:['u_lubu'],job:{guard:.6},def:12,d:'呂布專屬，重四十斤'},
+ lubu_armor:{n:'獸面吞頭連環鎧',slot:'armor',w:15,k:'suit',r:'UR',set:'lubu',aff:['u_lubu'],job:{guard:.15},bite:.4,risk:.6,d:'呂布專屬'},
+ redhare:{n:'赤兔馬',slot:'tool',w:0,k:'pack',r:'UR',set:'lubu',aff:['u_lubu'],job:{scav:.4,patrol:.3},loot:.4,risk:.6,d:'人中呂布，馬中赤兔'},
+ goldstaff:{n:'如意金箍棒',slot:'weapon',w:2,k:'staff',r:'UR',set:'wukong',aff:['u_wukong'],job:{guard:.5,patrol:.3},def:10,d:'孫悟空專屬，可大可小'},
+ goldarmor:{n:'鎖子黃金甲',slot:'armor',w:5,k:'suit',r:'UR',set:'wukong',aff:['u_wukong'],bite:.3,risk:.5,d:'孫悟空專屬'},
+ cloud:{n:'筋斗雲',slot:'tool',w:0,k:'cloud',r:'UR',set:'wukong',aff:['u_wukong'],job:{scav:.5},loot:.5,risk:.5,d:'一個筋斗十萬八千里'},
+ mjolnir:{n:'雷神之鎚',slot:'weapon',w:22,k:'hammer',r:'UR',set:'thor',aff:['u_thor'],job:{guard:.7},def:15,d:'索爾專屬，凡人拎唔起'},
+ megingjord:{n:'力量腰帶',slot:'armor',w:2,k:'arm',r:'UR',set:'thor',aff:['u_thor'],bite:.7,st:{str:6},d:'索爾專屬，力量 +6'},
+ jarngreipr:{n:'鐵手套',slot:'tool',w:4,k:'box',r:'UR',set:'thor',aff:['u_thor'],job:{guard:.2,repair:.2},d:'索爾專屬'},
+ dv_xbow:{n:'連發連弩',slot:'weapon',w:6,k:'xbow',r:'UR',set:'davinci',aff:['u_davinci'],job:{guard:.3},def:8,d:'達文西手稿上嘅設計'},
+ dv_wings:{n:'機械翼',slot:'armor',w:6,k:'wings',r:'UR',set:'davinci',aff:['u_davinci'],job:{scav:.2},risk:.5,d:'達文西專屬'},
+ dv_codex:{n:'達文西手稿',slot:'tool',w:1,k:'book',r:'UR',set:'davinci',aff:['u_davinci'],job:{repair:.5,medic:.2},d:'萬能天才嘅筆記'},
+ bride_scissors:{n:'鴛鴦剪',slot:'weapon',w:2,k:'knife',r:'UR',set:'bride',aff:['u_bride'],job:{guard:.3,scav:.2},d:'鬼新娘專屬'},
+ bride_veil:{n:'紅蓋頭',slot:'armor',w:1,k:'arm',r:'UR',set:'bride',aff:['u_bride'],bite:.2,d:'鬼新娘專屬'},
+ bride_lamp:{n:'引魂燈',slot:'tool',w:2,k:'lamp',r:'UR',set:'bride',aff:['u_bride'],job:{patrol:.5},d:'鬼新娘專屬'},
+ soulsword:{n:'噬魂劍',slot:'weapon',w:8,k:'sword',r:'UR',set:'chenmo',aff:['u_chenmo'],job:{guard:.5},def:8,d:'陳墨專屬'},
+ blackrobe:{n:'玄黑道袍',slot:'armor',w:3,k:'arm',r:'UR',set:'chenmo',aff:['u_chenmo'],bite:.5,risk:.6,d:'陳墨專屬'},
+ cauldron:{n:'吞天鼎',slot:'tool',w:10,k:'box',r:'UR',set:'chenmo',aff:['u_chenmo'],job:{medic:.2,repair:.2},d:'陳墨專屬，煉化晶核'},
+ frostsword:{n:'寒霜仙劍',slot:'weapon',w:5,k:'sword',r:'UR',set:'liu',aff:['u_liu'],job:{guard:.4,scav:.2},d:'柳如烟專屬'},
+ silkrobe:{n:'冰蠶羽衣',slot:'armor',w:1,k:'arm',r:'UR',set:'liu',aff:['u_liu'],bite:.5,risk:.5,d:'柳如烟專屬'},
+ jadevase:{n:'玉淨瓶',slot:'tool',w:2,k:'med',r:'UR',set:'liu',aff:['u_liu'],job:{medic:.6},d:'柳如烟專屬'},
+ merlinstaff:{n:'梅林法杖',slot:'weapon',w:4,k:'wand',r:'UR',set:'merlin',aff:['u_merlin'],job:{guard:.3,patrol:.3},d:'梅林專屬'},
+ starrobe:{n:'星辰長袍',slot:'armor',w:2,k:'arm',r:'UR',set:'merlin',aff:['u_merlin'],bite:.6,risk:.7,d:'梅林專屬'},
+ crystal:{n:'水晶球',slot:'tool',w:3,k:'bino',r:'UR',set:'merlin',aff:['u_merlin'],job:{patrol:.4},d:'梅林專屬'},
+ /* SSR 專屬 */
+ featherfan:{n:'羽扇',slot:'tool',w:1,k:'fan',r:'SSR',set:'zhuge',aff:['s_zhuge'],job:{patrol:.25,guard:.1},d:'諸葛亮專屬'},
+ guanjin:{n:'綸巾',slot:'armor',w:1,k:'arm',r:'SSR',set:'zhuge',aff:['s_zhuge'],risk:.8,d:'諸葛亮專屬'},
+ masamune:{n:'名刀正宗',slot:'weapon',w:8,k:'blade',r:'SSR',set:'mio',aff:['u_mio'],job:{guard:.45,scav:.2},d:'宮本澪專屬'},
+ kendoarmor:{n:'劍道護具',slot:'armor',w:6,k:'arm',r:'SSR',set:'mio',aff:['u_mio','r_rin'],bite:.6,risk:.8,d:'宮本澪專屬'}
+});
+const SETS={
+ lubu:{n:'人中呂布',owner:'u_lubu',d:'保安效率再 +100%，夜間防禦 +30，佢唔會受傷',fx:{job:{guard:1},def:30,noHurt:1}},
+ wukong:{n:'齊天大聖',owner:'u_wukong',d:'每晚屍潮 -25%，巡邏同搜括再 +50%',fx:{job:{patrol:.5,scav:.5},horde:.75}},
+ thor:{n:'諸神黃昏',owner:'u_thor',d:'守夜時引雷機會再 +45%，保安再 +50%',fx:{thunder:.45,job:{guard:.5}}},
+ davinci:{n:'文藝復興',owner:'u_davinci',d:'設施升級所需工作量減半，維修再 +80%',fx:{workHalf:1,job:{repair:.8}}},
+ bride:{n:'冥婚',owner:'u_bride',d:'每晚 50% 機會令屍群自相殘殺（屍潮 -35%）',fx:{ghostwed:.5}},
+ chenmo:{n:'吞天魔功',owner:'u_chenmo',d:'每晚守住必得晶核 +1，全能力 +2',fx:{coreNight:1,st:{str:2,agi:2,per:2,tec:2,med:2,cok:2,wil:2}}},
+ liu:{n:'冰心訣·極',owner:'u_liu',d:'每日必定化解一個感染者嘅屍毒，全隊 HP 每日再 +8',fx:{cureDaily:1,teamHeal:8}},
+ merlin:{n:'星辰預言',owner:'u_merlin',d:'全隊效率再 +10%，夜間防禦再 +15%',fx:{teamEff:.1,defPct:.15}},
+ zhuge:{n:'空城計·真',owner:'s_zhuge',d:'防線被破時必定冇人受傷',fx:{breachSafe:1}},
+ mio:{n:'一刀流',owner:'u_mio',d:'保安再 +60%，唔使彈藥',fx:{job:{guard:.6},noAmmo:1}}
+};
+Object.keys(SETS).forEach(k=>SETS[k].items=Object.keys(ITEMS).filter(i=>ITEMS[i].set===k));
+Object.assign(LOCITEM,{train:['crowbar','chainsaw','walkie','torch'],bunker:['torch','toolbox','medkit','helmet'],prison:['pistol','shield','vest','umbrella'],hospital:['medkit','surgkit','armguard'],dungeon:['assault','vest','nvg','surgkit','chainsaw'],fortress:['toolbox','chainsaw','bike','helmet'],store:['bat','shoes','pack','umbrella','torch','apron'],market:['cleaver','wok','spear','apron'],barracks:['rifle','shield','binoc','pistol','assault','vest','nvg']});
+const ITEM_BY_R={};RANK.forEach(r=>ITEM_BY_R[r]=Object.keys(ITEMS).filter(k=>ITEMS[k].r===r));
+const IRATES=[['UR',2],['SSR',7],['SR',18],['R',33],['C',40]];
+function rollItem(r){return pick(ITEM_BY_R[r]||ITEM_BY_R.R)}
+function setOf(u){
+  if(!u.eq)return null;const es=Object.values(u.eq).filter(Boolean);
+  for(const k in SETS){const S=SETS[k];if(S.owner===u.id&&S.items.every(i=>es.includes(i)))return S}
+  return null;
+}
+function setFx(u,k){const S=setOf(u);return S?S.fx[k]||0:0}
+function gearSt(u,k){
+  let b=0;if(u.eq)for(const sl in u.eq){const it=u.eq[sl]&&ITEMS[u.eq[sl]];if(it&&it.st&&it.st[k])b+=it.st[k]}
+  const S=setOf(u);if(S&&S.fx.st&&S.fx.st[k])b+=S.fx.st[k];return b;
+}
+function teamAdd(k){return G?G.units.filter(u=>u.act).reduce((s,u)=>s+(typeof fxOf(u)[k]==='number'&&!MULK.includes(k)?fxOf(u)[k]:0)+(setFx(u,k)||0),0):0}
+function teamMul(k){return G?G.units.filter(u=>u.act).reduce((s,u)=>s*(fxOf(u)[k]??1)*(setFx(u,k)||1),1):1}
+function teamMaxFx(k){return G?G.units.filter(u=>u.act).reduce((s,u)=>Math.max(s,(fxOf(u)[k]||0),(setFx(u,k)||0)),0):0}
+/* 覆寫：裝備效果用基本力量計（避免力量腰帶循環），加套裝 */
+const iw=(u,it)=>it.set&&(it.aff||[]).includes(u.id)?Math.ceil(it.w/2):it.w;
+function eqF(u,it){
+  const w=iw(u,it),st=statB(u,'str')+(it.st&&it.st.str?0:gearSt(u,'str'));let f=st>=w?1:Math.max(.35,1-(w-st)*.08);
+  if(u.sta<30&&w>=8)f*=.75;
+  if((it.aff||[]).includes(u.id))f*=1.5;
+  return f;
+}
+function eqNote(u,it){
+  const st=statB(u,'str')+gearSt(u,'str'),n=[];
+  if((it.aff||[]).includes(u.id))n.push(it.set?'專屬 ×1.5':'專精 ×1.5');
+  if(st<iw(u,it))n.push(`力量唔夠（${st}/${iw(u,it)}）`);
+  if(iw(u,it)<it.w)n.push('主人用重量減半');
+  if(u.sta<30&&it.w>=8)n.push('體力低 ×0.75');
+  return n.join('、');
+}
+function eqS(u){
+  const r={job:{},def:0,risk:1,bite:1,loot:0,w:0,over:0,set:null};
+  if(!u.eq)return r;
+  for(const sl in u.eq){const id=u.eq[sl];if(!id||!ITEMS[id])continue;const it=ITEMS[id],f=eqF(u,it);r.w+=iw(u,it);
+    if(it.job)for(const j in it.job)r.job[j]=(r.job[j]||0)+it.job[j]*f;
+    if(it.def)r.def+=it.def*f;
+    if(it.risk)r.risk*=Math.max(.2,1-(1-it.risk)*f);
+    if(it.bite)r.bite*=Math.max(.2,1-(1-it.bite)*f);
+    if(it.loot)r.loot+=it.loot*f;}
+  const S=setOf(u);
+  if(S){r.set=S;if(S.fx.job)for(const j in S.fx.job)r.job[j]=(r.job[j]||0)+S.fx.job[j];if(S.fx.def)r.def+=S.fx.def}
+  r.over=Math.max(0,r.w-statB(u,'str')-gearSt(u,'str'));
+  return r;
+}
+function itemFx(u,it){
+  const f=u?eqF(u,it):1,p=x=>Math.round(x*f*100),out=[];
+  if(it.job)for(const j in it.job)out.push(`${JOBS[j].n} +${p(it.job[j])}%`);
+  if(it.def)out.push(`夜間防禦 +${Math.round(it.def*f)}`);
+  if(it.loot)out.push(`搜括收穫 +${p(it.loot)}%`);
+  if(it.risk)out.push(`受傷風險 -${Math.round((1-Math.max(.2,1-(1-it.risk)*f))*100)}%`);
+  if(it.bite)out.push(`被咬機會 -${Math.round((1-Math.max(.2,1-(1-it.bite)*f))*100)}%`);
+  if(it.st)for(const k in it.st)out.push(`${STN[k]} +${it.st[k]}`);
+  return out.join('、');
+}
+const rk=r=>`<span class="rk ${r}">${r}</span>`;
+
+/* ---------- 裝備抽獎 ---------- */
+let RTAB='char';
+function rollR(rates){let x=R()*100;for(const [g,p] of rates){if((x-=p)<=0)return g}return 'C'}
+function pullGear(n){
+  const cost=n===10?720:80;
+  if(G.res.bat<cost){toast('電池唔夠。搜括、守夜、完成章節都會有');return}
+  G.res.bat-=cost;G.gpity=G.gpity||0;const out=[];
+  for(let i=0;i<n;i++){
+    let r=rollR(IRATES);G.gpity++;
+    if(G.gpity>=50&&r!=='UR')r='SSR';
+    if(n===10&&i===9&&!out.some(o=>['UR','SSR','SR'].includes(ITEMS[o].r))&&!['UR','SSR','SR'].includes(r))r='SR';
+    if(r==='UR'||r==='SSR')G.gpity=0;
+    const id=rollItem(r);addItem(id);out.push(id);
+  }
+  save();renderHead();
+  modal(`<div class="modal" style="width:min(900px,100%)">
+    <div class="eyebrow">空投箱落地 · ${n} 件</div>
+    <div class="pullgrid ${n===1?'one':''}">${out.map((id,k)=>{const it=ITEMS[id],S=it.set&&SETS[it.set];return `<div class="pc g-${it.r}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="gcard r-${it.r}"><div class="row" style="justify-content:space-between">${rk(it.r)}<span class="chip">${SLOTS[it.slot]}</span></div><b>${esc(it.n)}</b><small>${esc(itemFx(null,it))}</small>${S?`<small class="setn">專屬：${esc(CH[S.owner].n)} · 套裝「${esc(S.n)}」</small>`:''}</div></div></div></div>`}).join('')}</div>
+    <div class="row" style="justify-content:center"><button class="btn" id="again">再開 ${n} 個（${cost} 電池）</button><button class="btn pri" id="ok">收到</button></div>
+  </div>`,()=>{
+    const cards=[...document.querySelectorAll('.pc')];const t=cards.map((c,i)=>setTimeout(()=>c.classList.add('open'),250+i*180));
+    $('#ok').onclick=()=>{t.forEach(clearTimeout);closeOv()};
+    $('#again').onclick=()=>{t.forEach(clearTimeout);closeOv();pullGear(n)};
+  });
+}
+function rRadio(){
+  const total=CH_RAW.length,got=Object.keys(G.dex).length;
+  const head=`<div class="subtabs"><button data-rt="char" aria-pressed="${RTAB==='char'}">倖存者廣播</button><button data-rt="gear" aria-pressed="${RTAB==='gear'}">物資空投（裝備）</button></div>`;
+  if(RTAB==='char'){
+    $('#main').innerHTML=head+`
+    <div class="radio">
+      <div class="dial"><div class="scale"><div class="nums"><span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span></div><div class="needle" id="needle"></div></div><div class="grill"></div></div>
+      <div class="stack">
+        <h2>緊急廣播</h2>
+        <p class="muted" style="margin:0;max-width:52ch">用電池向全城廣播。回應嘅可能係普通街坊，亦可能係傳說入面嘅人物——呂布、孫悟空、雷神索爾、達文西、鬼新娘、陳墨、柳如烟……抽到某個陣營嘅角色會解鎖對應副本。</p>
+        <div class="row"><button class="btn" id="p1">廣播 1 次 · 100 電池</button><button class="btn pri" id="p10">廣播 10 次 · 900 電池</button></div>
+        <p class="muted" style="margin:0;font-size:12px">10 連保證 SR 以上 · 50 次保底 SSR（${G.pity}/50）· 重複角色突破 +1★。傳奇好強，但都要有人煮飯、巡邏、維修。</p>
+        <div class="rates">${RATES.map(([g,p])=>`<div class="rate"><b>${rk(g)}</b><span>${p}%</span></div>`).join('')}</div>
+      </div>
+    </div>
+    <div class="secth"><h2>倖存者圖鑑</h2><span class="muted type">${got}/${total}</span></div>
+    <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b>${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}</div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}" style="font-size:20px">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
+    $('#p1').onclick=()=>{spin();setTimeout(()=>pull(1),500)};
+    $('#p10').onclick=()=>{spin();setTimeout(()=>pull(10),500)};
+  }else{
+    const keys=Object.keys(ITEMS).sort((a,b)=>RANK.indexOf(ITEMS[a].r)-RANK.indexOf(ITEMS[b].r));
+    const own=k=>(G.inv[k]||0)+G.units.filter(u=>u.eq&&Object.values(u.eq).includes(k)).length;
+    $('#main').innerHTML=head+`
+    <div class="radio">
+      <div class="dial airdrop"><div class="crate"><span>AIRDROP</span></div></div>
+      <div class="stack">
+        <h2>物資空投</h2>
+        <p class="muted" style="margin:0;max-width:52ch">用電池換軍方空投坐標。空投係裝備最主要嘅來源，傳奇角色嘅專屬裝備（UR）只可以喺度或者副本搵到。集齊一套專屬裝備，佢會覺醒套裝技能。</p>
+        <div class="row"><button class="btn" id="g1">開 1 箱 · 80 電池</button><button class="btn pri" id="g10">開 10 箱 · 720 電池</button></div>
+        <p class="muted" style="margin:0;font-size:12px">10 連保證 SR 以上 · 50 次保底 SSR（${G.gpity||0}/50）</p>
+        <div class="rates">${IRATES.map(([g,p])=>`<div class="rate"><b>${rk(g)}</b><span>${p}%</span></div>`).join('')}</div>
+      </div>
+    </div>
+    <div class="secth"><h2>專屬套裝</h2></div>
+    <div class="inv">${Object.keys(SETS).map(k=>{const S=SETS[k];return `<div class="invi"><div class="row" style="justify-content:space-between"><b>${esc(S.n)}</b><span class="muted" style="font-size:12px">${esc(CH[S.owner].n)}</span></div><div style="font-size:12px">${esc(S.d)}</div><div class="chips">${S.items.map(i=>`<span class="chip ${own(i)?'good':''}">${esc(ITEMS[i].n)}</span>`).join('')}</div></div>`}).join('')}</div>
+    <div class="secth"><h2>裝備圖鑑</h2><span class="muted type">${keys.filter(own).length}/${keys.length}</span></div>
+    <div class="inv">${keys.map(k=>{const it=ITEMS[k],o=own(k);return `<div class="invi ${o?'':'off'}"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${o?esc(it.n):'？？？'}</b><span class="chip">${SLOTS[it.slot]} · 重 ${it.w}</span></div>${o?`<div style="font-size:12px">${esc(itemFx(null,it))}</div>`:''}</div>`}).join('')}</div>`;
+    $('#g1').onclick=()=>pullGear(1);$('#g10').onclick=()=>pullGear(10);
+  }
+  document.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{RTAB=b.dataset.rt;render()});
+}
+function go(v){VIEW=v;SEL=null;render();window.scrollTo(0,0)}
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
-if(G){if(!G.base)G.base='mall';if(!G.clear)G.clear={};if(!G.inv)G.inv={bat:1,cleaver:1,armguard:1};if(!G.chDay){G.chDay={};CHAPS.forEach(c=>{if(c.n<=G.ch)G.chDay[c.n]=c.day});if(G.ch>=6&&G.flags.huntersMet&&!G.flags.raidDay)G.flags.raidDay=40;}}else{fresh();save()}
+if(G){if(!G.base)G.base='mall';if(!G.clear)G.clear={};if(!G.inv)G.inv={bat:1,cleaver:1,armguard:1};if(!G.dun){G.dun={};Object.keys(G.dex).forEach(id=>{if(CH[id])CH[id].fa.forEach(f=>{const d=DUNS.find(x=>x.key===f);if(d)G.dun[d.id]=1})})}if(G.over==='cure'||G.over==='fort'){G.over=null;G.flags.ended=0;G.flags.overShown=0}if(!G.chDay){G.chDay={};CHAPS.forEach(c=>{if(c.n<=G.ch)G.chDay[c.n]=c.day});if(G.ch>=6&&G.flags.huntersMet&&!G.flags.raidDay)G.flags.raidDay=40;}}else{fresh();save()}
 render();
 if(G.queue.length)showQueue();
 
