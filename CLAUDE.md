@@ -38,7 +38,7 @@ README.md       ← 玩家介紹
 | `8b_layout.js` | 據點頁 `rBase`（平面圖、拖人調工 `startDrag`）、`fitPlan`（令桌面版一版睇晒唔使捲） |
 | `8c_outpost.js` | 分部基本：`opMembers`、`reserveFree`、`opRoles`，同 `op_trade`/`op_help`/`op_raid`/`op_rebel` 事件 |
 | `9a_char.js` | Diablo 式角色面板 `openUnit`、槍械精通 `GUNNERS`、綁定裝備 `BOUND`、個人背包 `BITEMS`、修仙 |
-| `9b_crew.js` | 倖存者大地圖 `rCrew`：據點方塊（`mnode`）、拖人 `crewDrag`/`crewMove`、方塊排位 `fitNodes`、拖方塊 `nodeDrag` |
+| `9b_crew.js` | 倖存者大地圖 `rCrew`：據點方塊（`mnode`）、拖人 `crewDrag`/`crewMove`、方塊排位 `fitNodes`、拖方塊 `nodeDrag`。分部預設收起（重疊頭像 `opStack` + N），撳開用 `toggleOp`，一次只開一個（`OPEN_OP`）；候選地點係一行；手機版次序係主據點 → 游擊隊 → 分部 → 摺埋嘅「可設立分部」（`CAND_OPEN`） |
 | `9c_reveal.js` | 抽到新角色或新裝備時嘅 3D 旋轉登場 `reveal()` |
 | `9d_net.js` | 據點網絡，見下面「據點網絡」 |
 | `9_boot.js` | 啟動同舊存檔 migrate（**一定要最後**） |

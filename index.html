@@ -537,6 +537,13 @@ button.cell:hover{border-color:var(--sodium)}
 @media (max-width:560px){.distg{grid-template-columns:1fr}}
 .mnode:not(.main){width:max-content;max-width:260px}
 @media (max-width:760px){.mnode:not(.main){width:auto}}
+.mnode.cand{flex-direction:row;align-items:center;gap:6px;padding:3px 8px;min-width:0;white-space:nowrap}.mnode.cand b{font-size:12px}.mnode.cand .type{font-size:10px}
+.mnode.op .mn-full{display:none}.mnode.op.open .mn-full{display:flex;flex-direction:column;gap:4px}.mnode.op.open .mn-sum{display:none}
+.mnode.op.open{z-index:6;box-shadow:0 0 0 2px var(--sodium2),0 10px 30px rgba(0,0,0,.7)}
+.mn-sum{display:flex;align-items:center;gap:6px;cursor:pointer}
+.stk{display:inline-flex;align-items:center;padding-left:2px}.stk .chead{width:24px;height:24px;margin-left:-6px;border:2px solid #1c1712;box-sizing:content-box}.stk .chead:first-child{margin-left:0}.stk em{font-style:normal;font-size:11px;color:var(--dust);margin-left:5px}
+.mn-tg{background:none;border:0;color:var(--dust);cursor:pointer;font-size:15px;padding:0 4px;margin-left:auto}.mnode.op.open .mn-tg{transform:rotate(180deg)}
+.candgrp summary{cursor:pointer;padding:6px 4px;color:var(--dust);font-size:13px}.candl{display:flex;flex-direction:column;gap:6px}
 </style>
 </head>
 <body>
@@ -3348,9 +3355,10 @@ function openEquip(id,sl){
 }
 /* ================= 倖存者頁：港灣市大地圖（據點＋分部），後備名單喺右邊，全部人可以拖放 ================= */
 const MAPPOS={store:[22,26],mall:[46,18],tenement:[14,52],market:[66,24],estate:[58,62],hardware:[34,74],clinic:[80,52],police:[10,14],metro:[42,44],school:[86,16],barracks:[88,84],lab:[10,86],train:[26,42],bunker:[66,88],prison:[92,38],hospital:[76,72],fortress:[50,86],museum:[30,8],dungeon:[56,46]};
+function tokRing(u){return u.inf?'var(--bile)':u.crit||u.inj?'var(--blood)':u.mut?'#b07ad8':'transparent'}
 function crewTok(u){
   const c=CH[u.id];
-  const ring=u.inf?'var(--bile)':u.crit||u.inj?'var(--blood)':u.mut?'#b07ad8':'transparent';
+  const ring=tokRing(u);
   return `<button class="ctok" data-ctok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}${u.act?' · '+JOBS[u.job].n:''}">${typeof isCap==='function'&&isCap(u)?'<i class="crown" title="隊長">♛</i>':''}<span class="chead r-${c.g}" style="--ring:${ring}">${fig(u,null,true)}</span><small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }
 function rCrew(){
@@ -3364,17 +3372,21 @@ function rCrew(){
   const main=(()=>{const [x,y]=pos(G.base);return ` <div class="mnode main" data-dz="base" data-key="base" data-loc="${G.base}" data-fixed="${fx(G.base)}" style="left:${x}%;top:${y}%">
       <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(BS(G).n)}</b><span class="chip good">主據點</span><span class="muted type">${beds(G)}/${bedCap(G)} 床</span>${capBtn('base')}${linkBtn('base')}</div>${nodeChips('base')}${linksRow('base')}
       <div class="mn-t">${A.map(crewTok).join('')||'<span class="muted">冇人</span>'}</div></div>`})();
-  const opn=ops.map(id=>{const o=G.outposts[id],b=BASES[id],M=opMembers(G,id),[x,y]=pos(id);return `<div class="mnode op" data-dz="op:${id}" data-key="${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%">
-      <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(b.n)}</b><span class="chip">分部</span><span class="muted type">${M.filter(u=>!isAnimal(u)).length}/${b.beds}</span>${linkBtn(id)}<button class="mn-x" data-opclose="${id}" title="撤銷分部">✕</button></div>
-      <div class="row" style="gap:4px;font-size:10px"><span class="muted">忠誠</span><span class="minibar" style="width:60px"><i style="width:${o.loy}%;background:${o.loy<35?'var(--blood)':o.loy<60?'var(--sodium)':'var(--calm)'}"></i></span><span class="type">${o.loy}</span>${capBtn(id)}${hops(G,id).base===undefined?'<span class="chip bad" title="冇補給線連返主據點：唔夠嘢冇人接濟，剩嘅物資只會存喺分部">未連主據點</span>':''}</div>${nodeChips(id)}${linksRow(id)}
+  // 分部預設收起：只顯示重疊頭像同 +N；撳開先見全部人（一次開一個，OPEN_OP）
+  const opn=ops.map(id=>{const o=G.outposts[id],b=BASES[id],M=opMembers(G,id),[x,y]=pos(id),have=M.filter(u=>!isAnimal(u)).length,need=opNeed(id);return `<div class="mnode op" data-dz="op:${id}" data-key="${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%">
+      <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(b.n)}</b><span class="chip">分部</span><span class="muted type">${have}/${b.beds}</span>${linkBtn(id)}<button class="mn-x" data-opclose="${id}" title="撤銷分部">✕</button><button class="mn-tg" data-optg="${id}" title="打開／收起">▾</button></div>
+      <div class="row" style="gap:4px;font-size:10px"><span class="muted">忠誠</span><span class="minibar" style="width:60px"><i style="width:${o.loy}%;background:${o.loy<35?'var(--blood)':o.loy<60?'var(--sodium)':'var(--calm)'}"></i></span><span class="type">${o.loy}</span>${capBtn(id)}${hops(G,id).base===undefined?'<span class="chip bad" title="冇補給線連返主據點：唔夠嘢冇人接濟，剩嘅物資只會存喺分部">未連主據點</span>':''}</div>
+      <div class="mn-sum" data-optg="${id}">${opStack(M)}${have<need?`<span class="chip bad" title="人手唔夠：今晚屍群壓力大增，有機會淪陷">人手 ${have}/${need}</span>`:''}</div>
+      <div class="mn-full">${nodeChips(id)}${linksRow(id)}
       <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟駐守</span>'}</div>
-      ${o.last?`<div class="mn-l" title="${esc(o.last)}">昨日：${esc(o.last)}</div>`:''}</div>`}).join('');
-  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted" style="font-size:10px">拖人入嚟設立分部 · ${b.beds} 床 · 要 ${opNeed(id)} 人先守得住</span>${(G.idle||{})[id]?`<span class="idlew">無人駐守 ${G.idle[id]}/${IDLE_LOST} 日，夠鐘會被重新佔據</span>`:''}</div>`}).join('');
+      ${o.last?`<div class="mn-l" title="${esc(o.last)}">昨日：${esc(o.last)}</div>`:''}</div></div>`}).join('');
+  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%" title="拖人入嚟設立分部 · ${b.beds} 床 · 要 ${opNeed(id)} 人先守得住"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted type">${b.beds}床</span>${(G.idle||{})[id]?`<span class="idlew" title="無人駐守 ${G.idle[id]}/${IDLE_LOST} 日，夠鐘會被重新佔據">無人 ${G.idle[id]}/${IDLE_LOST}</span>`:''}</div>`}).join('');
+  const mob=innerWidth<=760;
   $('#main').innerHTML=`
   <div class="crewgrid">
     <section class="panel citywrap">
       <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去據點、分部、游擊隊或者後備；拖落主據點某人身上係換位；拖 ⛓ 去另一個據點拉補給線（撳線中間 ✕ 拆走）；撳 ♛ 揀隊長；拖 ⠿ 搬方塊</span><span class="row" style="gap:6px"><button class="btn sm pri" id="bulkjoin">一鍵分配／加入…</button><button class="btn sm" id="allres">全部放去後備</button><button class="btn sm" id="maplayout" title="主據點放中間，分部、游擊隊同候選地點排喺四邊">調整位置</button></span></div>
-      <div class="city"><svg class="netsvg" aria-hidden="true"></svg><div class="netx"></div>${dots}${cn}${opn}${sqNode()}${main}</div>
+      <div class="city"><svg class="netsvg" aria-hidden="true"></svg><div class="netx"></div>${mob?`${main}${sqNode()}${opn}${cand.length?`<details class="candgrp" ${CAND_OPEN?'open':''}><summary>可設立分部（${cand.length}）</summary><div class="candl">${cn}</div></details>`:''}`:`${dots}${cn}${opn}${sqNode()}${main}`}</div>
     </section>
     <aside class="panel reservep" data-dz="reserve">
       <div class="row" style="justify-content:space-between"><h3>後備名單</h3><span class="muted type">${Rs.length} 人</span></div>
@@ -3387,8 +3399,10 @@ function rCrew(){
     <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="eqico" style="--rc:${RCOL[it.r]}">${itemIcon(it.k,RCOL[it.r])}</span><b>${rk(it.r)} ${esc(it.n)}</b></span><span class="chip">${SLOTS[it.slot]}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.gun?' · 需要槍械精通':''}</div></div>`}).join('')||'<span class="muted">背包空空。</span>'}</div>
   </details>
   ${D.length?`<details class="panel" style="margin-top:8px"><summary><b>離開咗嘅人</b> <span class="muted">${D.length}</span></summary><div class="cards" style="margin-top:8px">${D.map(id=>tag(id,true)).join('')}</div></details>`:''}`;
-  fitNodes();drawNet();bindNet();
+  fitNodes();if(OPEN_OP&&!G.outposts[OPEN_OP])OPEN_OP=null;if(OPEN_OP)opOpen(OPEN_OP);drawNet();bindNet();
   document.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>nodeDrag(e,g.closest('.mnode')));
+  document.querySelectorAll('[data-optg]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;toggleOp(b.dataset.optg)});
+  const cg=document.querySelector('.candgrp');if(cg)cg.ontoggle=()=>CAND_OPEN=cg.open;
   const ml=$('#maplayout');if(ml)ml.onclick=()=>{arrangeMap();save();render();toast('已經調整好位置：主據點喺中間，其他據點排喺四邊')};
   document.querySelectorAll('[data-ctok]').forEach(b=>{
     b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}openUnit(b.dataset.ctok)};
@@ -3396,6 +3410,25 @@ function rCrew(){
   });
   $('#aeq').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動`:'而家已經係最好配搭')};
   document.querySelectorAll('[data-opclose]').forEach(b=>{let armed=false;b.onclick=e=>{e.stopPropagation();if(!armed){armed=true;b.textContent='確認？';b.classList.add('armed');return}opMembers(G,b.dataset.opclose).forEach(u=>u.op=null);delete G.outposts[b.dataset.opclose];save();render();toast('分部已撤銷，人員返回後備名單')}});
+}
+let OPEN_OP=null,CAND_OPEN=false;
+// 收起時嘅重疊頭像：有傷、感染、變種嘅排前，等佢哋嘅色圈一眼睇到
+function opStack(M){
+  if(!M.length)return '<span class="muted" style="font-size:11px">拖人入嚟駐守</span>';
+  const S=[...M].sort((a,b)=>(tokRing(b)!=='transparent')-(tokRing(a)!=='transparent')),k=5;
+  return `<span class="stk" title="${esc(M.map(nm).join('、'))}">${S.slice(0,k).map(u=>`<span class="chead r-${CH[u.id].g}" style="--ring:${tokRing(u)}">${fig(u,null,true)}</span>`).join('')}${M.length>k?`<em>+${M.length-k}</em>`:''}</span>`;
+}
+// 打開分部：記低原本位置，推返入地圖範圍；收起時放返原位
+function opOpen(id){
+  const city=document.querySelector('.city'),n=city&&city.querySelector(`.mnode.op[data-key="${id}"]`);if(!n)return;
+  n.classList.add('open');if(innerWidth<=760)return;
+  n.dataset.ox=n.style.left;n.dataset.oy=n.style.top;
+  const W=city.clientWidth,H=city.clientHeight,w=n.offsetWidth,h=n.offsetHeight;
+  n.style.left=Math.min(Math.max(parseFloat(n.style.left),w/2+6),W-w/2-6)+'px';n.style.top=Math.min(Math.max(parseFloat(n.style.top),h/2+6),H-h/2-6)+'px';
+}
+function toggleOp(id){
+  document.querySelectorAll('.mnode.op.open').forEach(n=>{n.classList.remove('open');if(n.dataset.ox){n.style.left=n.dataset.ox;n.style.top=n.dataset.oy;delete n.dataset.ox;delete n.dataset.oy}});
+  OPEN_OP=OPEN_OP===id?null:id;if(OPEN_OP)opOpen(OPEN_OP);drawNet();
 }
 function crewMove(u,dz,onTok){
   const name=nm(u);
@@ -3486,7 +3519,7 @@ function nodeDrag(e,n){
     const w=n.offsetWidth,h=n.offsetHeight;
     n.style.left=Math.min(Math.max(x0+dx,w/2+4),cr.width-w/2-4)+'px';n.style.top=Math.min(Math.max(y0+dy,h/2+4),cr.height-h/2-4)+'px';drawNet()};
   const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);n.classList.remove('moving');
-    if(!moved)return;G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];G.mapFix=G.mapFix||{};G.mapFix[n.dataset.loc]=1;n.dataset.fixed='1';save();drawNet()};
+    if(!moved){if(n.classList.contains('op')&&!LINKFROM)toggleOp(n.dataset.key);return}G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];G.mapFix=G.mapFix||{};G.mapFix[n.dataset.loc]=1;n.dataset.fixed='1';save();drawNet()};
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
 /* ---------- 新角色 / 新裝備：3D 旋轉登場 ---------- */

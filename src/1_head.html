@@ -532,6 +532,13 @@ button.cell:hover{border-color:var(--sodium)}
 @media (max-width:560px){.distg{grid-template-columns:1fr}}
 .mnode:not(.main){width:max-content;max-width:260px}
 @media (max-width:760px){.mnode:not(.main){width:auto}}
+.mnode.cand{flex-direction:row;align-items:center;gap:6px;padding:3px 8px;min-width:0;white-space:nowrap}.mnode.cand b{font-size:12px}.mnode.cand .type{font-size:10px}
+.mnode.op .mn-full{display:none}.mnode.op.open .mn-full{display:flex;flex-direction:column;gap:4px}.mnode.op.open .mn-sum{display:none}
+.mnode.op.open{z-index:6;box-shadow:0 0 0 2px var(--sodium2),0 10px 30px rgba(0,0,0,.7)}
+.mn-sum{display:flex;align-items:center;gap:6px;cursor:pointer}
+.stk{display:inline-flex;align-items:center;padding-left:2px}.stk .chead{width:24px;height:24px;margin-left:-6px;border:2px solid #1c1712;box-sizing:content-box}.stk .chead:first-child{margin-left:0}.stk em{font-style:normal;font-size:11px;color:var(--dust);margin-left:5px}
+.mn-tg{background:none;border:0;color:var(--dust);cursor:pointer;font-size:15px;padding:0 4px;margin-left:auto}.mnode.op.open .mn-tg{transform:rotate(180deg)}
+.candgrp summary{cursor:pointer;padding:6px 4px;color:var(--dust);font-size:13px}.candl{display:flex;flex-direction:column;gap:6px}
 </style>
 
 <header>
