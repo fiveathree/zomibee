@@ -377,6 +377,10 @@ details.panel summary{cursor:pointer}
 .tag .rn.UR,.modal.paper .rn.UR{background:none;color:#b03a9a}
 .tag .rn.SSR,.modal.paper .rn.SSR{color:#8a5a00}.tag .rn.SR,.modal.paper .rn.SR{color:#5a2fa8}.tag .rn.R,.modal.paper .rn.R{color:#2a5aa8}.tag .rn.C,.modal.paper .rn.C{color:#3a332a}
 .tag.gone .rn{color:#ccc!important;background:none}
+.grip{cursor:move;touch-action:none;user-select:none;-webkit-user-select:none}
+.gr{color:var(--dust);font-size:13px;margin-right:2px;letter-spacing:-1px}
+.mnode.moving{z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.7),0 0 0 2px var(--sodium2)}
+@media (max-width:760px){.gr{display:none}.grip{cursor:default}}
 /* daily report */
 .modal.report{width:min(1400px,100%);max-height:calc(100vh - 32px);padding:14px 16px;gap:10px}
 .rephead{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -3169,20 +3173,20 @@ function rCrew(){
   const keys=Object.keys(ITEMS).filter(k=>!ITEMS[k].bind&&(G.inv[k]||used[k]));
   const shown=new Set([G.base,...ops,...cand]);
   const dots=Object.keys(MAPPOS).filter(k=>!shown.has(k)&&(LOCS.find(l=>l.id===k)||{ch:99}).ch<=G.ch).map(k=>{const l=LOCS.find(x=>x.id===k);const [x,y]=MAPPOS[k];return `<div class="mdot" style="left:${x}%;top:${y}%"><i></i><span>${esc(l.n)}${BASES[k]?` · 清場 ${Math.round(G.clear[k]||0)}%`:''}</span></div>`}).join('');
-  const pos=k=>MAPPOS[k]||[50,50];
-  const main=(()=>{const [x,y]=pos(G.base);return `<div class="mnode main" data-dz="base" style="left:${x}%;top:${y}%">
-      <div class="mn-h"><b>${esc(BS(G).n)}</b><span class="chip good">主據點</span><span class="muted type">${beds(G)}/${bedCap(G)} 床</span></div>
+  G.mapPos=G.mapPos||{};const pos=k=>G.mapPos[k]||MAPPOS[k]||[50,50];const fx=k=>G.mapPos[k]?'1':'';
+  const main=(()=>{const [x,y]=pos(G.base);return `<div class="mnode main" data-dz="base" data-loc="${G.base}" data-fixed="${fx(G.base)}" style="left:${x}%;top:${y}%">
+      <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(BS(G).n)}</b><span class="chip good">主據點</span><span class="muted type">${beds(G)}/${bedCap(G)} 床</span></div>
       <div class="mn-t">${A.map(crewTok).join('')||'<span class="muted">冇人</span>'}</div></div>`})();
-  const opn=ops.map(id=>{const o=G.outposts[id],b=BASES[id],M=opMembers(G,id),[x,y]=pos(id);return `<div class="mnode op" data-dz="op:${id}" style="left:${x}%;top:${y}%">
-      <div class="mn-h"><b>${esc(b.n)}</b><span class="chip">分部</span><span class="muted type">${M.filter(u=>!isAnimal(u)).length}/${b.beds}</span><button class="mn-x" data-opclose="${id}" title="撤銷分部">✕</button></div>
+  const opn=ops.map(id=>{const o=G.outposts[id],b=BASES[id],M=opMembers(G,id),[x,y]=pos(id);return `<div class="mnode op" data-dz="op:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%">
+      <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(b.n)}</b><span class="chip">分部</span><span class="muted type">${M.filter(u=>!isAnimal(u)).length}/${b.beds}</span><button class="mn-x" data-opclose="${id}" title="撤銷分部">✕</button></div>
       <div class="row" style="gap:4px;font-size:10px"><span class="muted">忠誠</span><span class="minibar" style="width:60px"><i style="width:${o.loy}%;background:${o.loy<35?'var(--blood)':o.loy<60?'var(--sodium)':'var(--calm)'}"></i></span><span class="type">${o.loy}</span></div>
       <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟駐守</span>'}</div>
       ${o.last?`<div class="mn-l" title="${esc(o.last)}">昨日：${esc(o.last)}</div>`:''}</div>`}).join('');
-  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" style="left:${x}%;top:${y}%"><b>＋ ${esc(b.n)}</b><span class="muted" style="font-size:10px">拖人入嚟設立分部 · ${b.beds} 床</span></div>`}).join('');
+  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted" style="font-size:10px">拖人入嚟設立分部 · ${b.beds} 床</span></div>`}).join('');
   $('#main').innerHTML=`
   <div class="crewgrid">
     <section class="panel citywrap">
-      <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去主據點、分部或者後備；拖落主據點入面某人身上就係換位；撳一下睇人物</span></div>
+      <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去主據點、分部或者後備；拖落主據點入面某人身上就係換位；撳一下睇人物；拖 ⠿ 搬方塊位置</span>${Object.keys(G.mapPos||{}).length?'<button class="btn sm" id="mapreset">重設位置</button>':''}</div>
       <div class="city">${dots}${cn}${opn}${main}</div>
     </section>
     <aside class="panel reservep" data-dz="reserve">
@@ -3197,6 +3201,8 @@ function rCrew(){
   </details>
   ${D.length?`<details class="panel" style="margin-top:8px"><summary><b>離開咗嘅人</b> <span class="muted">${D.length}</span></summary><div class="cards" style="margin-top:8px">${D.map(id=>tag(id,true)).join('')}</div></details>`:''}`;
   fitNodes();
+  document.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>nodeDrag(e,g.closest('.mnode')));
+  const mr=$('#mapreset');if(mr)mr.onclick=()=>{G.mapPos={};save();render()};
   document.querySelectorAll('[data-ctok]').forEach(b=>{
     b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}openUnit(b.dataset.ctok)};
     b.onpointerdown=e=>crewDrag(e,b);
@@ -3263,13 +3269,28 @@ function fitNodes(){
       const a=nodes[i],b=nodes[j];
       const ax=parseFloat(a.style.left),ay=parseFloat(a.style.top),bx=parseFloat(b.style.left),by=parseFloat(b.style.top);
       const ox=(a.offsetWidth+b.offsetWidth)/2+6-Math.abs(ax-bx),oy=(a.offsetHeight+b.offsetHeight)/2+6-Math.abs(ay-by);
-      if(ox>0&&oy>0){moved=true;const mv=b.classList.contains('main')?a:b,st=mv===a?-1:1;
+      if(ox>0&&oy>0){moved=true;const fixedB=b.classList.contains('main')||b.dataset.fixed,fixedA=a.classList.contains('main')||a.dataset.fixed;if(fixedA&&fixedB)continue;const mv=fixedB?a:b,st=mv===a?-1:1;
         if(ox<oy){const nx=parseFloat(mv.style.left)+(bx>=ax?ox:-ox)*st;mv.style.left=Math.min(Math.max(nx,mv.offsetWidth/2+pad),W-mv.offsetWidth/2-pad)+'px'}
         else{const ny=parseFloat(mv.style.top)+(by>=ay?oy:-oy)*st;mv.style.top=Math.min(Math.max(ny,mv.offsetHeight/2+pad),H-mv.offsetHeight/2-pad)+'px'}}
     }
     if(!moved)break;}
 }
 addEventListener('resize',()=>{if(VIEW==='crew')render()});
+
+function nodeDrag(e,n){
+  if(e.button>0||e.target.closest('button,[data-ctok]'))return;
+  e.preventDefault();
+  const city=document.querySelector('.city'),cr=city.getBoundingClientRect();
+  const sx=e.clientX,sy=e.clientY,x0=parseFloat(n.style.left),y0=parseFloat(n.style.top);let moved=false;
+  n.classList.add('moving');
+  const move=ev=>{ev.preventDefault();const dx=ev.clientX-sx,dy=ev.clientY-sy;if(!moved&&Math.hypot(dx,dy)<4)return;moved=true;
+    const w=n.offsetWidth,h=n.offsetHeight;
+    n.style.left=Math.min(Math.max(x0+dx,w/2+4),cr.width-w/2-4)+'px';n.style.top=Math.min(Math.max(y0+dy,h/2+4),cr.height-h/2-4)+'px'};
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);n.classList.remove('moving');
+    if(!moved)return;G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];n.dataset.fixed='1';save();
+    const mr=$('#mapreset');if(!mr)render()};
+  addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
