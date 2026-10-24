@@ -456,6 +456,41 @@ button.cell:hover{border-color:var(--sodium)}
 .ghost{position:fixed;z-index:70;pointer-events:none;transform:translate(-50%,-65%) scale(1.25);filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
 .zone.hover{outline:3px solid var(--sodium)!important;outline-offset:-3px;background-color:rgba(255,162,58,.12)}
 @media (prefers-reduced-motion:reduce){.pc .in,.needle{transition:none}}
+/* 3D 登場 */
+.ov.rv{background:radial-gradient(60% 55% at 50% 42%,color-mix(in srgb,var(--rc) 24%,transparent),transparent 70%),rgba(8,7,6,.96);overflow:hidden;display:grid;place-items:center;padding:16px}
+.rv-rays{position:absolute;left:50%;top:40%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--rc) 22%,transparent) 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 55%);mask:radial-gradient(circle,#000 0,transparent 55%);animation:rvRays 22s linear infinite;pointer-events:none}
+.rv.g-UR .rv-rays{background:repeating-conic-gradient(from 0deg,rgba(255,180,240,.22) 0 6deg,transparent 6deg 12deg,rgba(168,228,255,.22) 12deg 18deg,transparent 18deg 24deg,rgba(255,240,168,.22) 24deg 30deg,transparent 30deg 36deg)}
+.rv-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,#fff,var(--rc) 30%,transparent 70%);animation:rvFlash .9s ease-out forwards;pointer-events:none}
+.rv-box{position:relative;z-index:1;width:min(440px,100%);max-height:100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.rv-eb{font-family:var(--f-type);letter-spacing:.2em;color:var(--rc);font-size:12px;text-transform:uppercase}
+.rv-stage{position:relative;width:100%;height:min(46vh,340px);perspective:900px;display:grid;place-items:center;cursor:grab;touch-action:none;user-select:none}
+.rv-stage.grab{cursor:grabbing}
+.rv-floor{position:absolute;left:50%;bottom:4%;width:62%;height:16%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--rc) 70%,transparent),transparent);box-shadow:0 0 40px color-mix(in srgb,var(--rc) 45%,transparent);animation:rvPulse 2.4s ease-in-out infinite}
+.rv-pop{width:min(62%,230px);aspect-ratio:40/56;transform-style:preserve-3d;animation:rvIn .9s cubic-bezier(.2,1.4,.4,1) both}
+.rv-stage.gear .rv-pop{aspect-ratio:1;width:min(56%,210px)}
+.rv-spin{position:relative;width:100%;height:100%;transform-style:preserve-3d;will-change:transform}
+.rv-l{position:absolute;inset:0}
+.rv-l svg{width:100%;height:100%;display:block;overflow:visible}
+.rv-front{transform:translateZ(6px);backface-visibility:hidden;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--rc) 55%,transparent))}
+.rv-back{transform:translateZ(-6px) rotateY(180deg);backface-visibility:hidden;filter:brightness(.2) drop-shadow(0 0 6px color-mix(in srgb,var(--rc) 70%,transparent))}
+.rv-mid{filter:brightness(.28)}
+.rv-info{animation:rvUp .6s .35s ease-out both}
+.rv-name{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--f-disp);font-size:24px;font-weight:900}
+.rv-sub{color:var(--dust);font-size:13px}
+.rv-sk{margin:6px 0 0;font-size:13px}.rv-sk b{color:var(--rc)}
+.rv-txt{margin:4px 0 0;font-size:13px;color:var(--bone);opacity:.85}
+.rv-set{margin:4px 0 0;font-size:12px;color:var(--sodium2)}
+.rv-hint{font-size:11px;color:var(--dust);opacity:.7}
+.rv-dust{position:absolute;inset:0;pointer-events:none}
+.rv-dust i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:var(--rc);box-shadow:0 0 8px var(--rc);opacity:0;animation:rvDust 4s linear infinite}
+@keyframes rvRays{to{transform:rotate(360deg)}}
+@keyframes rvFlash{0%{opacity:1}100%{opacity:0}}
+@keyframes rvIn{0%{transform:scale(.2) translateY(40px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes rvUp{0%{transform:translateY(14px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes rvPulse{50%{opacity:.6;transform:translateX(-50%) scale(1.08)}}
+@keyframes rvDust{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-90vh);opacity:0}}
+@media (max-height:640px){.rv-stage{height:38vh}.rv-txt{display:none}}
+@media (prefers-reduced-motion:reduce){.rv-rays,.rv-dust i,.rv-floor{animation:none}.rv-pop,.rv-info{animation-duration:.01s}}
 </style>
 </head>
 <body>
@@ -1808,7 +1843,7 @@ function pull(n){
   }
   G.pulls+=n;save();renderHead();
   const lab={new:'NEW',star:'突破 +1★',dead:'已犧牲 · 電池 +30',max:'滿星 · 電池 +50'};
-  modal(`<div class="modal dismiss" style="width:min(900px,100%)">
+  const grid=()=>modal(`<div class="modal dismiss" style="width:min(900px,100%)">
     <div class="eyebrow">廣播收到 ${n} 個回應</div>
     <div class="pullgrid ${n===1?'one':''}">${out.map((o,k)=>{const c=CH[o.id];return `<div class="pc g-${c.g}" data-k="${k}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="tag" style="cursor:default;height:100%"><div class="tt">${av(o.id)}<div style="min-width:0"><b class="rn ${c.g}">${esc(c.n)}</b><small>${esc(c.job)}</small></div></div><span class="badge ${o.type==='new'?'':'dup'}">${lab[o.type]}</span>${o.type==='new'&&!o.act?'<small>床位滿，入咗後備</small>':''}</div></div></div></div>`}).join('')}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="again">再廣播 ${n} 次（${n===10?900:100} 電池）</button><button class="btn pri" id="ok">收到</button></div>
@@ -1817,6 +1852,8 @@ function pull(n){
     $('#ok').onclick=()=>{t.forEach(clearTimeout);closeOv()};
     $('#again').onclick=()=>{t.forEach(clearTimeout);closeOv();pull(n)};
   });
+  const fresh=out.filter(o=>o.type==='new').map(o=>({kind:'char',id:o.id,act:o.act}));
+  typeof reveal==='function'&&fresh.length?reveal(fresh,grid):grid();
 }
 function rRadio(){
   const total=CH_RAW.length,got=Object.keys(G.dex).length;
@@ -2452,15 +2489,18 @@ function pullGear(n){
   const cost=n===10?720:80;
   if(G.res.bat<cost){toast('電池唔夠。搜括、守夜、完成章節都會有');return}
   G.res.bat-=cost;G.gpity=G.gpity||0;const out=[];
+  if(!G.gdex){G.gdex={};Object.keys(G.inv||{}).forEach(k=>{if(G.inv[k]>0)G.gdex[k]=1});G.units.forEach(u=>Object.values(u.eq||{}).forEach(k=>{if(k)G.gdex[k]=1}))}
+  const fresh=[];
   for(let i=0;i<n;i++){
     let r=rollR(IRATES);G.gpity++;
     if(G.gpity>=50&&r!=='UR')r='SSR';
     if(n===10&&i===9&&!out.some(o=>['UR','SSR','SR'].includes(ITEMS[o].r))&&!['UR','SSR','SR'].includes(r))r='SR';
     if(r==='UR'||r==='SSR')G.gpity=0;
-    const id=rollItem(r);addItem(id);out.push(id);
+    const id=rollItem(r),nw=!G.gdex[id];addItem(id);out.push(id);
+    if(nw){G.gdex[id]=1;fresh.push({kind:'gear',id})}
   }
   save();renderHead();
-  modal(`<div class="modal dismiss" style="width:min(900px,100%)">
+  const grid=()=>modal(`<div class="modal dismiss" style="width:min(900px,100%)">
     <div class="eyebrow">空投箱落地 · ${n} 件</div>
     <div class="pullgrid ${n===1?'one':''}">${out.map((id,k)=>{const it=ITEMS[id],S=it.set&&SETS[it.set];return `<div class="pc g-${it.r}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="gcard r-${it.r}"><div class="row" style="justify-content:space-between">${rk(it.r)}<span class="chip">${SLOTS[it.slot]}</span></div><b>${esc(it.n)}</b><small>${esc(itemFx(null,it))}</small>${S?`<small class="setn">專屬：${esc(CH[S.owner].n)} · 套裝「${esc(S.n)}」</small>`:''}</div></div></div></div>`}).join('')}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="again">再開 ${n} 個（${cost} 電池）</button><button class="btn pri" id="ok">收到</button></div>
@@ -2469,6 +2509,7 @@ function pullGear(n){
     $('#ok').onclick=()=>{t.forEach(clearTimeout);closeOv()};
     $('#again').onclick=()=>{t.forEach(clearTimeout);closeOv();pullGear(n)};
   });
+  typeof reveal==='function'&&fresh.length?reveal(fresh,grid):grid();
 }
 function rRadio(){
   const total=CH_RAW.length,got=Object.keys(G.dex).length;
@@ -3291,6 +3332,89 @@ function nodeDrag(e,n){
     const mr=$('#mapreset');if(!mr)render()};
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
+/* ---------- 新角色 / 新裝備：3D 旋轉登場 ---------- */
+const RV_RAF={id:0};
+function rvLayers(svg,n){
+  // 前面一塊、後面一塊（反轉，暗啲），中間幾塊做厚度
+  let h=`<div class="rv-l rv-front">${svg}</div><div class="rv-l rv-back">${svg}</div>`;
+  for(let i=1;i<n-1;i++){const z=-6+12*i/(n-1);h+=`<div class="rv-l rv-mid" style="transform:translateZ(${z.toFixed(2)}px)">${svg}</div>`}
+  return h;
+}
+function rvCard(o,i,tot){
+  if(o.kind==='gear'){
+    const it=ITEMS[o.id],S=it.set&&SETS[it.set],rc=RCOL[it.r];
+    return {g:it.r,html:`
+      <div class="rv-eb">新裝備 ${tot>1?`· ${i+1} / ${tot}`:''}</div>
+      <div class="rv-stage gear"><div class="rv-floor"></div><div class="rv-pop"><div class="rv-spin" id="rvSpin">${rvLayers(itemIcon(it.k,rc),9)}</div></div></div>
+      <div class="rv-info">
+        <div class="rv-name">${rk(it.r)} <b class="rn ${it.r}">${esc(it.n)}</b></div>
+        <div class="rv-sub">${SLOTS[it.slot]} · 重 ${it.w||0}${it.gun?' · 需要槍械精通':''}</div>
+        <p class="rv-txt">${esc(itemFx(null,it))}</p>
+        ${S?`<p class="rv-set">專屬：<span class="rn ${CH[S.owner].g}">${esc(CH[S.owner].n)}</span> · 套裝「${esc(S.n)}」</p>`:''}
+      </div>`};
+  }
+  const c=CH[o.id],u=G.units.find(x=>x.id===o.id)||{id:o.id},fa=(c.fa||[]).map(k=>FA[k]).filter(Boolean);
+  return {g:c.g,html:`
+    <div class="rv-eb">新倖存者 ${tot>1?`· ${i+1} / ${tot}`:''}</div>
+    <div class="rv-stage"><div class="rv-floor"></div><div class="rv-pop"><div class="rv-spin" id="rvSpin">${rvLayers(fig(u,null),9)}</div></div></div>
+    <div class="rv-info">
+      <div class="rv-name">${rk(c.g)} <b class="rn ${c.g}">${esc(c.n)}</b></div>
+      <div class="rv-sub">${esc(c.job)} · ${esc(c.o)}${fa.length?' · '+fa.map(esc).join(' / '):''}</div>
+      <p class="rv-sk"><b>${esc(c.sk.n)}</b>　${esc(c.sk.d)}</p>
+      <p class="rv-txt">${esc(c.bio||'')}</p>
+      ${o.act===false?'<p class="rv-set">床位滿，入咗後備</p>':''}
+    </div>`};
+}
+function reveal(list,done){
+  if(!list.length){done&&done();return}
+  let i=0;
+  const stop=()=>{cancelAnimationFrame(RV_RAF.id);document.removeEventListener('keydown',key)};
+  const finish=()=>{stop();$('#ovroot').innerHTML='';done?done():render()};
+  const key=e=>{if(!document.querySelector('.rv')){document.removeEventListener('keydown',key);return}if(e.key==='Escape'){e.preventDefault();finish()}};
+  document.addEventListener('keydown',key);
+  const show=()=>{
+    cancelAnimationFrame(RV_RAF.id);
+    const o=list[i],card=rvCard(o,i,list.length),last=i===list.length-1;
+    $('#ovroot').innerHTML=`<div class="ov rv g-${card.g}" role="dialog" aria-modal="true" style="--rc:${RCOL[card.g]}">
+      <div class="rv-rays"></div><div class="rv-flash"></div>
+      <div class="rv-box">${card.html}
+        <div class="rv-hint">左右拖動可以轉</div>
+        <div class="row" style="justify-content:center">${list.length>1&&!last?'<button class="btn" id="rvSkip">跳過全部</button>':''}<button class="btn pri" id="rvNext">${last?'收到':'下一個'}</button></div>
+      </div>
+      <div class="rv-dust">${Array.from({length:16},(_,k)=>`<i style="left:${(k*61%100)}%;animation-delay:${(k*.37%3).toFixed(2)}s;animation-duration:${(3+k%4*.7).toFixed(1)}s"></i>`).join('')}</div>
+    </div>`;
+    $('#rvNext').onclick=()=>{if(last)finish();else{i++;show()}};
+    const sk=$('#rvSkip');if(sk)sk.onclick=finish;
+    $('#rvNext').focus({preventScroll:true});
+    spin($('#rvSpin'),$('.rv-stage'));
+  };
+  show();
+}
+function spin(el,stage){
+  const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  let a=-25,v=still?0:60,auto=still?0:60,drag=null,lastT=performance.now();
+  const tick=t=>{
+    if(!el.isConnected)return;
+    const dt=Math.min(.05,(t-lastT)/1000);lastT=t;
+    if(!drag){v+=(auto-v)*Math.min(1,dt*1.6);a+=v*dt}
+    const bob=still?0:Math.sin(t/650)*4;
+    el.style.transform=`translateY(${bob.toFixed(1)}px) rotateY(${a.toFixed(1)}deg)`;
+    RV_RAF.id=requestAnimationFrame(tick);
+  };
+  RV_RAF.id=requestAnimationFrame(tick);
+  stage.addEventListener('pointerdown',e=>{
+    drag={x:e.clientX,a,t:performance.now(),vx:0};stage.setPointerCapture(e.pointerId);stage.classList.add('grab');
+  });
+  stage.addEventListener('pointermove',e=>{
+    if(!drag)return;const now=performance.now(),na=drag.a+(e.clientX-drag.x)*.8;
+    const d=now-drag.t;if(d>0)drag.vx=(na-a)/(d/1000);drag.t=now;a=na;
+  });
+  const up=()=>{if(!drag)return;v=Math.max(-900,Math.min(900,drag.vx||0));drag=null;stage.classList.remove('grab')};
+  stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
+}
+/* 搜括、任務得到嘅裝備都記入圖鑑，下次抽到唔當新 */
+const _addItemRV=addItem;
+addItem=function(id,n){_addItemRV(id,n);if(G&&G.gdex)G.gdex[id]=1};
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
