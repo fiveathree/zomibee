@@ -67,7 +67,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
 /* chapter */
-.chap{position:relative;padding:10px 14px;border-radius:8px;background:linear-gradient(120deg,#2b2016,#1b1712 70%);border:1px solid var(--line2)}
+.chap{position:relative;padding:7px 12px;border-radius:8px;background:linear-gradient(120deg,#2b2016,#1b1712 70%);border:1px solid var(--line2)}
 .chl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
 .chap .no{font-family:var(--f-type);color:var(--sodium);font-size:13px;letter-spacing:.1em}
 .chap h2{font-size:18px}
@@ -305,6 +305,37 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .syn{display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:13px}
 .syn-m{font-size:11px;color:var(--dust)}
 .pc.g-UR .back{box-shadow:0 0 18px #f2a6e6}.pc.g-SSR .back{box-shadow:0 0 14px #f2c552}
+/* base layout v3 */
+.toprow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch}
+@media (max-width:700px){.toprow{grid-template-columns:minmax(0,1fr)}}
+.fcmini{display:flex;align-items:center;gap:6px;background:var(--slab);border:1px solid var(--line2);border-radius:8px;padding:6px 10px}
+.fcmini .fcl{font-size:11px;letter-spacing:.1em}
+.fcmini div{background:var(--slab2);border-radius:5px;padding:3px 10px;text-align:center;min-width:70px}
+.fcmini b{display:block;font-family:var(--f-type);font-weight:400;font-size:17px;line-height:1.2;font-variant-numeric:tabular-nums}
+.fcmini span{font-size:10px;color:var(--dust)}
+.fcmini .bad b{color:var(--blood)}.fcmini .ok b{color:var(--calm)}
+.opsbar{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;background:var(--slab);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.opsbar .op{display:flex;align-items:center;gap:6px;flex:1 1 280px;min-width:0}
+.opsbar .op .sel{padding:4px 6px;font-size:13px;min-width:0;flex:1}
+.opsbar .lbl{white-space:nowrap}
+.ophint{flex-basis:100%;font-size:11px;color:var(--dust);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.planwrap{margin-top:8px;padding:10px 12px}
+.planwrap h2{font-size:18px}
+.basestats{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;align-items:center}
+.bs{font-size:11px;background:var(--slab2);border-radius:4px;padding:2px 7px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.bs b{font-family:var(--f-type);font-weight:400;color:var(--sodium2);font-size:12px}
+.minibar{display:inline-block;width:56px;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.minibar i{display:block;height:100%}
+.basestats .hint{font-size:11px;color:var(--dust);margin-left:auto}
+.synbar{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--bone);margin-top:6px;padding:0 2px}
+.synbar b{color:var(--sodium2)}
+.synbar em{font-style:normal;color:var(--sodium2)}
+.planwrap .plan{grid-auto-rows:minmax(84px,auto)}
+@media (min-width:901px) and (min-height:600px){.planwrap .plan{min-height:max(320px,calc(100vh - 402px));grid-auto-rows:minmax(min-content,1fr)}.planwrap .zone{padding-block:4px}.planwrap .zp{display:none}.planwrap .toks{padding-top:0;margin-top:2px}}
+.zhint{font-size:10px;color:var(--dust);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 0}
+.zh{flex-wrap:nowrap;min-width:0}
+@media (min-width:901px) and (max-height:900px){main{padding-block:8px 16px}.chap{padding:4px 12px}.fcmini{padding:3px 8px}.fcmini b{font-size:15px}.opsbar{margin-top:6px;padding:4px 10px}.planwrap{margin-top:6px;padding:6px 10px}.planhead .btn.pri{padding:6px 14px}.basestats{margin:5px 0}.planwrap .plan{gap:4px;padding:4px;border-width:5px}.synbar{margin-top:4px}.supply{padding-bottom:5px}.hbar{padding-block:6px 4px}.planwrap .tok{width:40px}.planwrap .tok svg{width:32px;height:44px}.planwrap .tok small{font-size:9px}.planwrap .zh b{font-size:13px}}
+main{padding-block:12px 40px}
 /* base layout v2 */
 .basegrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start;margin-top:14px}
 @media (max-width:900px){.basegrid{grid-template-columns:minmax(0,1fr)}}
@@ -2513,51 +2544,34 @@ function rBase(){
   const avail=allLocs(G);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
   const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
   const done=!!G.obj[c.n];
+  const L=avail.find(x=>x.id===G.loc);
+  const locHint=L?'主要：'+Object.keys(L.loot).sort((a,b)=>L.loot[b]-L.loot[a]).map(k=>RES[k].n).join('、')+(BASES[L.id]?`；清場後可做據點（${BASES[L.id].beds} 床）`:'')+(L.dun?`；${L.bonus.map(f=>FA[f]).join('、')}有加成，普通人風險 ×${L.mortal.risk}、意志 -${L.mortal.san}`:''):'';
+  const syn=synList();
   $('#main').innerHTML=`
-  <section class="chap">
-    <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
-      <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
-      <span class="nxt">${c.n<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${CNUM[c.n]}章`:`完成目標解鎖第${CNUM[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
-      <details class="chd"><summary>劇情（已解鎖 ${c.n}/${CHAPS.length} 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${CNUM[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
-    </div>
-    ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
-  </section>
-  <div class="basegrid">
-    ${planHTML(A,res)}
-    <aside class="stack side">
-      <div class="panel stack">
-        <h3>今晚預報</h3>
-        <div class="fc">
-          <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>預計屍潮${raidTonight(G)?'＋'+raidTonight(G).n:''}${G.warn>1?' ⚠':''}</span></div>
-          <div class="${danger}"><b>${fc.def}</b><span>預計防禦</span></div>
-          <div class="${G.res.food<fc.food?'bad':''}"><b>${fc.food}/${fc.water}</b><span>今晚食物/水</span></div>
-        </div>
-        <p class="muted" style="margin:0;font-size:11px">防禦 = 圍牆 ×0.4 + 保安 + 全員自衛。保安每人用 1 發彈藥火力 ×1.5。巡邏減少屍潮，冇人巡邏屍潮 +10%。</p>
+  <div class="toprow">
+    <section class="chap">
+      <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
+        <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
+        <span class="nxt">${c.n<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${CNUM[c.n]}章`:`完成目標解鎖第${CNUM[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
+        <details class="chd"><summary>劇情（已解鎖 ${c.n}/${CHAPS.length} 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${CNUM[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
       </div>
-      <div class="panel stack">
-        <div class="field"><label class="lbl" for="loc">搜括地點</label>
-          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.script?'【劇本】':l.dun?'【副本】':''}${l.n.replace(/^(劇本|.+本) · /,'')} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]||l.dun||l.id==='dungeon'?` · ${(G.clear[l.id]||0)>=100?'已完成':(l.dun?'進度 ':'清場 ')+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select>
-          <span class="muted" style="font-size:11px">${(()=>{const l=avail.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、')+(BASES[l.id]?`。清場後可以搬去做據點（${BASES[l.id].beds} 床）`:'')+(l.dun?`。${l.bonus.map(f=>FA[f]).join('、')}陣營有加成；普通人去受傷風險 ×${l.mortal.risk}、意志 -${l.mortal.san}`:''):''})()}</span>
-        </div>
-        <div class="field"><label class="lbl" for="proj">維修項目</label>
-          <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select>
-          <span class="muted" style="font-size:11px">${G.proj==='fort'?'用零件修補圍牆':esc(FAC[G.proj].d)}</span>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="row" style="justify-content:space-between"><h3>據點</h3><span class="muted type" style="font-size:12px">${A.length}/${bedCap(G)} 床</span></div>
-        <div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted">圍牆耐久</span><span class="type">${G.fort}/${fortMax(G)}</span></div>
-        <div class="wall"><i style="width:${G.fort/fortMax(G)*100}%"></i></div>
-        <div class="fac" style="margin-top:8px">${FK.map(k=>`<div title="${esc(FAC[k].d)}"><span>${FAC[k].n}</span><b>Lv${G.fac[k]}</b></div>`).join('')}</div>
-        <p class="muted" style="margin:8px 0 0;font-size:12px">擊退 ${G.kills} 隻 · ${Object.values(G.gone).filter(x=>x.dead).length} 人犧牲${res.length?` · 後備 ${res.length} 人 <button class="linkbtn" data-go="crew">調動</button>`:''}</p>
-      </div>
-      <div class="panel">
-        <h3>陣營加成</h3>
-        <div class="syn">${synList().map(x=>`<div><b>${FA[x.f]}</b> <span class="muted">${x.n} 人 · 全工作 +${x.b}%</span><div class="syn-m">${x.m.map(u=>esc(nm(u))).join('、')}</div></div>`).join('')||'<span class="muted" style="font-size:12px">同陣營嘅人有兩個或以上喺據點就有加成；做同一份工再加。</span>'}</div>
-        <p class="muted" style="margin:6px 0 0;font-size:11px">同陣營同做一份工：每個拍檔該工作再 +8%。</p>
-      </div>
-    </aside>
-  </div>`;
+      ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
+    </section>
+    <section class="fcmini" title="防禦 = 圍牆 ×0.4 + 保安 + 全員自衛。保安每人用 1 發彈藥火力 ×1.5。巡邏減少屍潮，冇人巡邏屍潮 +10%。">
+      <span class="lbl fcl">今晚</span>
+      <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>屍潮${raidTonight(G)?'＋'+raidTonight(G).n:''}${G.warn>1?' ⚠':''}</span></div>
+      <div class="${danger}"><b>${fc.def}</b><span>防禦</span></div>
+      <div class="${G.res.food<fc.food||G.res.water<fc.water?'bad':''}"><b>${fc.food}/${fc.water}</b><span>食物/水</span></div>
+    </section>
+  </div>
+  <div class="opsbar">
+    <div class="op"><label class="lbl" for="loc">搜括地點</label>
+      <select class="sel" id="loc" title="${esc(locHint)}">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.script?'【劇本】':l.dun?'【副本】':''}${l.n.replace(/^(劇本|.+本) · /,'')} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]||l.dun||l.id==='dungeon'?` · ${(G.clear[l.id]||0)>=100?'已完成':(l.dun?'進度 ':'清場 ')+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select></div>
+    <div class="op"><label class="lbl" for="proj">維修項目</label>
+      <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select></div>
+  </div>
+  ${planHTML(A,res)}
+  <div class="synbar"><b>陣營加成</b>${syn.length?syn.map(x=>`<span><em>${FA[x.f]}</em> ${x.n}人 +${x.b}%（${x.m.map(u=>esc(nm(u))).join('、')}）</span>`).join(''):'<span>同陣營兩個或以上喺據點就有加成</span>'}<span class="muted">同陣營同做一份工，每個拍檔再 +8%</span></div>`;
   $('#end').onclick=doEnd;
   $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
   $('#aeq2').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動（專屬裝備優先俾主人，休息嘅人除裝）`:'而家已經係最好配搭')};
@@ -2574,13 +2588,13 @@ function planHTML(A,res){
     const z=b.z[k];const us=A.filter(u=>(canWork(u,u.job)?u.job:'rest')===k);
     const cls=sel?(canWork(sel,k)?'drop':'no'):'';
     return `<div class="zone z-${k} ${cls}" style="grid-area:${k}" data-z="${k}" role="button" tabindex="0" aria-label="${esc(z[0])}（${z[1]}）">
-      <div class="zh"><b>${esc(z[0])}</b><span>${z[1]}${k==='scav'&&loc?' → '+esc(loc.n):''}</span><em class="zc">${us.length||''}</em></div>
+      <div class="zh"><b>${esc(z[0])}</b><span>${z[1]}${k==='scav'&&loc?' → '+esc(loc.n):''}</span>${k==='scav'&&loc?`<span class="zhint">${esc('主要：'+Object.keys(loc.loot).sort((a,b)=>loc.loot[b]-loc.loot[a]).map(r=>RES[r].n).join('、')+(BASES[loc.id]?`；清場後可做據點（${BASES[loc.id].beds} 床）`:'')+(loc.dun?`；${loc.bonus.map(f=>FA[f]).join('、')}有加成，普通人風險 ×${loc.mortal.risk}`:''))}</span>`:''}<em class="zc">${us.length||''}</em></div>
       ${z[2]?`<div class="zp">${esc(z[2])}</div>`:''}
       <div class="toks">${us.map(tok).join('')||(k==='scav'||k==='patrol'?'':'<span class="zp">（冇人）</span>')}</div>
     </div>`}).join('');
   return `<section class="panel planwrap">
     <div class="planhead">
-      <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:12px">${esc(b.pd)}</div></div>
+      <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:11px">${esc(b.pd)}</div></div>
       <div class="row acts">
         <button class="btn sm" id="aeq2">自動配裝</button>
         <button class="btn sm" id="auto">自動分配</button>
@@ -2588,7 +2602,15 @@ function planHTML(A,res){
         <button class="btn pri" id="end" ${G.over?'disabled':''}>結束第 ${G.day} 日</button>
       </div>
     </div>
-    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>，撳或者拖去一個區域派佢去；撳其他地方取消。`:'拖住人去唔同區域就可以調工；撳一下睇狀態同裝備。'}${A.length?'':' 據點冇人，去「廣播」招募倖存者。'}</p>
+    <div class="basestats">
+      <span class="bs"><span class="muted">床位</span> <b>${A.length}/${bedCap(G)}</b></span>
+      <span class="bs wallbs"><span class="muted">圍牆</span> <b>${G.fort}/${fortMax(G)}</b><span class="minibar"><i style="width:${fr*100}%;background:${fr<.3?'var(--blood)':fr<.6?'var(--sodium)':'#a08a6a'}"></i></span></span>
+      ${FK.map(k=>`<span class="bs" title="${esc(FAC[k].d)}"><span class="muted">${FAC[k].n}</span> <b>${G.fac[k]}</b></span>`).join('')}
+      <span class="bs"><span class="muted">擊退</span> <b>${G.kills}</b></span>
+      <span class="bs"><span class="muted">犧牲</span> <b>${Object.values(G.gone).filter(x=>x.dead).length}</b></span>
+      ${res.length?`<span class="bs"><span class="muted">後備</span> <b>${res.length}</b> <button class="linkbtn" data-go="crew">調動</button></span>`:''}
+      <span class="hint">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>：撳或者拖去區域派佢去`:'拖人去唔同區域調工；撳一下睇狀態同裝備'}</span>
+    </div>
     <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
   </section>`;
 }
