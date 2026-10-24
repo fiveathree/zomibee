@@ -244,6 +244,41 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .tok.sel .d{box-shadow:0 0 0 2px var(--sodium),0 0 14px var(--sodium)}
 .tok i{position:absolute;top:-4px;right:-7px;font-style:normal;font-size:9px;line-height:1.3;background:#ffb8f5;color:#1c1206;border-radius:3px;padding:0 3px;font-family:var(--f-type)}
 @media (max-width:560px){.plan{gap:4px;padding:4px;border-width:5px}.zone{padding:5px}.zh b{font-size:12px}.zp{display:none}.tok{width:36px}.tok .d{width:28px;height:28px;font-size:13px}.tok small{max-width:36px}}
+/* figures, popover, gear */
+.av svg{width:100%;height:100%;position:absolute;inset:0;border-radius:inherit}
+.av{overflow:hidden;font-size:0}
+.av span{font-size:10px;z-index:1;text-shadow:0 1px 2px #000}
+.av::before{z-index:2}
+.tok{position:relative;width:46px;display:flex;flex-direction:column;align-items:center}
+.tok svg{width:40px;height:56px;display:block;transition:transform .15s}
+.tok:hover svg{transform:translateY(-2px)}
+.tok.sel svg{filter:drop-shadow(0 0 4px var(--sodium)) drop-shadow(0 0 2px var(--sodium))}
+.tok i{top:0;right:0}
+.tok small{margin-top:-2px}
+.pop{position:fixed;z-index:45;width:min(280px,calc(100vw - 16px));background:var(--slab);border:1px solid var(--sodium);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:7px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.pop-h{display:flex;gap:8px;align-items:center}
+.pop-h .av{width:34px;height:42px;grid-row:auto}
+.pop-x{font-size:20px;line-height:1;color:var(--dust);padding:0 4px;align-self:flex-start}
+.pop .bars{gap:6px}
+.pkst{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+.pkst div{background:var(--slab2);border-radius:4px;padding:2px 0;text-align:center;font-size:10px;color:var(--dust);line-height:1.2}
+.pkst b{display:block;font-family:var(--f-type);font-weight:400;font-size:13px;color:var(--bone)}
+.pkst em{display:block;font-style:normal;font-size:9px;color:var(--calm)}
+.pkst.g6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.eqline{display:flex;flex-wrap:wrap;gap:4px}
+.eqs{font-size:11px;background:var(--slab2);border-radius:3px;padding:1px 6px}
+.eqs.none{color:var(--dust)}.eqs.heavy{color:var(--blood)}
+.bigfig{width:72px;height:100px;flex:none;background:radial-gradient(circle at 50% 70%,rgba(255,162,58,.15),transparent 70%);border-radius:8px}
+.bigfig svg{width:100%;height:100%}
+.aptg em.eqp{display:block;font-style:normal;font-size:9px;color:var(--calm)}
+.eqrow{display:flex;gap:10px;align-items:center;padding-top:8px;margin-top:8px;border-top:1px solid var(--line)}
+.eqrow .lbl{width:34px;flex:none}
+.eqpick{text-align:left;background:var(--slab2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.eqpick:hover{border-color:var(--sodium)}
+.inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.invi{background:var(--slab);border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
+.plan{grid-auto-rows:minmax(104px,auto)}
+@media (max-width:560px){.tok{width:38px}.tok svg{width:34px;height:47px}}
 @media (prefers-reduced-motion:reduce){.pc .in,.needle{transition:none}}
 </style>
 </head>
@@ -267,6 +302,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 </header>
 <main class="wrap" id="main"></main>
 <div id="ovroot"></div>
+<div id="pop" class="pop" hidden></div>
 <script>
 /* ================= 數據 ================= */
 const KEY='zomibee_v1';
@@ -490,7 +526,7 @@ function condMult(u){
 }
 function eff(u,j){
   if(!canWork(u,j)||j==='rest')return 0;
-  const f=fxOf(u);let e=apt(u,j)*condMult(u)*(f.job[j]||1);
+  const f=fxOf(u);let e=apt(u,j)*condMult(u)*(f.job[j]||1)*(1+(eqS(u).job[j]||0));
   if(f.berserk&&j==='guard'&&u.hp<maxHp(u)/2)e*=1.5;
   return e;
 }
@@ -519,7 +555,7 @@ function forecast(g){
   let horde=hordeBase(g)*(1-red);
   if(raidTonight(g))horde+=38+(g.flags.angry?10:0);
   let ammo=g.res.ammo,gp=0;
-  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)});
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
   const def=g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+act(g).filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0);
   const A=act(g);
   const eat=A.reduce((s,u)=>s+fxOf(u).eat,0);
@@ -552,12 +588,13 @@ function infect(u,src){
   return `${nm(u)} 被咬咗！`;
 }
 function killUnit(u,why){
+  unequipAll(u);
   G.units=G.units.filter(x=>x!==u);
   G.gone[u.id]={d:G.day,why,dead:true};
   act(G).forEach(x=>sanD(x,-8));
   addLog(`${nm(u)} 死咗。${why}`);
 }
-function leaveUnit(u,why){G.units=G.units.filter(x=>x!==u);G.gone[u.id]={d:G.day,why,dead:false};addLog(`${nm(u)} 離開咗據點。${why}`)}
+function leaveUnit(u,why){unequipAll(u);G.units=G.units.filter(x=>x!==u);G.gone[u.id]={d:G.day,why,dead:false};addLog(`${nm(u)} 離開咗據點。${why}`)}
 function sanD(u,n){if(n<0)n*=fxOf(u).sanDecay;u.san=cl(u.san+n,0,100)}
 function allSan(n){act(G).forEach(u=>sanD(u,n))}
 function addRes(o){const out=[];for(const k in o){if(!o[k])continue;G.res[k]=Math.max(0,(G.res[k]||0)+o[k]);if(k==='core'&&o[k]>0)G.flags.coreTotal=(G.flags.coreTotal||0)+o[k];out.push(`${RES[k].n} ${o[k]>0?'+':''}${o[k]}`)}return out.join('、')}
@@ -576,7 +613,7 @@ function endDay(){
   if(by.scav.length){
     const loc=LOCS.find(l=>l.id===g.loc&&l.ch<=g.ch&&l.id!==g.base)||LOCS.find(l=>l.id!==g.base);
     const sc=by.scav;
-    let pw=sc.reduce((s,u)=>s+eff(u,'scav')*fxOf(u).lootAll,0);
+    let pw=sc.reduce((s,u)=>s+eff(u,'scav')*fxOf(u).lootAll*(1+eqS(u).loot),0);
     if(sc.length===1&&fxOf(sc[0]).loner)pw*=1.4;
     const sS=sc.some(u=>isS(u,'scav'));if(sS)pw*=1.3;
     const dep=g.dep[loc.id]??1;const got={};
@@ -588,13 +625,15 @@ function endDay(){
     }
     if(sS&&!got.serum&&R()<.05)got.serum=1;
     const txt=addRes(got);
+    const li=LOCITEM[loc.id]||[];let found=null;if(li.length&&R()<(sS?.45:.32)){found=pick(li);addItem(found)}
     L(`${sc.map(nm).join('、')} 去咗${loc.n}搜括：${txt||'乜都搵唔到'}${dep<.6?'（呢度已經畀人搜得七七八八）':''}`,txt?'g':'');
     g.dep[loc.id]=Math.max(.35,dep*.85);
+    if(found)L(`仲搵到裝備：${ITEMS[found].n}（${SLOTS[ITEMS[found].slot]}）`,'g');
     const tf=Math.max(.7,1-.07*(sc.length-1));
     sc.forEach(u=>{
-      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf*(isS(u,'scav')?.5:1);
+      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf*(isS(u,'scav')?.5:1)*eqS(u).risk;
       if(R()<base){const d=hurt(u,ri(12,28));L(`${nm(u)} 喺${loc.n}受傷（-${d} HP）${u.crit?'，傷勢嚴重！':''}`,'b')}
-      if(R()<base*.3*fxOf(u).bite){const t=infect(u,loc.n);if(t)L(t,fxOf(u).immune?'':'y')}
+      if(R()<base*.3*fxOf(u).bite*eqS(u).bite){const t=infect(u,loc.n);if(t)L(t,fxOf(u).immune?'':'y')}
     });
     const pc=g.clear[loc.id]||0;g.clear[loc.id]=Math.min(100,pc+pw*.8);
     if(pc<100&&g.clear[loc.id]>=100){addLog(`${loc.n}已經清場。`);if(BASES[loc.id])g.queue.push({id:'cleared',c:{loc:loc.id}})}
@@ -683,7 +722,7 @@ function endDay(){
   let horde=Math.round(hordeBase(g)*(1-fc.red)*rf(.85,1.2));
   if(raid)horde+=38+(g.flags.angry?10:0);
   let ammo=g.res.ammo,gp=0;
-  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)});
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
   const used=g.res.ammo-ammo;g.res.ammo=ammo;
   const def=Math.round(g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0));
   const night={horde,def,raid,used};
@@ -707,7 +746,7 @@ function endDay(){
     if(sG.length)L(`${sG.map(nm).join('、')}【一夫當關】頂住咗缺口`,'g');
     const pool=[...A];const vs=[];
     for(let i=0;i<n&&pool.length;i++){const w=pool.map(u=>u.job==='guard'?2:1);let r=R()*w.reduce((a,b)=>a+b,0),k=0;while(r>w[k]){r-=w[k];k++}vs.push(pool.splice(k,1)[0])}
-    vs.forEach(u=>{const d=hurt(u,Math.min(45,ri(10,20)+diff*.5));L(`${nm(u)} 喺混戰中受傷（-${d} HP）`,'b');if(!isS(u,'guard')&&R()<(.15+diff/250)*fxOf(u).bite){const t=infect(u,'夜襲');if(t)L(t,'y')}});
+    vs.forEach(u=>{const d=hurt(u,Math.min(45,ri(10,20)+diff*.5));L(`${nm(u)} 喺混戰中受傷（-${d} HP）`,'b');if(!isS(u,'guard')&&R()<(.15+diff/250)*fxOf(u).bite*eqS(u).bite){const t=infect(u,'夜襲');if(t)L(t,'y')}});
     const lost={food:-ri(0,Math.ceil(diff*.2))};if(raid){lost.ammo=-Math.round(g.res.ammo*.3);lost.med=-Math.round(g.res.med*.3);lost.food-=Math.round(g.res.food*.25)}
     const lt=addRes(lost);if(lt)L(`損失：${lt}`,'b');
     allSan(-6);
@@ -720,7 +759,7 @@ function endDay(){
   [...A].forEach(u=>{
     const f=fxOf(u),j=u.worked;
     if(j==='rest'){u.sta=cl(u.sta+40*f.staRec,0,100);sanD(u,10);u.hp=Math.min(maxHp(u),u.hp+6);if(u.inj&&R()<.2)u.inj=0}
-    else{u.sta=cl(u.sta-JOBS[j].sta,0,100);sanD(u,-JOBS[j].san)}
+    else{u.sta=cl(u.sta-JOBS[j].sta-eqS(u).over*1.2,0,100);sanD(u,-JOBS[j].san)}
     if(j!=='guard'){u.sta=cl(u.sta+15*f.staRec,0,100);u.hp=Math.min(maxHp(u),u.hp+2)}
     sanD(u,-(2+g.ch*.3));sanD(u,teamSan);
     if(u.sta<=0)u.hp-=5;
@@ -997,7 +1036,7 @@ ${b.pd}
  airdrop:{w:2,t:'空投',txt:()=>`一架直升機喺上空經過，丟咗個降落傘箱落兩條街外嘅球場。
 
 成區嘅喪屍都聽到。`,opts:[
-  {l:'派最快嗰個去搶',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);if(R()<.35*fxOf(u).risk){const d=hurt(u,ri(15,30));let t=`${nm(u)} 被一大群包圍，受傷撤退（-${d} HP）。`;if(R()<.3){const x=infect(u,'空投');if(x)t+='\n'+x}return t}return `${nm(u)} 搶到箱！入面有：${addRes({med:ri(3,6),ammo:ri(5,10),food:ri(4,8)})}`}},
+  {l:'派最快嗰個去搶',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);if(R()<.35*fxOf(u).risk){const d=hurt(u,ri(15,30));let t=`${nm(u)} 被一大群包圍，受傷撤退（-${d} HP）。`;if(R()<.3){const x=infect(u,'空投');if(x)t+='\n'+x}return t}const it=pick(['pistol','shield','medkit','firesuit','binoc']);addItem(it);return `${nm(u)} 搶到箱！入面有：${addRes({med:ri(3,6),ammo:ri(5,10),food:ri(4,8)})}，仲有一件${ITEMS[it].n}`}},
   {l:'唔好冒險',fx:()=>'第二朝，箱已經唔見咗。'}]},
  rain:{w:2,t:'大雨',txt:()=>'落咗成晚大雨。雨聲蓋過咗外面嘅聲音，大家難得瞓得好。',opts:[{l:'用晒所有桶裝水',fx:()=>{allSan(3);return addRes({water:4+G.fac.rain*3})+'，全隊意志 +3'}}]},
  trader:{w:2,t:'行商',txt:()=>`一個推住超市手推車嘅阿伯喺門口叫：「換嘢！換嘢！」
@@ -1006,6 +1045,7 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
   {l:()=>`5 食物 → ${teamFx(G,'deal','any')?6:4} 彈藥`,req:()=>G.res.food>=5,fx:()=>addRes({food:-5,ammo:teamFx(G,'deal','any')?6:4})},
   {l:()=>`6 零件 → ${teamFx(G,'deal','any')?4:3} 藥品`,req:()=>G.res.parts>=6,fx:()=>addRes({parts:-6,med:teamFx(G,'deal','any')?4:3})},
   {l:()=>`4 水 → ${teamFx(G,'deal','any')?90:60} 電池`,req:()=>G.res.water>=4,fx:()=>addRes({water:-4,bat:teamFx(G,'deal','any')?90:60})},
+  {l:()=>`${teamFx(G,'deal','any')?6:8} 食物 → 一件隨機裝備`,req:()=>G.res.food>=(teamFx(G,'deal','any')?6:8),fx:()=>{addRes({food:-(teamFx(G,'deal','any')?6:8)});const it=pick(Object.keys(ITEMS));addItem(it);return `阿伯由車底拎出一件${ITEMS[it].n}。`}},
   {l:'唔換',fx:()=>'阿伯推住車走咗，車轆吱吱聲。'}]},
  nightmare:{w:2,t:'噩夢',pre:()=>{const A=act(G).filter(talker);return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 半夜大叫醒咗。佢夢見屋企人喺門外叫佢開門。`,opts:[
   {l:'搵人陪佢傾',req:c=>act(G).length>1,fx:c=>{const b=bestTalker(x=>stat(x,'wil'),x=>x.id!==c.u);if(!b){sanD(uOf(c.u),-12);return '冇人得閒。'}b.sta=Math.max(0,b.sta-10);sanD(uOf(c.u),18);return `${nm(b)} 陪佢坐到天光。\n${nm(uOf(c.u))} 意志 +18`}},
@@ -1064,7 +1104,7 @@ function randomEvent(){
 }
 /* ================= 存檔 ================= */
 function fresh(){
-  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},base:'store',clear:{},chDay:{1:1},proj:'fort',prog:{},loc:'market',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
+  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},base:'store',clear:{},chDay:{1:1},inv:{bat:1,cleaver:1,armguard:1},proj:'fort',prog:{},loc:'market',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
   ['c_chan','c_keung','c_cheung'].forEach(id=>addUnit(G,id));
   G.units.forEach(u=>u.job=bestJob(u));
   G.queue.push({id:'s_intro'});
@@ -1340,13 +1380,6 @@ function rMenu(){
   $('#reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認';e.target.classList.add('danger');return}fresh();save();go('base');showQueue()};
 }
 
-/* ================= 啟動 ================= */
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
-G=load();
-if(G){if(!G.base)G.base='mall';if(!G.clear)G.clear={};if(!G.chDay){G.chDay={};CHAPS.forEach(c=>{if(c.n<=G.ch)G.chDay[c.n]=c.day});if(G.ch>=6&&G.flags.huntersMet&&!G.flags.raidDay)G.flags.raidDay=40;}}else{fresh();save()}
-render();
-if(G.queue.length)showQueue();
-
 /* ---------- 平面圖 ---------- */
 function planHTML(){
   const b=BS(G),A=act(G),loc=LOCS.find(l=>l.id===G.loc);
@@ -1366,7 +1399,7 @@ function planHTML(){
       <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:12px">${esc(b.pd)}</div></div>
       <button class="btn sm" id="move">${mv.length?`搬據點（${mv.length} 個已清場）`:'搬據點'}</button>
     </div>
-    ${sel?peek(sel):'<p class="muted" style="margin:6px 0 10px;font-size:12px">撳一個人睇佢嘅狀態；再撳一個區域就可以派佢去做嗰份工。</p>'}
+    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>，撳一個區域派佢去；撳其他地方取消。`:'撳一個人睇佢嘅狀態同裝備；再撳一個區域就可以派佢去做嗰份工。'}</p>
     <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
   </section>`;
 }
@@ -1384,7 +1417,7 @@ function bindPlan(){
     z.onclick=go;z.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
   });
   $('#move').onclick=openMove;
-  const pm=$('#pkmore');if(pm)pm.onclick=()=>{const id=SEL;SEL=null;openUnit(id)};
+  
 }
 function openMove(){
   const mv=canMove(G);let armed=null;
@@ -1426,6 +1459,350 @@ function peek(u){
     <div class="muted" style="font-size:12px">專長【${esc(c.sk.n)}】${esc(c.sk.d)} · 撳區域派佢去，或者再撳頭像取消。</div>
   </div>`;
 }
+/* ================= 人物繪圖 ================= */
+/* 髮型,髮色(或帽色),衫色,膚色,配件 */
+const SKIN={L:'#f2d3b6',T:'#e2b98f',M:'#c48d63',D:'#7a4b2f'};
+const LOOK={
+ u_shen:'crop,#161616,#4b5a3a,T,vest',u_mio:'pony,#111,#efe9dd,T,band hakama',u_grace:'wavy,#d1a96a,#4a6a8a,L,coat glasses',u_han:'helm,#d8a52a,#2e3a52,T,stripe',
+ s_ho:'short,#202020,#8a1f2e,T,shades',s_lin:'crop,#2a2a2a,#f3f1ea,T,band apron',s_olga:'bun,#c9bb9c,#c2662a,L,stripe',s_hawk:'cap,#4d5a33,#5b6a3c,M,vest',
+ s_park:'bun,#151515,#bfe3e3,T,cross',s_fei:'cap,#1f2f5a,#2a7de1,T,',s_mao:'hat,#111,#d6b85a,T,robe',s_sofia:'long,#24150e,#262626,M,',
+ r_rin:'pony,#151515,#1f2a4a,T,band',r_dale:'cap,#6a4a26,#9a7a48,L,star',r_choi:'short,#141414,#2c3440,T,glasses tie',r_hung:'crop,#1d1d1d,#2f5aa0,T,beard',
+ r_mei:'long,#2b1d14,#7aa7b0,T,coat glasses',r_hannah:'pony,#d9b36a,#5a7a3a,L,',r_kenji:'wavy,#1d1d1d,#3a3a4a,T,glasses',r_darnell:'crop,#111,#b8352b,D,',
+ r_maria:'veil,#111,#1e1e28,L,',r_lee:'helm,#e2be2c,#26324a,T,stripe',r_lulu:'long,#3a1a14,#e88fb0,T,',r_zhou:'short,#c4c4c4,#4d5a3a,T,glasses beard',
+ c_may:'pony,#2a1a10,#3aa35a,T,',c_cheung:'cap,#e0a020,#e0a020,T,',c_wong:'short,#6a6a6a,#7a8aa0,T,',c_keung:'helm,#f0d020,#d06a1a,T,stripe',
+ c_emily:'pony,#c47a3a,#6a9ab0,L,',c_david:'crop,#111,#262626,D,',c_mrwong:'short,#111,#f2f2f2,T,glasses tie',c_chan:'curly,#2a1a12,#b44a6a,T,apron',
+ c_minho:'short,#222,#3a5a8a,T,',c_igor:'bald,#5a3a22,#ece8e0,L,apron beard',c_ana:'pony,#111,#6ab0c0,M,apron',c_tang:'short,#dcdcdc,#2a3a5a,T,beard',
+ c_ng:'short,#151515,#f4f4f4,T,tie',n_tanaka:'short,#111,#2b2f38,T,glasses tie',n_ashley:'long,#e6c070,#c04a4a,L,',n_dou:'short,#111,#f0c030,T,kid',
+ n_fat:'short,#222,#6a4a8a,T,glasses',n_brad:'crop,#c8a060,#e04040,L,',n_rosa:'wavy,#3a1a10,#202020,M,',n_kwok:'wavy,#1a1a1a,#4a7a5a,T,',n_sun:'bun,#cfcfcf,#6a4a6a,T,glasses'
+};
+function shade(hex,k){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;r=Math.round(r*k);g=Math.round(g*k);b=Math.round(b*k);return '#'+[r,g,b].map(v=>Math.min(255,v).toString(16).padStart(2,'0')).join('')}
+function hairBack(hs,hc){
+  if(hs==='long')return `<path d="M12.5 12 Q12 4 20 4 Q28 4 27.5 12 L28.5 25 L24 24 L24 13 L16 13 L16 24 L11.5 25Z" fill="${hc}"/>`;
+  if(hs==='wavy')return `<path d="M12.5 12 Q12 4 20 4 Q28 4 27.5 12 Q29 16 27 19 L24 18 L24 13 L16 13 L16 18 L13 19 Q11 16 12.5 12Z" fill="${hc}"/>`;
+  if(hs==='pony')return `<path d="M25 8 Q32 9 31 20 Q29 15 26 12Z" fill="${hc}"/>`;
+  if(hs==='veil')return `<path d="M11 13 Q11 3 20 3 Q29 3 29 13 L31 26 L9 26Z" fill="${hc}"/>`;
+  return '';
+}
+function hairFront(hs,hc){
+  switch(hs){
+    case 'short':return `<path d="M12.8 12 Q12.5 4 20 4 Q27.5 4 27.2 12 Q25 7.5 20 8 Q15 7.5 12.8 12Z" fill="${hc}"/>`;
+    case 'crop':return `<path d="M13.3 10 Q14 4.8 20 4.8 Q26 4.8 26.7 10 Q23 7 20 7.2 Q17 7 13.3 10Z" fill="${hc}"/>`;
+    case 'long':case 'wavy':case 'pony':return `<path d="M12.8 12 Q12.5 4 20 4 Q27.5 4 27.2 12 Q24 6.5 18 9 Q15 9.5 12.8 12Z" fill="${hc}"/>`;
+    case 'bun':return `<circle cx="20" cy="3.6" r="3" fill="${hc}"/><path d="M12.8 11 Q12.5 4.5 20 4.5 Q27.5 4.5 27.2 11 Q25 7.5 20 7.8 Q15 7.5 12.8 11Z" fill="${hc}"/>`;
+    case 'curly':return [[14,7],[17,5],[20,4.3],[23,5],[26,7],[13.3,10],[26.7,10]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="${hc}"/>`).join('');
+    case 'bald':return `<path d="M13 13 Q13 10.5 14 10 L14 13Z M27 13 Q27 10.5 26 10 L26 13Z" fill="${hc}"/>`;
+    case 'cap':return `<path d="M12.6 10.5 Q13 3.6 20 3.6 Q27 3.6 27.4 10.5Z" fill="${hc}"/><rect x="19" y="9" width="12" height="2.2" rx="1" fill="${shade(hc,.75)}"/>`;
+    case 'helm':return `<path d="M11.6 11 Q12 2.2 20 2.2 Q28 2.2 28.4 11Z" fill="${hc}"/><rect x="18.6" y="2.4" width="2.8" height="8.5" fill="${shade(hc,.8)}"/><ellipse cx="20" cy="11" rx="10.5" ry="1.8" fill="${shade(hc,.85)}"/>`;
+    case 'hat':return `<path d="M13.2 10 Q13.5 6 20 6 Q26.5 6 26.8 10Z" fill="#222"/><path d="M14 7 L15.5 1.5 L24.5 1.5 L26 7Z" fill="#111"/><rect x="14.5" y="4" width="11" height="1.2" fill="#c33"/>`;
+    case 'veil':return `<rect x="12.6" y="6.4" width="14.8" height="2.4" rx="1" fill="#f2f2f2"/>`;
+  }
+  return '';
+}
+function weaponSVG(k){
+  switch(k){
+    case 'blade':return `<line x1="33" y1="15" x2="39" y2="1.5" stroke="#d9dde2" stroke-width="1.6" stroke-linecap="round"/><line x1="31.5" y1="14" x2="35" y2="15.8" stroke="#3a2a1a" stroke-width="1.6"/>`;
+    case 'club':return `<line x1="33.5" y1="15" x2="38" y2="2.5" stroke="#a87444" stroke-width="3" stroke-linecap="round"/>`;
+    case 'axe':return `<line x1="33.5" y1="15" x2="37" y2="2" stroke="#7a5532" stroke-width="2"/><path d="M35.5 2 L40 3.5 L39 8.5 L36.3 6.5Z" fill="#c6352b"/>`;
+    case 'spear':return `<line x1="31" y1="30" x2="38.5" y2="3" stroke="#b49a6a" stroke-width="1.6"/><path d="M37.8 0.5 L40 4.5 L37.2 5Z" fill="#cfd4da"/>`;
+    case 'bar':return `<path d="M33.5 15 L38 3 L39.5 3.8" stroke="#6b7480" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    case 'knife':return `<path d="M33 14 L36.5 6 L38.2 7 L35 14.5Z" fill="#d9dde2"/>`;
+    case 'gun':return `<rect x="33" y="19.2" width="6" height="2.6" fill="#1b1b1b"/><rect x="33.6" y="21" width="1.8" height="3" fill="#1b1b1b"/>`;
+    case 'rifle':return `<line x1="22" y1="24.5" x2="40" y2="19.5" stroke="#1b1b1b" stroke-width="2.2"/><rect x="27" y="20" width="4" height="1.6" fill="#1b1b1b"/>`;
+  }
+  return '';
+}
+function animalSVG(u,job,bust){
+  const dog=u.id==='n_tofu',vb=bust?(dog?'18 18 22 22':'17 22 20 20'):'0 0 40 56';
+  const rest=!bust&&(job==='rest'||u.crit||u.iso);
+  const c=u.inf?'#8fa36a':dog?'#d6a24e':'#202024',lt=dog?'#efd09a':'#3a3a40';
+  let s='';
+  if(dog){
+    s+= rest?`<ellipse cx="19" cy="46" rx="12" ry="5" fill="${c}"/><circle cx="30" cy="43" r="5.5" fill="${c}"/><path d="M27.5 38.5 L29 34 L32 38.5Z" fill="${shade(c,.65)}"/><ellipse cx="34.5" cy="45" rx="3" ry="2" fill="${lt}"/><path d="M8 45 Q3 43 5 39" stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round"/><text x="33" y="34" font-size="6" fill="#86afcf">z</text>`
+      :`<path d="M8.5 34 Q3 28 6 23.5" stroke="${c}" stroke-width="2.6" fill="none" stroke-linecap="round"/><rect x="10" y="38" width="3" height="11" rx="1.4" fill="${shade(c,.85)}"/><rect x="14.5" y="38" width="3" height="11" rx="1.4" fill="${c}"/><rect x="22" y="38" width="3" height="11" rx="1.4" fill="${shade(c,.85)}"/><rect x="26.5" y="38" width="3" height="11" rx="1.4" fill="${c}"/><ellipse cx="19" cy="36" rx="11.5" ry="6.5" fill="${c}"/><rect x="25" y="31" width="5" height="2" fill="#c6352b"/><circle cx="30" cy="27.5" r="6" fill="${c}"/><path d="M26.5 23 L28.3 17.5 L31.6 23Z" fill="${shade(c,.65)}"/><ellipse cx="35" cy="29.5" rx="3.3" ry="2.4" fill="${lt}"/><circle cx="37.8" cy="28.6" r="1.1" fill="#111"/><circle cx="31.2" cy="26" r=".9" fill="#111"/>`;
+  }else{
+    s+= rest?`<ellipse cx="20" cy="47" rx="10" ry="4.5" fill="${c}"/><circle cx="28" cy="45" r="5" fill="${c}"/><path d="M24.5 42 L25.5 37.5 L28 41Z M28.5 41 L31 37.5 L31.8 42Z" fill="${c}"/><path d="M10 47 Q6 49 9 51" stroke="${c}" stroke-width="2.2" fill="none"/><text x="32" y="38" font-size="6" fill="#86afcf">z</text>`
+      :`<path d="M11 41 Q4 32 9 25" stroke="${c}" stroke-width="2.4" fill="none" stroke-linecap="round"/><rect x="13" y="42" width="2.6" height="8" rx="1.2" fill="${c}"/><rect x="22.5" y="42" width="2.6" height="8" rx="1.2" fill="${c}"/><ellipse cx="19" cy="41" rx="9.5" ry="5.5" fill="${c}"/><circle cx="28" cy="33" r="5.5" fill="${c}"/><path d="M23.5 30 L24.5 24.5 L27.6 28.4Z M28.4 28.4 L31.5 24.5 L32.6 30Z" fill="${c}"/><circle cx="26.2" cy="32.6" r="1.1" fill="#f2cf3a"/><circle cx="29.8" cy="32.6" r="1.1" fill="#f2cf3a"/><path d="M27.3 35 L28 35.6 L28.7 35" stroke="#888" stroke-width=".5" fill="none"/>`;
+  }
+  if(u.inj&&!bust)s+=`<rect x="26" y="${dog?20.5:26.5}" width="7" height="2" rx="1" fill="#f4f4f4"/>`;
+  return `<svg viewBox="${vb}" aria-hidden="true">${s}</svg>`;
+}
+function fig(u,job,bust){
+  const c=CH[u.id];
+  if(c.tr.includes('animal'))return animalSVG(u,job,bust);
+  const [hs,hc,oc0,sk,exs]=(LOOK[u.id]||'short,#222,#667788,T,').split(',');
+  const X=(exs||'').split(' ');
+  const eq=u.eq||{},arm=eq.armor&&ITEMS[eq.armor],wpn=eq.weapon&&ITEMS[eq.weapon],tool=eq.tool&&ITEMS[eq.tool];
+  let oc=oc0;if(arm&&arm.k==='suit')oc='#c9a227';if(arm&&arm.k==='jacket')oc='#2a2523';
+  const skin=u.inf?'#a8b88a':SKIN[sk]||sk,dark=shade(oc,.7),pants=X.includes('hakama')?'#25263a':'#2c2b31';
+  const pose=bust?'idle':u.crit||u.iso?'lie':job==='rest'?'sit':job||'idle';
+  let back='',body='',front='';
+  // 背包
+  if(tool&&tool.k==='pack'&&!bust)back+=`<rect x="9.5" y="20" width="21" height="15" rx="4" fill="#6b5232"/>`;
+  back+=hairBack(hs,hc);
+  // 腳
+  if(pose==='sit')body+=`<rect x="13" y="35" width="17" height="5" rx="2.4" fill="${pants}"/><rect x="13" y="40" width="17" height="4" rx="2" fill="${shade(pants,.85)}"/><rect x="28" y="35" width="4" height="9" rx="1.5" fill="#1a1a1a"/>`;
+  else body+=`<rect x="14" y="36" width="5" height="15" rx="2" fill="${pants}"/><rect x="21" y="36" width="5" height="15" rx="2" fill="${shade(pants,.85)}"/><rect x="13" y="49.5" width="6.5" height="2.8" rx="1.3" fill="#151515"/><rect x="20.5" y="49.5" width="6.5" height="2.8" rx="1.3" fill="#151515"/>`;
+  // 身
+  body+=`<rect x="11" y="19" width="18" height="19" rx="5" fill="${oc}"/>`;
+  if(X.includes('coat'))body+=`<path d="M11 21 Q11 19 15 19 L18 19 L17 44 L11.5 44Z M29 21 Q29 19 25 19 L22 19 L23 44 L28.5 44Z" fill="#f4f3ef"/>`;
+  if(X.includes('robe'))body+=`<path d="M11.5 30 L28.5 30 L30 46 L10 46Z" fill="${oc}"/><path d="M20 19 L16 27 M20 19 L24 27" stroke="${dark}" stroke-width="1"/>`;
+  if(X.includes('apron'))body+=`<rect x="14" y="24" width="12" height="15" rx="1.5" fill="#f2efe6"/><path d="M14.5 24 L17 19.5 M25.5 24 L23 19.5" stroke="#f2efe6" stroke-width="1"/>`;
+  if(X.includes('vest'))body+=`<rect x="13" y="21" width="14" height="12" rx="2" fill="${shade(oc,.75)}"/><rect x="15" y="24" width="3" height="3" fill="${shade(oc,.6)}"/><rect x="22" y="24" width="3" height="3" fill="${shade(oc,.6)}"/>`;
+  if(X.includes('stripe')||(arm&&arm.k==='suit'))body+=`<rect x="11" y="30" width="18" height="2" fill="#dfe6d0"/>`;
+  if(X.includes('tie'))body+=`<path d="M19 20 L21 20 L21.6 27 L20 29 L18.4 27Z" fill="#8a2a2a"/>`;
+  if(X.includes('star'))body+=`<circle cx="15.5" cy="23.5" r="1.5" fill="#e8c34a"/>`;
+  // 左手（盾）
+  const sleeve=X.includes('coat')?'#f4f3ef':oc;
+  if(pose==='lie'||pose==='sit'||pose==='idle'||pose==='scav'||pose==='medic'||pose==='repair'||pose==='guard'||pose==='patrol'){
+    body+=`<rect x="7.6" y="20" width="4" height="14" rx="2" fill="${sleeve}"/><circle cx="9.6" cy="35" r="1.9" fill="${skin}"/>`;
+    if(X.includes('cross'))body+=`<rect x="7.9" y="23" width="3.4" height="3.4" fill="#fff"/><path d="M9.6 23.5 V26 M8.4 24.7 H10.8" stroke="#d33" stroke-width=".9"/>`;
+    if(arm&&arm.k==='arm')body+=`<rect x="7.4" y="26" width="4.4" height="5" fill="#d8d2c2"/>`;
+  }
+  // 頭
+  body+=`<rect x="18" y="16.5" width="4" height="3.5" fill="${shade(skin,.9)}"/><circle cx="20" cy="12" r="7" fill="${skin}"/>`;
+  body+=`<circle cx="17.6" cy="12.6" r=".95" fill="#1b1410"/><circle cx="22.4" cy="12.6" r=".95" fill="#1b1410"/><path d="M18.6 15.6 Q20 16.4 21.4 15.6" stroke="#6a3a2a" stroke-width=".6" fill="none"/>`;
+  if(X.includes('beard'))body+=`<path d="M13.6 13 Q14.5 20.5 20 20.2 Q25.5 20.5 26.4 13 Q24.5 16.8 20 16.6 Q15.5 16.8 13.6 13Z" fill="${hc}"/>`;
+  if(X.includes('glasses'))body+=`<circle cx="17.4" cy="12.5" r="2.1" stroke="#222" stroke-width=".7" fill="none"/><circle cx="22.6" cy="12.5" r="2.1" stroke="#222" stroke-width=".7" fill="none"/><line x1="19.5" y1="12.4" x2="20.5" y2="12.4" stroke="#222" stroke-width=".6"/>`;
+  if(X.includes('shades'))body+=`<rect x="15" y="11.2" width="10" height="2.6" rx="1" fill="#0d0d0d"/>`;
+  body+=hairFront(hs,hc);
+  if(X.includes('band'))body+=`<rect x="12.8" y="7.6" width="14.4" height="1.9" fill="#f4f1ea"/><circle cx="20" cy="8.5" r=".8" fill="#c33"/>`;
+  if(u.inj&&!bust)body+=`<rect x="12.8" y="9" width="14.4" height="2.4" rx="1" fill="#f4f4f4" transform="rotate(-8 20 10)"/><circle cx="24" cy="9.6" r=".9" fill="#c33"/>`;
+  // 右手 + 手上嘢
+  const hand=(x,y)=>`<circle cx="${x}" cy="${y}" r="1.9" fill="${skin}"/>`;
+  const armLine=(x2,y2)=>`<line x1="29.5" y1="22" x2="${x2}" y2="${y2}" stroke="${sleeve}" stroke-width="4" stroke-linecap="round"/>`;
+  if(pose==='guard'){
+    const k=wpn?wpn.k:'';
+    if(k==='gun'){front+=armLine(34,21)+hand(34.5,21)+weaponSVG(k)}
+    else if(k==='rifle'){front+=armLine(30,25)+weaponSVG(k)+hand(30,25)}
+    else if(k==='spear'){front+=armLine(32,28)+weaponSVG(k)+hand(32,28)}
+    else{front+=armLine(33,15)+weaponSVG(k)+hand(33.5,14.5)}
+    if(arm&&arm.k==='shield')front+=`<rect x="3" y="21" width="9" height="16" rx="2" fill="#5d6f85" stroke="#2c3644" stroke-width=".8"/><rect x="4.5" y="25" width="6" height="1.4" fill="#e8e8e8"/>`;
+  }else if(pose==='cook'){
+    front+=`<line x1="10.5" y1="22" x2="14" y2="29" stroke="${sleeve}" stroke-width="4" stroke-linecap="round"/>${armLine(26,29)}<path d="M11 28 L29 28 L27.5 34 Q20 36 12.5 34Z" fill="${tool&&tool.k==='wok'?'#2a2a2a':'#7d848c'}"/><path d="M15 26 Q16 24 15 22 M20 26 Q21 23.5 20 21 M25 26 Q26 24 25 22" stroke="#d8d8d8" stroke-width=".6" fill="none" opacity=".8"/>`;
+  }else if(pose==='medic'){
+    front+=armLine(31,31)+`<rect x="28.5" y="30" width="9" height="7" rx="1.2" fill="#f4f4f4"/><path d="M33 31.3 V35.7 M30.8 33.5 H35.2" stroke="#d33" stroke-width="1.3"/>`+hand(30,31);
+  }else if(pose==='repair'){
+    front+=armLine(31,30)+`<line x1="31" y1="30" x2="37" y2="22" stroke="#8b939c" stroke-width="1.8"/><circle cx="37.3" cy="21.6" r="1.8" fill="none" stroke="#8b939c" stroke-width="1.3"/>`+hand(31,30);
+  }else if(pose==='patrol'){
+    front+=`<path d="M36 21 L40 15 L40 29Z" fill="#ffe08a" opacity=".55"/>`+armLine(34,22)+`<rect x="33" y="20.5" width="4" height="2.6" rx=".8" fill="#333"/>`+hand(33.5,22);
+    if(tool&&tool.k==='bino')front+=`<rect x="15" y="10.5" width="10" height="3.4" rx="1.4" fill="#222"/>`;
+  }else if(pose==='scav'){
+    front+=`<rect x="28.5" y="20" width="4" height="14" rx="2" fill="${sleeve}"/>`+(tool&&tool.k==='pack'?'':`<path d="M28 35 Q29 33 32 33 Q35 33 36 35 L36.5 44 Q32 46 27.5 44Z" fill="#8a6a3e"/>`)+hand(30.5,35);
+  }else{
+    front+=`<rect x="28.4" y="20" width="4" height="14" rx="2" fill="${sleeve}"/>`+hand(30.4,35);
+  }
+  if(pose==='sit')front+=`<text x="29" y="8" font-size="6" fill="#86afcf" font-family="sans-serif">z</text><text x="33" y="4.5" font-size="4.5" fill="#86afcf" font-family="sans-serif">z</text>`;
+  let inner=back+body+front;
+  if(X.includes('kid'))inner=`<g transform="translate(4.4 12.3) scale(.78)">${inner}</g>`;
+  if(pose==='lie')inner=`<g transform="translate(2 54) rotate(-90) scale(.72)">${inner}</g><rect x="1" y="47" width="38" height="6" rx="2" fill="#4a3f36"/>`+(u.crit?`<path d="M33 40 V46 M30 43 H36" stroke="#e0503b" stroke-width="1.6"/>`:'');
+  const vb=bust?'6.5 0.5 27 27':'0 0 40 56';
+  return `<svg viewBox="${vb}" aria-hidden="true">${!bust&&pose!=='lie'?'<ellipse cx="20" cy="53" rx="10" ry="2" fill="rgba(0,0,0,.35)"/>':''}${inner}</svg>`;
+}
+/* 覆寫：頭像同棋子改用人物圖 */
+function av(id,extra=''){
+  const c=CH[id],u=(G&&G.units.find(x=>x.id===id))||{id};
+  return `<div class="av r-${c.g} ${extra}">${fig(u,null,true)}<span>${c.g}</span></div>`;
+}
+function tok(u){
+  const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
+  return `<button class="tok ${SEL===u.id?'sel':''}" data-tok="${u.id}" aria-label="${esc(c.n)}">${fig(u,j)}${isS(u,j)?'<i>S</i>':''}<small>${esc(c.n.split(' ')[0])}</small></button>`;
+}
+/* ================= 裝備 ================= */
+/* w = 重量（力量要夠先發揮全效），aff = 專精角色（效果 ×1.5） */
+const ITEMS={
+ bat:{n:'棒球棍',slot:'weapon',w:6,k:'club',job:{guard:.15,scav:.05},d:'順手又耐用'},
+ axe:{n:'消防斧',slot:'weapon',w:11,k:'axe',job:{guard:.25,scav:.1,repair:.05},aff:['r_lee','u_han'],d:'劈門劈頭都得'},
+ katana:{n:'武士刀',slot:'weapon',w:8,k:'blade',job:{guard:.3,scav:.15},aff:['u_mio','r_rin'],d:'博物館展品，仲好利'},
+ cleaver:{n:'斬骨刀',slot:'weapon',w:4,k:'knife',job:{guard:.08,cook:.15},aff:['s_lin','c_igor','c_chan'],d:'廚房同戰場兩用'},
+ spear:{n:'自製長矛',slot:'weapon',w:7,k:'spear',job:{guard:.18,patrol:.1},d:'晾衫竹綁住菜刀，隔住閘都刺到'},
+ pistol:{n:'手槍',slot:'weapon',w:5,k:'gun',job:{guard:.2},def:4,aff:['r_dale','c_david'],d:'警署搵返嚟嘅配槍'},
+ rifle:{n:'狙擊步槍',slot:'weapon',w:12,k:'rifle',job:{guard:.35,patrol:.1},def:8,aff:['s_hawk','u_shen'],d:'好重，但喺天台一槍一隻'},
+ crowbar:{n:'撬棍',slot:'weapon',w:8,k:'bar',job:{scav:.15,repair:.1,guard:.08},aff:['r_lee','c_keung'],d:'撬門、撬窗、撬喪屍'},
+ shield:{n:'防暴盾',slot:'armor',w:14,k:'shield',job:{guard:.2},bite:.6,aff:['r_dale','u_han','r_hung'],d:'防暴隊留低，重到要用兩隻手'},
+ leather:{n:'電單車皮褸',slot:'armor',w:5,k:'jacket',bite:.75,risk:.9,aff:['s_sofia','c_cheung'],d:'厚皮咬唔入'},
+ armguard:{n:'雜誌護臂',slot:'armor',w:2,k:'arm',bite:.6,d:'用膠紙將雜誌綁喺手臂'},
+ firesuit:{n:'消防衣',slot:'armor',w:12,k:'suit',risk:.7,bite:.6,aff:['r_lee','u_han'],d:'防火防咬，但好焗'},
+ pack:{n:'登山背包',slot:'tool',w:6,k:'pack',loot:.25,aff:['s_sofia','c_cheung','s_fei'],d:'搜括時帶得多啲嘢返嚟'},
+ toolbox:{n:'工具箱',slot:'tool',w:9,k:'box',job:{repair:.3},aff:['s_olga','c_keung','r_lee'],d:'扳手、螺絲批、電鑽'},
+ medkit:{n:'急救包',slot:'tool',w:3,k:'med',job:{medic:.25},aff:['s_park','u_grace','r_mei','r_zhou'],d:'繃帶、縫針、止痛藥'},
+ binoc:{n:'望遠鏡',slot:'tool',w:1,k:'bino',job:{patrol:.25,guard:.05},aff:['s_hawk','c_minho'],d:'遠遠就睇到屍群'},
+ walkie:{n:'對講機',slot:'tool',w:1,k:'walkie',job:{patrol:.1},risk:.85,aff:['r_kenji'],d:'出事即刻叫救兵'},
+ shoes:{n:'跑鞋',slot:'tool',w:1,k:'shoe',job:{scav:.1},risk:.8,aff:['s_fei','c_cheung'],d:'跑得快就係最好嘅防具'},
+ wok:{n:'大鐵鑊',slot:'tool',w:7,k:'wok',job:{cook:.3},aff:['s_lin','c_chan','c_ana'],d:'一鑊炒晒全據點嘅飯'}
+};
+const SLOTS={weapon:'武器',armor:'防具',tool:'道具'};
+const LOCITEM={store:['bat','shoes','pack'],market:['cleaver','wok','spear'],estate:['bat','armguard','wok','cleaver'],hardware:['crowbar','toolbox','axe','spear'],clinic:['medkit','armguard'],police:['pistol','shield','walkie','leather'],metro:['walkie','firesuit','crowbar','axe'],school:['bat','binoc','medkit','pack'],museum:['katana'],barracks:['rifle','shield','binoc','pistol'],lab:['medkit','firesuit']};
+const canEquip=u=>!isAnimal(u);
+function eqF(u,it){
+  const st=stat(u,'str');let f=st>=it.w?1:Math.max(.35,1-(it.w-st)*.08);
+  if(u.sta<30&&it.w>=8)f*=.75;
+  if((it.aff||[]).includes(u.id))f*=1.5;
+  return f;
+}
+function eqNote(u,it){
+  const st=stat(u,'str'),n=[];
+  if((it.aff||[]).includes(u.id))n.push('專精 ×1.5');
+  if(st<it.w)n.push(`力量唔夠（${st}/${it.w}）`);
+  if(u.sta<30&&it.w>=8)n.push('體力低 ×0.75');
+  return n.join('、');
+}
+function eqS(u){
+  const r={job:{},def:0,risk:1,bite:1,loot:0,w:0,over:0};
+  if(!u.eq)return r;
+  for(const sl in u.eq){const id=u.eq[sl];if(!id||!ITEMS[id])continue;const it=ITEMS[id],f=eqF(u,it);r.w+=it.w;
+    if(it.job)for(const j in it.job)r.job[j]=(r.job[j]||0)+it.job[j]*f;
+    if(it.def)r.def+=it.def*f;
+    if(it.risk)r.risk*=Math.max(.2,1-(1-it.risk)*f);
+    if(it.bite)r.bite*=Math.max(.2,1-(1-it.bite)*f);
+    if(it.loot)r.loot+=it.loot*f;}
+  r.over=Math.max(0,r.w-stat(u,'str'));
+  return r;
+}
+function itemFx(u,it){
+  const f=u?eqF(u,it):1,p=x=>Math.round(x*f*100),out=[];
+  if(it.job)for(const j in it.job)out.push(`${JOBS[j].n} +${p(it.job[j])}%`);
+  if(it.def)out.push(`夜間防禦 +${Math.round(it.def*f)}`);
+  if(it.loot)out.push(`搜括收穫 +${p(it.loot)}%`);
+  if(it.risk)out.push(`受傷風險 -${Math.round((1-Math.max(.2,1-(1-it.risk)*f))*100)}%`);
+  if(it.bite)out.push(`被咬機會 -${Math.round((1-Math.max(.2,1-(1-it.bite)*f))*100)}%`);
+  return out.join('、');
+}
+function addItem(id,n=1){G.inv[id]=(G.inv[id]||0)+n}
+function equip(u,slot,id){
+  u.eq=u.eq||{};
+  if(u.eq[slot]){addItem(u.eq[slot]);u.eq[slot]=null}
+  if(id&&G.inv[id]>0){G.inv[id]--;if(!G.inv[id])delete G.inv[id];u.eq[slot]=id}
+}
+function unequipAll(u){if(!u.eq)return;for(const sl in u.eq)if(u.eq[sl]){addItem(u.eq[sl]);u.eq[sl]=null}}
+function eqScore(u,it,j){
+  const f=eqF(u,it);let s=((it.job&&it.job[j])||0)*f*10;
+  if(j==='guard')s+=(it.def||0)*f*.6+(1-(it.bite||1))*4;
+  if(j==='scav')s+=(it.loot||0)*f*10+(1-(it.risk||1))*8+(1-(it.bite||1))*6;
+  if(j==='patrol')s+=(1-(it.risk||1))*3+(1-(it.bite||1))*2;
+  const st=stat(u,'str');if(it.w>st)s-=(it.w-st)*.4;
+  return s;
+}
+function autoEquip(){
+  const A=act(G).filter(canEquip);A.forEach(unequipAll);
+  const pri={guard:0,scav:1,patrol:2,repair:3,medic:4,cook:5,rest:9};
+  [...A].sort((a,b)=>pri[a.job]-pri[b.job]).forEach(u=>{
+    Object.keys(SLOTS).forEach(sl=>{
+      let best=null,bv=.8;
+      const cw=eqS(u).w;Object.keys(G.inv).forEach(id=>{const it=ITEMS[id];if(!it||it.slot!==sl||!(G.inv[id]>0)||cw+it.w>stat(u,'str')+3)return;const v=eqScore(u,it,u.job);if(v>bv){bv=v;best=id}});
+      if(best)equip(u,sl,best);
+    });
+  });
+}
+function eqSummary(u){
+  if(!canEquip(u))return '<span class="muted">動物唔用裝備</span>';
+  const e=u.eq||{},s=eqS(u);
+  return Object.keys(SLOTS).map(sl=>`<span class="eqs ${e[sl]?'':'none'}">${SLOTS[sl]}：${e[sl]?esc(ITEMS[e[sl]].n):'—'}</span>`).join('')+`<span class="eqs ${s.over?'heavy':''}">負重 ${s.w}/${stat(u,'str')}</span>`;
+}
+
+/* ---------- 浮窗 ---------- */
+function popHTML(u){
+  const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest',es=eqS(u);
+  return `<div class="pop-h">${av(u.id)}<div style="min-width:0;flex:1"><b>${esc(c.n)}</b>${stars(u.star)}<div class="muted" style="font-size:11px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</div></div><button class="pop-x" id="popx" aria-label="關閉">×</button></div>
+    <div class="chips">${statusChips(u)||'<span class="chip good">狀態正常</span>'}</div>
+    <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
+    <div class="pkst">${ST.map(k=>`<div><span>${STN[k]}</span><b>${stat(u,k)}</b></div>`).join('')}<div><span>效率</span><b>${j==='rest'?'—':Math.round(eff(u,j))}</b></div></div>
+    <div class="pkst g6">${JK.filter(x=>x!=='rest').map(x=>{const g=canWork({...u,crit:0,iso:0},x)?grade(apt(u,x)*(fxOf(u).job[x]||1)):'—';const b=es.job[x]?`<em>+${Math.round(es.job[x]*100)}%</em>`:'';return `<div><span>${JOBS[x].n}</span><b class="g${g}">${g}</b>${b}</div>`}).join('')}</div>
+    <div class="eqline">${eqSummary(u)}</div>
+    <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:11px">撳區域派佢去做嘢</span><button class="btn sm" id="popmore">詳細／換裝備</button></div>`;
+}
+function showPop(){
+  const p=$('#pop');if(!p)return;
+  const u=SEL&&uOf(SEL),a=u&&document.querySelector(`[data-tok="${SEL}"]`);
+  if(!u||!a||VIEW!=='base'){p.hidden=true;return}
+  p.innerHTML=popHTML(u);p.hidden=false;placePop();
+  $('#popx').onclick=e=>{e.stopPropagation();SEL=null;render()};
+  $('#popmore').onclick=e=>{e.stopPropagation();const id=SEL;SEL=null;render();openUnit(id)};
+}
+function placePop(){
+  const p=$('#pop'),a=SEL&&document.querySelector(`[data-tok="${SEL}"]`);if(!a||p.hidden)return;
+  const r=a.getBoundingClientRect(),W=innerWidth,H=innerHeight,pw=p.offsetWidth,ph=p.offsetHeight,m=8;
+  let x=r.right+m,y=r.top-10;
+  if(x+pw>W-m){x=r.left-pw-m}
+  if(x<m){x=cl(r.left+r.width/2-pw/2,m,W-pw-m);y=r.bottom+6;if(y+ph>H-m)y=r.top-ph-6}
+  y=cl(y,m,Math.max(m,H-ph-m));
+  p.style.left=x+'px';p.style.top=y+'px';
+}
+function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,menu:rMenu})[VIEW]();showPop()}
+addEventListener('scroll',()=>{if(SEL)placePop()},{passive:true});
+addEventListener('resize',()=>{if(SEL)placePop()});
+document.addEventListener('click',e=>{if(!SEL)return;if(e.target.closest('#pop,[data-tok],.zone,.ov'))return;SEL=null;render()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&SEL){SEL=null;render()}});
+
+/* ---------- 人物頁（加裝備） ---------- */
+function openUnit(id){
+  const u=uOf(id);if(!u)return;const c=CH[id];
+  const coreCost=2+u.star;let armed=false;const es=eqS(u);
+  modal(`<div class="modal">
+    <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap"><div class="bigfig">${fig(u,canWork(u,u.job)?u.job:'rest')}</div><div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${statusChips(u)}</div><p style="margin:6px 0 0;font-size:13px">${esc(c.bio)}</p></div></div>
+    <div class="bars">${bar('HP',u.hp,maxHp(u),'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
+    <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
+    <div class="aptg">${JK.filter(j=>j!=='rest').map(j=>{const g=canWork({...u,crit:0,iso:0},j)?grade(apt(u,j)*(fxOf(u).job[j]||1)):'—';return `<div>${JOBS[j].n}<b class="g${g}">${g}</b>${es.job[j]?`<em class="eqp">裝備 +${Math.round(es.job[j]*100)}%</em>`:''}</div>`}).join('')}</div>
+    <div class="panel" style="background:var(--slab2)">
+      <div class="row" style="justify-content:space-between"><b style="color:var(--sodium2)">裝備</b>${canEquip(u)?`<span class="muted type" style="font-size:12px;${es.over?'color:var(--blood)':''}">負重 ${es.w} / 力量 ${stat(u,'str')}${es.over?` · 每日多耗 ${Math.round(es.over*1.2)} 體力`:''}</span>`:''}</div>
+      ${canEquip(u)?Object.keys(SLOTS).map(sl=>{const it=u.eq&&u.eq[sl]&&ITEMS[u.eq[sl]];return `<div class="eqrow"><span class="lbl">${SLOTS[sl]}</span><div style="min-width:0;flex:1">${it?`<b>${esc(it.n)}</b> <span class="muted" style="font-size:12px">重 ${it.w}</span><div style="font-size:12px">${esc(itemFx(u,it))}</div>${eqNote(u,it)?`<div style="font-size:11px;color:var(--sodium2)">${esc(eqNote(u,it))}</div>`:''}`:'<span class="muted">未裝備</span>'}</div><button class="btn sm" data-eq="${sl}">換</button></div>`}).join(''):'<p class="muted" style="margin:6px 0 0">動物唔用裝備。</p>'}
+    </div>
+    <div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">專長 · ${esc(c.sk.n)}</b><div style="font-size:13px">${esc(c.sk.d)}</div>
+      ${c.tr.map(t=>`<div style="font-size:13px;margin-top:4px"><span class="chip">${TR[t].n}</span> <span class="muted">${esc(TR[t].d)}</span></div>`).join('')}
+      ${JK.filter(j=>isS(u,j)).map(j=>`<div style="font-size:13px;margin-top:6px"><span class="rk UR">S</span> <b>${JOBS[j].n}【${SPERK[j].n}】</b> <span class="muted">${esc(SPERK[j].d)}</span></div>`).join('')}</div>
+    <div class="row">
+      ${u.act?`<button class="btn sm" id="mv">移去後備</button>`:`<button class="btn sm" id="mv" ${act(G).length>=bedCap(G)?'disabled':''}>加入據點${act(G).length>=bedCap(G)?'（冇床位）':''}</button>`}
+      <button class="btn sm" id="up" ${u.star>=5||G.res.core<coreCost?'disabled':''}>用 ${coreCost} 晶核強化${u.star>=5?'（滿星）':''}</button>
+      <button class="btn sm" id="bye">遣散</button>
+      <button class="btn pri sm" id="cx" style="margin-left:auto">關閉</button>
+    </div>
+  </div>`,()=>{
+    $('#cx').onclick=closeOv;
+    $('#mv').onclick=()=>{if(u.act&&(u.inf||u.iso)){toast('感染者唔可以送走後備');return}u.act=!u.act;if(u.act)u.job=bestJob(u);else unequipAll(u);save();closeOv();openUnit(id)};
+    $('#up').onclick=()=>{G.res.core-=coreCost;u.star++;u.hp=Math.min(maxHp(u),u.hp+10);save();toast(`${c.n} 強化到 ${u.star} 星，全能力 +1`);closeOv();openUnit(id)};
+    $('#bye').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認遣散';e.target.classList.add('danger');return}leaveUnit(u,'被遣散。');addRes({bat:20});save();closeOv()};
+    document.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>openEquip(id,b.dataset.eq));
+  });
+}
+function openEquip(id,sl){
+  const u=uOf(id),cur=u.eq&&u.eq[sl];
+  const opts=Object.keys(G.inv).filter(k=>ITEMS[k]&&ITEMS[k].slot===sl&&G.inv[k]>0);
+  modal(`<div class="modal">
+    <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}</div>
+    <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色用效果 ×1.5。</p>
+    <div class="stack" style="gap:6px">
+      ${opts.map(k=>{const it=ITEMS[k],note=eqNote(u,it);return `<button class="eqpick" data-k="${k}"><div class="row" style="justify-content:space-between"><b>${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${it.w} · 背包 ${G.inv[k]}</span></div><div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">背包入面冇${SLOTS[sl]}。去搜括會搵到。</p>`}
+    </div>
+    <div class="row">${cur?'<button class="btn sm" id="off">卸下</button>':''}<button class="btn pri sm" id="back" style="margin-left:auto">返回</button></div>
+  </div>`,()=>{
+    $('#back').onclick=()=>openUnit(id);
+    const off=$('#off');if(off)off.onclick=()=>{equip(u,sl,null);save();openUnit(id)};
+    document.querySelectorAll('.eqpick').forEach(b=>b.onclick=()=>{equip(u,sl,b.dataset.k);save();openUnit(id)});
+  });
+}
+
+/* ---------- 倖存者頁（加裝備背包） ---------- */
+function rCrew(){
+  const A=act(G),Rs=G.units.filter(u=>!u.act),D=Object.keys(G.gone);
+  const used={};G.units.forEach(u=>{if(u.eq)for(const sl in u.eq){const k=u.eq[sl];if(k)(used[k]=used[k]||[]).push(nm(u))}});
+  const keys=Object.keys(ITEMS).filter(k=>G.inv[k]||used[k]);
+  $('#main').innerHTML=`
+   <div class="secth"><h2>據點內</h2><span class="muted type">${A.length}/${bedCap(G)}</span></div>
+   <div class="cards">${A.map(u=>tag(u)).join('')||'<span class="muted">冇人</span>'}</div>
+   <div class="secth"><h2>裝備背包</h2><button class="btn sm" id="aeq">按工作自動配裝</button></div>
+   <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between"><b>${esc(it.n)}</b><span class="chip">${SLOTS[it.slot]} · 重 ${it.w}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.aff?` · 專精：${it.aff.map(a=>esc(CH[a].n)).join('、')}`:''}</div></div>`}).join('')||'<span class="muted">背包空空。搜括時有機會搵到武器、防具同道具。</span>'}</div>
+   <div class="secth"><h2>後備名單</h2><span class="muted">無線電聯絡中，有床位先可以加入；唔使食糧</span></div>
+   <div class="cards">${Rs.map(u=>tag(u)).join('')||'<span class="muted">冇人。升級床位可以收留更多人。</span>'}</div>
+   ${D.length?`<div class="secth"><h2>離開咗嘅人</h2></div><div class="cards">${D.map(id=>tag(id,true)).join('')}</div>`:''}`;
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
+  $('#aeq').onclick=()=>{autoEquip();save();render();toast('已按各人而家嘅工作分配裝備')};
+}
+/* ================= 啟動 ================= */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+G=load();
+if(G){if(!G.base)G.base='mall';if(!G.clear)G.clear={};if(!G.inv)G.inv={bat:1,cleaver:1,armguard:1};if(!G.chDay){G.chDay={};CHAPS.forEach(c=>{if(c.n<=G.ch)G.chDay[c.n]=c.day});if(G.ch>=6&&G.flags.huntersMet&&!G.flags.raidDay)G.flags.raidDay=40;}}else{fresh();save()}
+render();
+if(G.queue.length)showQueue();
+
 </script>
 </body>
 </html>
