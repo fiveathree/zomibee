@@ -331,11 +331,18 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .synbar b{color:var(--sodium2)}
 .synbar em{font-style:normal;color:var(--sodium2)}
 .planwrap .plan{grid-auto-rows:minmax(84px,auto)}
-@media (min-width:901px) and (min-height:600px){.planwrap .plan{min-height:max(320px,calc(100vh - 402px));grid-auto-rows:minmax(min-content,1fr)}.planwrap .zone{padding-block:4px}.planwrap .zp{display:none}.planwrap .toks{padding-top:0;margin-top:2px}}
+@media (min-width:901px) and (min-height:600px){.planwrap .plan{min-height:max(320px,calc(100vh - 410px));grid-auto-rows:minmax(min-content,1fr)}.planwrap .zone{padding-block:4px}.planwrap .zp{display:none}.planwrap .toks{padding-top:0;margin-top:2px}}
 .zhint{font-size:10px;color:var(--dust);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 0}
 .zh{flex-wrap:nowrap;min-width:0}
 @media (min-width:901px) and (max-height:900px){main{padding-block:8px 16px}.chap{padding:4px 12px}.fcmini{padding:3px 8px}.fcmini b{font-size:15px}.opsbar{margin-top:6px;padding:4px 10px}.planwrap{margin-top:6px;padding:6px 10px}.planhead .btn.pri{padding:6px 14px}.basestats{margin:5px 0}.planwrap .plan{gap:4px;padding:4px;border-width:5px}.synbar{margin-top:4px}.supply{padding-bottom:5px}.hbar{padding-block:6px 4px}.planwrap .tok{width:40px}.planwrap .tok svg{width:32px;height:44px}.planwrap .tok small{font-size:9px}.planwrap .zh b{font-size:13px}}
 main{padding-block:12px 40px}
+.opgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.opcard{background:var(--slab);border:1px solid var(--line2);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.chip.opm,.chip.swapc{cursor:pointer}
+.chip.swapc:hover{border-color:var(--sodium);color:var(--sodium2)}
+.ov{cursor:default}
+@media (min-width:901px){main{padding-bottom:6px}}
+@media (min-width:901px) and (max-height:780px){.planwrap .tok{width:34px}.planwrap .tok svg{width:26px;height:36px}.planwrap .tok small{font-size:8px}.planhead h2{font-size:15px}.planhead .muted{display:none}.planhead .btn{padding:4px 10px;font-size:12px}.basestats .hint{display:none}.chd{display:none}.opsbar .sel{padding:2px 6px}.fcmini b{font-size:13px}.planwrap .plan{grid-auto-rows:minmax(min-content,1fr)}.zh b{font-size:12px}.zh span{font-size:10px}}
 /* base layout v2 */
 .basegrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start;margin-top:14px}
 @media (max-width:900px){.basegrid{grid-template-columns:minmax(0,1fr)}}
@@ -737,6 +744,7 @@ const stat=(u,k)=>{const b=statB(u,k);return b?Math.min(30,b+gearSt(u,k)):0};
 const maxHp=u=>60+stat(u,'str')*2+u.star*4+(fxOf(u).frailHp||0);
 const BS=g=>BASES[g.base]||BASES.store;
 const bedCap=g=>BS(g).beds+g.fac.beds*2;
+const beds=g=>act(g).filter(u=>!isAnimal(u)).length;
 const act=g=>g.units.filter(u=>u.act);
 const uOf=id=>G.units.find(u=>u.id===id);
 const fortMax=g=>BS(g).wall+g.fac.wall*30;
@@ -816,7 +824,7 @@ function addUnit(g,id){
   const ex=g.units.find(u=>u.id===id);
   if(ex){if(ex.star>=5)return{type:'max',u:ex};ex.star++;ex.hp=Math.min(maxHp(ex),ex.hp+8);return{type:'star',u:ex}}
   delete g.gone[id];
-  const u=newUnit(id);u.joined=g.day;u.act=act(g).length<bedCap(g);g.units.push(u);
+  const u=newUnit(id);u.joined=g.day;u.act=isAnimal(u)||beds(g)<bedCap(g);g.units.push(u);
   u.job=bestJob(u);
   onRecruit(g,id);
   return{type:'new',u};
@@ -883,7 +891,7 @@ function endDay(){
     if(loc.dun){[34,67,100].forEach((t,i)=>{if(pc<t&&g.clear[loc.id]>=t)g.queue.push({id:'dun_stage',c:{d:loc.id,s:i}})});if(g.clear[loc.id]<100)L(`${loc.n}探索進度 ${Math.round(g.clear[loc.id])}%`)}
     if(loc.id==='dungeon'&&pc<100&&g.clear.dungeon>=100)g.queue.push({id:'s_kingdead'});
     if(pc<100&&g.clear[loc.id]>=100){addLog(`${loc.n}已經清場。`);if(BASES[loc.id])g.queue.push({id:'cleared',c:{loc:loc.id}})}
-    else if(BASES[loc.id]||loc.id==='dungeon')L(`${loc.n}清場進度 ${Math.round(g.clear[loc.id])}%`);
+    else if((BASES[loc.id]||loc.id==='dungeon')&&g.clear[loc.id]<100)L(`${loc.n}清場進度 ${Math.round(g.clear[loc.id])}%`);
     if(loc.id==='museum'&&!g.flags.codex&&!g.flags.codexQ){g.flags.codexQ=1;g.queue.push({id:'codex'})}
     if(loc.id==='lab'&&!g.flags.labSeen){g.flags.labSeen=1;g.queue.push({id:'labfind'})}
   }
@@ -964,6 +972,7 @@ function endDay(){
   if(g.res.water>=wneed)g.res.water-=wneed;
   else{const short=wneed-g.res.water;g.res.water=0;const v=[...A].sort(()=>R()-.5).slice(0,short);v.forEach(u=>{u.hp-=10;u.sta=Math.max(0,u.sta-15);sanD(u,-5);if(!fxOf(u).noSick&&R()<.3)u.sick=1});L(`食水唔夠！${v.map(nm).join('、')} 口渴脫水（-10 HP）`,'b')}
   if(!teamFx(g,'noRats','any')&&R()<.1&&g.res.food>5){const n=ri(2,4);g.res.food-=n;L(`老鼠偷咗 ${n} 份食物`,'b')}
+  const opDef=simOutposts(g,H,L);
   // 夜晚
   H('夜晚');
   const raid=raidTonight(g);
@@ -975,7 +984,7 @@ function endDay(){
   let ammo=g.res.ammo,gp=0;
   by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo||setFx(u,'noAmmo'))e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)+eqS(u).def});
   const used=g.res.ammo-ammo;g.res.ammo=ammo;
-  const def=Math.round((g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0))*(1+teamAdd('defPct')));
+  const def=Math.round((g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0))*(1+teamAdd('defPct'))+opDef);
   const night={horde,def,raid,used};
   if(g.ch>=5)L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
   if(raid)L(raid.txt,'b');
@@ -1045,7 +1054,7 @@ function endDay(){
   // 新一日
   g.day++;g.warn=1;
   LOCS.concat(DUNS).forEach(l=>{if(g.dep[l.id]!==undefined)g.dep[l.id]=Math.min(1,g.dep[l.id]+.04)});
-  if(!act(g).length){const res=g.units.filter(u=>!u.act).slice(0,bedCap(g));res.forEach(u=>u.act=true);if(res.length)addLog(`據點冇人，後備名單上嘅 ${res.map(nm).join('、')} 收到訊號趕嚟。`)}
+  if(!act(g).length){const res=g.units.filter(u=>!u.act&&!u.op).slice(0,bedCap(g));res.forEach(u=>u.act=true);if(res.length)addLog(`據點冇人，後備名單上嘅 ${res.map(nm).join('、')} 收到訊號趕嚟。`)}
   if(!g.units.length){g.over='dead';addLog('最後一個人都倒下咗。');save();return{rep,night}}
   checkObj();
   let sd=false;
@@ -1109,10 +1118,10 @@ function relocate(id){
   if(g.loc===id)g.loc='store';
   if(LOCS.find(l=>l.id===prev))g.dep[prev]=.2;
   act(g).forEach(u=>{u.sta=Math.max(0,u.sta-20)});
-  const room=bedCap(g)-act(g).length;
-  g.units.filter(u=>!u.act).slice(0,Math.max(0,room)).forEach(u=>{u.act=true;u.job=bestJob(u)});
-  let over=act(g).length-bedCap(g);
-  if(over>0)[...act(g)].reverse().forEach(u=>{if(over>0&&!u.inf&&!u.iso){u.act=false;over--}});
+  const room=bedCap(g)-beds(g);
+  g.units.filter(u=>!u.act&&!u.op).slice(0,Math.max(0,room)).forEach(u=>{u.act=true;u.job=bestJob(u)});
+  let over=beds(g)-bedCap(g);
+  if(over>0)[...act(g)].reverse().forEach(u=>{if(over>0&&!u.inf&&!u.iso&&!isAnimal(u)){u.act=false;over--}});
   addLog(`由${old.n}搬到${b.n}。`);
   return `大家連夜搬去${b.n}。帶唔晒嘅嘢只好留低（${lt||'冇損失'}）。\n設施拆唔走，要喺新地方重新起，每樣跌 1 級。\n${b.pd}\n床位：${bedCap(g)}`;
 }
@@ -1527,7 +1536,7 @@ function rBase(){
   <div class="grid2" style="margin-top:16px">
     <section class="stack">
       <div class="row" style="justify-content:space-between">
-        <h2>今日分工 <span class="muted type" style="font-size:13px">${A.length}/${bedCap(G)} 床</span></h2>
+        <h2>今日分工 <span class="muted type" style="font-size:13px">${beds(G)}/${bedCap(G)} 床</span></h2>
         <div class="row"><button class="btn sm" id="aeq2">自動配裝</button><button class="btn sm" id="auto">自動分配</button><button class="btn pri" id="end" ${G.over?'disabled':''}>結束第 ${G.day} 日</button></div>
       </div>
       ${A.length?A.map(uRow).join(''):'<div class="panel muted">據點冇人。去「廣播」招募倖存者。</div>'}
@@ -1604,7 +1613,7 @@ function doEnd(){
   </div>`,()=>{$('#cont').onclick=()=>{closeOv();showQueue()}});
   render();
 }
-function modal(html,bind){$('#ovroot').innerHTML=`<div class="ov" role="dialog" aria-modal="true">${html}</div>`;bind&&bind();const f=$('#ovroot button');f&&f.focus({preventScroll:true})}
+function modal(html,bind){$('#ovroot').innerHTML=`<div class="ov" role="dialog" aria-modal="true">${html}</div>`;const ov=$('#ovroot .ov');ov.onclick=e=>{if(e.target===ov&&ov.querySelector('.modal.dismiss'))closeOv()};bind&&bind();const f=$('#ovroot button');f&&f.focus({preventScroll:true})}
 function closeOv(){$('#ovroot').innerHTML='';render()}
 function showQueue(){
   while(G.queue.length){
@@ -1643,7 +1652,7 @@ function tag(u,gone){
 function rCrew(){
   const A=act(G),Rs=G.units.filter(u=>!u.act),D=Object.keys(G.gone);
   $('#main').innerHTML=`
-   <div class="secth"><h2>據點內</h2><span class="muted type">${A.length}/${bedCap(G)}</span></div>
+   <div class="secth"><h2>據點內</h2><span class="muted type">${beds(G)}/${bedCap(G)}</span></div>
    <div class="cards">${A.map(u=>tag(u)).join('')||'<span class="muted">冇人</span>'}</div>
    <div class="secth"><h2>後備名單</h2><span class="muted">無線電聯絡中，有床位先可以加入；唔使食糧</span></div>
    <div class="cards">${Rs.map(u=>tag(u)).join('')||'<span class="muted">冇人。升級床位可以收留更多人。</span>'}</div>
@@ -1694,7 +1703,7 @@ function pull(n){
   }
   G.pulls+=n;save();renderHead();
   const lab={new:'NEW',star:'突破 +1★',dead:'已犧牲 · 電池 +30',max:'滿星 · 電池 +50'};
-  modal(`<div class="modal" style="width:min(900px,100%)">
+  modal(`<div class="modal dismiss" style="width:min(900px,100%)">
     <div class="eyebrow">廣播收到 ${n} 個回應</div>
     <div class="pullgrid ${n===1?'one':''}">${out.map((o,k)=>{const c=CH[o.id];return `<div class="pc g-${c.g}" data-k="${k}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="tag" style="cursor:default;height:100%"><div class="tt">${av(o.id)}<div style="min-width:0"><b>${esc(c.n)}</b><small>${esc(c.job)}</small></div></div><span class="badge ${o.type==='new'?'':'dup'}">${lab[o.type]}</span>${o.type==='new'&&!o.act?'<small>床位滿，入咗後備</small>':''}</div></div></div></div>`}).join('')}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="again">再廣播 ${n} 次（${n===10?900:100} 電池）</button><button class="btn pri" id="ok">收到</button></div>
@@ -1793,7 +1802,7 @@ function bindPlan(){
 function openMove(){
   const mv=canMove(G);let armed=null;
   const all=Object.keys(BASES).filter(k=>!BASES[k].start&&k!==G.base);
-  modal(`<div class="modal">
+  modal(`<div class="modal dismiss">
     <div class="eyebrow">搬據點</div><h2>而家：${esc(BS(G).n)}</h2>
     <p class="muted" style="margin:0">床位 ${bedCap(G)}、圍牆上限 ${fortMax(G)}。搬走會留低約四分一食物、水同零件，所有設施各跌 1 級。去搜括一個地點就會累積清場進度。</p>
     <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=l.ch>G.ch;
@@ -2147,8 +2156,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&SEL){SEL=null;rende
 function openUnit(id){
   const u=uOf(id);if(!u)return;const c=CH[id];
   const coreCost=Math.ceil((2+u.star)*(fxOf(u).coreHalf?.5:1));let armed=false;const es=eqS(u);
-  modal(`<div class="modal">
+  modal(`<div class="modal dismiss">
     <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap"><div class="bigfig">${fig(u,canWork(u,u.job)?u.job:'rest')}</div><div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}${statusChips(u)}</div><p style="margin:6px 0 0;font-size:13px">${esc(c.bio)}</p>${u.mut?`<div class="mutline">變種人【${MUT[u.mut.t].n}】${esc(MUT[u.mut.t].d)}；對病毒免疫，食量 ×1.5</div>`:''}</div></div>
+    ${!u.act&&!isAnimal(u)?(()=>{const H=act(G).filter(x=>!isAnimal(x)&&!x.inf&&!x.iso);return H.length?`<div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">同據點入面嘅人換位</b><div class="muted" style="font-size:12px">揀一個人，佢會${u.op?`去${esc(BASES[u.op].n)}分部`:'去後備'}，${esc(c.n)} 接手佢嘅床位同工作</div><div class="chips" style="margin-top:6px">${H.map(x=>`<button class="chip swapc" data-swap="${x.id}">${esc(nm(x))} · ${JOBS[x.job].n}</button>`).join('')}</div></div>`:''})():''}
     <div class="bars">${bar('HP',u.hp,maxHp(u),'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
     <div class="aptg">${JK.filter(j=>j!=='rest').map(j=>{const g=canWork({...u,crit:0,iso:0},j)?grade(apt(u,j)*(fxOf(u).job[j]||1)):'—';return `<div>${JOBS[j].n}<b class="g${g}">${g}</b>${es.job[j]?`<em class="eqp">裝備 +${Math.round(es.job[j]*100)}%</em>`:''}</div>`}).join('')}</div>
@@ -2161,17 +2171,18 @@ function openUnit(id){
       ${c.tr.map(t=>`<div style="font-size:13px;margin-top:4px"><span class="chip">${TR[t].n}</span> <span class="muted">${esc(TR[t].d)}</span></div>`).join('')}
       ${JK.filter(j=>isS(u,j)).map(j=>`<div style="font-size:13px;margin-top:6px"><span class="rk UR">S</span> <b>${JOBS[j].n}【${SPERK[j].n}】</b> <span class="muted">${esc(SPERK[j].d)}</span></div>`).join('')}</div>
     <div class="row">
-      ${u.act?`<button class="btn sm" id="mv">移去後備</button>`:`<button class="btn sm" id="mv" ${act(G).length>=bedCap(G)?'disabled':''}>加入據點${act(G).length>=bedCap(G)?'（冇床位）':''}</button>`}
+      ${u.act?`<button class="btn sm" id="mv">移去後備</button>`:`<button class="btn sm" id="mv" ${!isAnimal(u)&&beds(G)>=bedCap(G)?'disabled':''}>加入據點${isAnimal(u)?'（寵物唔佔床位）':beds(G)>=bedCap(G)?'（冇床位）':''}</button>${u.op?`<span class="chip">駐守${esc(BASES[u.op].n)}分部</span>`:''}`}
       <button class="btn sm" id="up" ${u.star>=5||G.res.core<coreCost?'disabled':''}>用 ${coreCost} 晶核強化${u.star>=5?'（滿星）':''}</button>
       <button class="btn sm" id="bye">遣散</button>
       <button class="btn pri sm" id="cx" style="margin-left:auto">關閉</button>
     </div>
   </div>`,()=>{
     $('#cx').onclick=closeOv;
-    $('#mv').onclick=()=>{if(u.act&&(u.inf||u.iso)){toast('感染者唔可以送走後備');return}u.act=!u.act;if(u.act)u.job=bestJob(u);else unequipAll(u);save();closeOv();openUnit(id)};
+    $('#mv').onclick=()=>{if(u.act&&(u.inf||u.iso)){toast('感染者唔可以送走後備');return}u.act=!u.act;u.op=null;if(u.act)u.job=bestJob(u);else unequipAll(u);save();closeOv();openUnit(id)};
     $('#up').onclick=()=>{G.res.core-=coreCost;u.star++;u.hp=Math.min(maxHp(u),u.hp+10);save();toast(`${c.n} 強化到 ${u.star} 星，全能力 +1`);closeOv();openUnit(id)};
     $('#bye').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認遣散';e.target.classList.add('danger');return}leaveUnit(u,'被遣散。');addRes({bat:20});save();closeOv()};
     document.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>openEquip(id,b.dataset.eq));
+    document.querySelectorAll('[data-swap]').forEach(b=>b.onclick=()=>{const o=uOf(b.dataset.swap);const op=u.op||null;const j=o.job;o.act=false;unequipAll(o);o.op=op;o.job='rest';u.act=true;u.op=null;u.job=canWork(u,j)?j:bestJob(u);save();toast(`${nm(u)} 同 ${nm(o)} 換咗位`);closeOv();openUnit(id)});
   });
 }
 function openEquip(id,sl){
@@ -2179,7 +2190,7 @@ function openEquip(id,sl){
   const opts=Object.keys(G.inv).filter(k=>ITEMS[k]&&ITEMS[k].slot===sl&&G.inv[k]>0).map(k=>({k,from:null}));
   G.units.forEach(o=>{if(o!==u&&o.eq&&o.eq[sl])opts.push({k:o.eq[sl],from:o.id})});
   opts.sort((a,b)=>RANK.indexOf(ITEMS[a.k].r)-RANK.indexOf(ITEMS[b.k].r)||(a.from?1:0)-(b.from?1:0));
-  modal(`<div class="modal">
+  modal(`<div class="modal dismiss">
     <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}${cur?` · 而家用緊：${esc(ITEMS[cur].n)}`:''}</div>
     <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色用效果 ×1.5。其他人用緊嘅裝備都可以調過嚟，對方會即刻除低。</p>
     <div class="stack" style="gap:6px">
@@ -2202,7 +2213,7 @@ function rCrew(){
   const used={};G.units.forEach(u=>{if(u.eq)for(const sl in u.eq){const k=u.eq[sl];if(k)(used[k]=used[k]||[]).push(nm(u))}});
   const keys=Object.keys(ITEMS).filter(k=>G.inv[k]||used[k]);
   $('#main').innerHTML=`
-   <div class="secth"><h2>據點內</h2><span class="muted type">${A.length}/${bedCap(G)}</span></div>
+   <div class="secth"><h2>據點內</h2><span class="muted type">${beds(G)}/${bedCap(G)}</span></div>
    <div class="cards">${A.map(u=>tag(u)).join('')||'<span class="muted">冇人</span>'}</div>
    <div class="secth"><h2>裝備背包</h2><button class="btn sm" id="aeq">按工作自動配裝</button></div>
    <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="chip">${SLOTS[it.slot]} · 重 ${it.w}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.aff?` · 專精：${it.aff.map(a=>esc(CH[a].n)).join('、')}`:''}</div></div>`}).join('')||'<span class="muted">背包空空。搜括時有機會搵到武器、防具同道具。</span>'}</div>
@@ -2344,7 +2355,7 @@ function pullGear(n){
     const id=rollItem(r);addItem(id);out.push(id);
   }
   save();renderHead();
-  modal(`<div class="modal" style="width:min(900px,100%)">
+  modal(`<div class="modal dismiss" style="width:min(900px,100%)">
     <div class="eyebrow">空投箱落地 · ${n} 件</div>
     <div class="pullgrid ${n===1?'one':''}">${out.map((id,k)=>{const it=ITEMS[id],S=it.set&&SETS[it.set];return `<div class="pc g-${it.r}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="gcard r-${it.r}"><div class="row" style="justify-content:space-between">${rk(it.r)}<span class="chip">${SLOTS[it.slot]}</span></div><b>${esc(it.n)}</b><small>${esc(itemFx(null,it))}</small>${S?`<small class="setn">專屬：${esc(CH[S.owner].n)} · 套裝「${esc(S.n)}」</small>`:''}</div></div></div></div>`}).join('')}</div>
     <div class="row" style="justify-content:center"><button class="btn" id="again">再開 ${n} 個（${cost} 電池）</button><button class="btn pri" id="ok">收到</button></div>
@@ -2540,7 +2551,7 @@ function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,men
 /* ================= 據點頁新版面：平面圖做主角、資料放右邊、可拖放 ================= */
 let DRAGGED=false;
 function rBase(){
-  const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act);
+  const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act&&!u.op),opn=G.units.filter(u=>!u.act&&u.op).length;
   const avail=allLocs(G);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
   const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
   const done=!!G.obj[c.n];
@@ -2603,12 +2614,13 @@ function planHTML(A,res){
       </div>
     </div>
     <div class="basestats">
-      <span class="bs"><span class="muted">床位</span> <b>${A.length}/${bedCap(G)}</b></span>
+      <span class="bs"><span class="muted">床位</span> <b>${beds(G)}/${bedCap(G)}</b></span>
       <span class="bs wallbs"><span class="muted">圍牆</span> <b>${G.fort}/${fortMax(G)}</b><span class="minibar"><i style="width:${fr*100}%;background:${fr<.3?'var(--blood)':fr<.6?'var(--sodium)':'#a08a6a'}"></i></span></span>
       ${FK.map(k=>`<span class="bs" title="${esc(FAC[k].d)}"><span class="muted">${FAC[k].n}</span> <b>${G.fac[k]}</b></span>`).join('')}
       <span class="bs"><span class="muted">擊退</span> <b>${G.kills}</b></span>
       <span class="bs"><span class="muted">犧牲</span> <b>${Object.values(G.gone).filter(x=>x.dead).length}</b></span>
       ${res.length?`<span class="bs"><span class="muted">後備</span> <b>${res.length}</b> <button class="linkbtn" data-go="crew">調動</button></span>`:''}
+      ${Object.keys(G.outposts||{}).length?`<span class="bs"><span class="muted">分部</span> <b>${Object.keys(G.outposts).length}</b><span class="muted">· ${G.units.filter(u=>!u.act&&u.op).length} 人</span> <button class="linkbtn" data-go="crew">管理</button></span>`:''}
       <span class="hint">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>：撳或者拖去區域派佢去`:'拖人去唔同區域調工；撳一下睇狀態同裝備'}</span>
     </div>
     <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
@@ -2657,6 +2669,158 @@ function startDrag(e,b){
     SEL=null;render();
   };
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
+
+function fitPlan(){
+  const p=document.querySelector('.planwrap .plan');if(!p||innerWidth<=900||VIEW!=='base')return;
+  p.style.minHeight='';
+  const over=document.documentElement.scrollHeight-innerHeight;
+  if(over>0)p.style.minHeight=Math.max(180,p.offsetHeight-over-1)+'px';
+}
+{const _r=render;render=function(){_r();fitPlan()}}
+addEventListener('resize',()=>{if(VIEW==='base')fitPlan()});
+/* ================= 分部：後備人員駐守其他據點，電腦自動模擬 ================= */
+const OPJOB=['scav','patrol','guard','cook','medic','repair'];
+function opMembers(g,id){return g.units.filter(u=>!u.act&&u.op===id)}
+function reserveFree(g){return g.units.filter(u=>!u.act&&!u.op)}
+function opCands(g){
+  return Object.keys(BASES).filter(k=>k!==g.base&&!(g.outposts||{})[k]&&((g.clear[k]||0)>=100||(g.oldBases||[]).includes(k)));
+}
+function opRoles(M){
+  // 電腦按能力分工：每人揀自己最叻嘅；冇人守夜就派最大力嗰個
+  const r=M.map(u=>{let b='scav',v=-1;OPJOB.forEach(j=>{if(!canWork({...u,crit:0,iso:0},j))return;const a=apt(u,j)*(fxOf(u).job[j]||1);if(a>v){v=a;b=j}});return{u,j:b}});
+  if(r.length>=2&&!r.some(x=>x.j==='guard')){const g=r.reduce((a,b)=>apt(b.u,'guard')>apt(a.u,'guard')?b:a);g.j='guard'}
+  if(r.length>=3&&!r.some(x=>x.j==='cook')){const c=r.filter(x=>x.j!=='guard').reduce((a,b)=>apt(b.u,'cook')>apt(a.u,'cook')?b:a);c.j='cook'}
+  return r;
+}
+function simOutposts(g,H,L){
+  g.outposts=g.outposts||{};const ids=Object.keys(g.outposts);let jdef=0;
+  if(!ids.length)return 0;
+  H('分部');
+  ids.forEach(id=>{
+    const o=g.outposts[id],b=BASES[id],loc=LOCS.find(l=>l.id===id);
+    // 感染倒數
+    opMembers(g,id).forEach(u=>{if(!u.inf)return;u.inf--;if(u.inf===0){if(R()<mutChance(u)){const m=mutate(u);L(`${b.n}：${nm(u)} 冇屍變，變成咗變種人（${m.n}）`,'y')}else{killUnit(u,`喺${b.n}分部屍變。`);L(`${b.n}：${nm(u)} 屍變咗`,'b');o.loy=Math.max(0,o.loy-8)}}});
+    const M=opMembers(g,id);
+    if(!M.length){o.last='冇人駐守';L(`${b.n}：冇人駐守`);return}
+    const roles=opRoles(M),by={};roles.forEach(x=>(by[x.j]=by[x.j]||[]).push(x.u));
+    const pw=(by.scav||[]).reduce((s,u)=>s+apt(u,'scav')*condMult(u),0)+(by.patrol||[]).reduce((s,u)=>s+apt(u,'patrol')*.5,0);
+    const gd=(by.guard||[]).reduce((s,u)=>s+apt(u,'guard')*condMult(u),0)+M.reduce((s,u)=>s+stat(u,'str')*.15,0);
+    const ck=(by.cook||[]).reduce((s,u)=>s+apt(u,'cook'),0),md=(by.medic||[]).reduce((s,u)=>s+apt(u,'medic'),0);
+    const got={},ll=loc?loc.loot:{food:1,water:1};
+    for(const r in ll){if(r==='serum')continue;const n=Math.round(pw/10*ll[r]*(LSCALE[r]||1)*.5*rf(.6,1.3));if(n>0)got[r]=n}
+    for(const r in (b.perk||{}))got[r]=(got[r]||0)+b.perk[r];
+    const eat=Math.ceil(M.reduce((s,u)=>s+fxOf(u).eat,0)*(ck>=10?.75:1));
+    let fNet=(got.food||0)-eat,wNet=(got.water||0)-M.length;
+    const notes=[],sup={};
+    if(fNet<0){const t=Math.min(-fNet,g.res.food);g.res.food-=t;fNet+=t;if(t)sup.food=t}
+    if(wNet<0){const t=Math.min(-wNet,g.res.water);g.res.water-=t;wNet+=t;if(t)sup.water=t}
+    if(sup.food||sup.water)notes.push(`由主據點補給 ${Object.keys(sup).map(k=>RES[k].n+' '+sup[k]).join('、')}`);
+    const short=fNet<0||wNet<0;
+    got.food=Math.max(0,fNet);got.water=Math.max(0,wNet);
+    // 分部夜晚
+    const hz=hordeBase(g)*.28*(b.horde||1)*rf(.7,1.3),odef=b.wall*.4+gd+(b.def||0);
+    if(hz>odef){const v=pick(M);const d=hurt(v,ri(10,25));notes.push(`夜晚被屍群衝擊，${nm(v)} 受傷（-${d}）`);o.loy=Math.max(0,o.loy-4);if(R()<.12){const t=infect(v,b.n);if(t)notes.push(t)}}
+    M.forEach(u=>{u.hp=Math.min(maxHp(u),u.hp+3+md*.4);u.sta=cl(u.sta+8,0,100);if(u.inj&&R()<.15+md*.01)u.inj=0;if(u.crit&&md>=10)u.crit=0;sanD(u,short?-6:1)});
+    if(short){o.loy=Math.max(0,o.loy-6);notes.push('主據點都冇得補給，分部捱餓，開始有怨言')}else o.loy=Math.min(100,o.loy+1);
+    if(o.loy<30)notes.push('忠誠度好低');
+    const st=addRes(got);
+    const who=roles.map(x=>`${nm(x.u)}${JOBS[x.j].n}`).join('、');
+    o.last=`${who}。${st?'運返 '+st:'冇剩'}${notes.length?'；'+notes.join('；'):''}`;
+    L(`${b.n}（${M.length}人，忠誠 ${o.loy}）：${o.last}`,short||notes.length?'b':'g');
+    M.forEach(u=>{if(u.hp<=0){killUnit(u,`喺${b.n}分部傷重不治。`);L(`${b.n}：${nm(u)} 傷重不治`,'b')}});
+    // 突發事項
+    const r=R();
+    if(r<.07&&gd>8){const add=Math.round(gd*.6);jdef+=add;L(`${b.n}派人過嚟聯合守夜（今晚防禦 +${add}）`,'g')}
+    else if(r<.13)g.queue.push({id:'op_trade',c:{op:id}});
+    else if(r<.18)g.queue.push({id:'op_help',c:{op:id}});
+    else if(r<.22)g.queue.push({id:'op_raid',c:{op:id}});
+    else if(r<.26){const it=rollItem(pick(['C','R','R','SR']));addItem(it);L(`${b.n}執到一件${ITEMS[it].n}（${ITEMS[it].r}）送返嚟`,'g')}
+    if(o.loy<35&&R()<.35&&opMembers(g,id).length)g.queue.push({id:'op_rebel',c:{op:id}});
+  });
+  return jdef;
+}
+const opLeader=id=>opMembers(G,id).filter(talker).reduce((a,b)=>!a||stat(b,'wil')>stat(a,'wil')?b:a,null)||opMembers(G,id)[0];
+const opOk=c=>G.outposts&&G.outposts[c.op]&&opMembers(G,c.op).length?c:null;
+Object.assign(EV,{
+ op_trade:{t:'分部交易',pre:opOk,txt:c=>{const b=BASES[c.op],l=opLeader(c.op);return `${b.n}分部嘅 ${nm(l)} 用無線電聯絡：「我哋呢邊有啲嘢多咗，想同你換。」`},opts:[
+  {l:'10 彈藥 → 18 食物',req:()=>G.res.ammo>=10,fx:c=>{G.outposts[c.op].loy+=3;return addRes({ammo:-10,food:18})}},
+  {l:'15 食物 → 8 零件 + 4 藥品',req:()=>G.res.food>=15,fx:c=>{G.outposts[c.op].loy+=3;return addRes({food:-15,parts:8,med:4})}},
+  {l:'免費送 10 食物過去',d:'忠誠 +15',req:()=>G.res.food>=10,fx:c=>{addRes({food:-10});const o=G.outposts[c.op];o.loy=Math.min(100,o.loy+15);return `${BASES[c.op].n}分部好感激。忠誠 ${o.loy}`}},
+  {l:'唔換',fx:()=>'對方話「下次啦」。'}]},
+ op_help:{t:'分部求援',pre:opOk,txt:c=>`${BASES[c.op].n}分部被屍群圍住，${nm(opLeader(c.op))} 喺無線電入面大叫：「頂唔順喇！有冇彈藥？有冇藥？」`,opts:[
+  {l:'派 8 發彈藥過去',req:()=>G.res.ammo>=8,fx:c=>{addRes({ammo:-8});const o=G.outposts[c.op];o.loy=Math.min(100,o.loy+15);return `佢哋頂住咗。忠誠 ${o.loy}`}},
+  {l:'派 3 份藥品過去',req:()=>G.res.med>=3,fx:c=>{addRes({med:-3});opMembers(G,c.op).forEach(u=>{u.inj=0;u.hp=Math.min(maxHp(u),u.hp+20)});const o=G.outposts[c.op];o.loy=Math.min(100,o.loy+10);return `傷者得救。忠誠 ${o.loy}`}},
+  {l:'自己諗辦法',fx:c=>{const o=G.outposts[c.op];o.loy=Math.max(0,o.loy-15);const v=pick(opMembers(G,c.op));const d=hurt(v,ri(15,35));let t=`${nm(v)} 受重傷（-${d}）。`;if(v.hp<=0){killUnit(v,`喺${BASES[c.op].n}分部求援無果，戰死。`);t=`${nm(v)} 戰死。`}return `${t}\n分部對你好失望。忠誠 ${o.loy}`}}]},
+ op_raid:{t:'聯合突襲',pre:opOk,txt:c=>`${BASES[c.op].n}分部發現附近有個無人看守嘅物資倉，但門口有一大群喪屍。佢哋問主據點要唔要一齊行動。`,opts:[
+  {l:'派主據點最勁嘅人一齊去',d:'收穫大，有受傷風險',req:()=>able().length>0,fx:c=>{const u=bestBy(x=>eff(x,'guard'));const p=eff(u,'guard')+opMembers(G,c.op).reduce((s,x)=>s+apt(x,'guard')*.5,0);let t=`${nm(u)} 同分部嘅人一齊殺入去。\n`;if(p*rf(.7,1.3)>=22){const it=rollItem(pick(['SR','SSR']));addItem(it);t+=`大豐收：${addRes({food:15,ammo:12,parts:10})}，仲有一件${ITEMS[it].n}（${ITEMS[it].r}）`;G.outposts[c.op].loy+=8}else{const d=hurt(u,ri(12,28));t+=`喪屍太多，撤退。${nm(u)} 受傷（-${d}）。帶返 ${addRes({food:5})}`}return t}},
+  {l:'由分部自己去',fx:c=>{const v=pick(opMembers(G,c.op));if(R()<.55){return `${nm(v)} 帶隊成功：${addRes({food:8,ammo:6})}`}const d=hurt(v,ri(10,25));return `${nm(v)} 受傷撤退（-${d}）。`}},
+  {l:'太危險，唔去',fx:c=>{G.outposts[c.op].loy-=3;return '分部有啲失望。'}}]},
+ op_rebel:{t:'分部叛變',pre:opOk,txt:c=>{const l=opLeader(c.op),b=BASES[c.op];return `${b.n}分部嘅無線電傳嚟 ${nm(l)} 把聲：
+
+「我哋喺度捱餓捱凍，你哋喺主據點食好住好。由今日起，${b.n}自己話事。」
+
+分部 ${opMembers(G,c.op).length} 個人都站喺佢嗰邊。`},opts:[
+  {l:'送物資安撫',d:'食物 -15、彈藥 -10，忠誠回升',req:()=>G.res.food>=15&&G.res.ammo>=10,fx:c=>{addRes({food:-15,ammo:-10});G.outposts[c.op].loy=60;return '物資送到，對方收貨。\n分部忠誠回升到 60。'}},
+  {l:'親自去談判',d:'派主據點意志最強嘅人',req:()=>able().some(talker),fx:c=>{const b=bestTalker(x=>stat(x,'wil')+(fxOf(x).deal?4:0)),l=opLeader(c.op);if(stat(b,'wil')+(fxOf(b).deal?4:0)+rf(0,10)>=stat(l,'wil')+8){G.outposts[c.op].loy=65;return `${nm(b)} 同 ${nm(l)} 傾咗成晚。\n大家都係為咗生存。分部忠誠回升到 65。`}return `${nm(b)} 講唔掂。\n${nm(l)} 收咗線。（分部仲未正式脫離，但忠誠好低）`}},
+  {l:'由佢哋獨立',fx:c=>{const M=opMembers(G,c.op);M.forEach(u=>leaveUnit(u,`隨${BASES[c.op].n}分部獨立。`));delete G.outposts[c.op];return `${BASES[c.op].n}分部宣佈獨立，${M.length} 個人離開咗。`}},
+  {l:'武力鎮壓',d:'用主據點保安實力對抗分部',req:()=>able().length>0,fx:c=>{const M=opMembers(G,c.op);const mine=act(G).reduce((s,u)=>s+eff(u,'guard'),0)*.5,theirs=M.reduce((s,u)=>s+apt(u,'guard'),0);const l=opLeader(c.op);if(mine*rf(.8,1.2)>theirs){killUnit(l,'帶頭叛變，被鎮壓。');G.outposts[c.op].loy=55;allSan(-5);return `叛亂平息。${nm(l)} 死咗。\n其他人低頭。全隊意志 -5`}const v=bestBy(x=>eff(x,'guard'));if(v){const d=hurt(v,ri(15,30))}M.forEach(u=>leaveUnit(u,'叛變後離開。'));delete G.outposts[c.op];return '鎮壓失敗，分部全部人走晒，仲有人受傷。'}}]}
+});
+/* 搬據點：舊據點可以做分部；搬入分部會解散 */
+{const _rel=relocate;relocate=function(id){const prev=G.base;G.oldBases=G.oldBases||[];if(!G.oldBases.includes(prev))G.oldBases.push(prev);
+  if(G.outposts&&G.outposts[id]){opMembers(G,id).forEach(u=>{u.op=null});delete G.outposts[id]}
+  return _rel(id)}}
+/* ---------- 介面 ---------- */
+function opCard(id){
+  const o=G.outposts[id],b=BASES[id],M=opMembers(G,id);
+  return `<div class="opcard"><div class="row" style="justify-content:space-between"><b>${esc(b.n)}</b><span class="muted type" style="font-size:12px">${M.filter(x=>!isAnimal(x)).length}/${b.beds} 人</span></div>
+    <div class="row" style="gap:6px;font-size:11px"><span class="muted">忠誠</span><span class="minibar" style="width:90px"><i style="width:${o.loy}%;background:${o.loy<35?'var(--blood)':o.loy<60?'var(--sodium)':'var(--calm)'}"></i></span><span class="type">${o.loy}</span></div>
+    <div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">${M.map(u=>tag(u)).join('')||'<span class="muted" style="font-size:12px">冇人駐守</span>'}</div>
+    <div style="font-size:12px" class="muted">昨日：${esc(o.last||'未有紀錄')}</div>
+    <div class="row"><button class="btn sm" data-opadd="${id}" ${M.filter(x=>!isAnimal(x)).length>=b.beds||!reserveFree(G).length?'disabled':''}>派後備過去</button><button class="btn sm" data-opclose="${id}">撤銷分部</button></div></div>`;
+}
+function rCrew(){
+  G.outposts=G.outposts||{};
+  const A=act(G),Rs=reserveFree(G),D=Object.keys(G.gone),ops=Object.keys(G.outposts),cand=opCands(G);
+  const used={};G.units.forEach(u=>{if(u.eq)for(const sl in u.eq){const k=u.eq[sl];if(k)(used[k]=used[k]||[]).push(nm(u))}});
+  const keys=Object.keys(ITEMS).filter(k=>G.inv[k]||used[k]);
+  $('#main').innerHTML=`
+   <div class="secth"><h2>據點內</h2><span class="muted type">${beds(G)}/${bedCap(G)}</span></div>
+   <div class="cards">${A.map(u=>tag(u)).join('')||'<span class="muted">冇人</span>'}</div>
+   <div class="secth"><h2>後備名單</h2><span class="muted">${Rs.length} 人 · 唔使食糧；可以派去分部</span></div>
+   <div class="cards">${Rs.map(u=>tag(u)).join('')||'<span class="muted">冇人。升級床位可以收留更多人。</span>'}</div>
+   <div class="secth"><h2>分部</h2><span class="muted">後備人員駐守其他據點，電腦每日自動分工、搜括、送物資返嚟</span>${cand.length?`<button class="btn sm" id="opnew">設立分部（${cand.length} 個地點）</button>`:''}</div>
+   ${ops.length?`<div class="opgrid">${ops.map(opCard).join('')}</div>`:`<p class="muted" style="margin:0">${cand.length?'撳「設立分部」揀地點。':'清場一個可以做據點嘅地點（例如街市、屋邨、五金舖），或者搬過據點之後，舊據點就可以設立分部。'}</p>`}
+   <div class="secth"><h2>裝備背包</h2><button class="btn sm" id="aeq">按工作自動配裝</button></div>
+   <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="chip">${SLOTS[it.slot]} · 重 ${it.w}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.aff?` · 專精：${it.aff.map(a=>esc(CH[a].n)).join('、')}`:''}</div></div>`}).join('')||'<span class="muted">背包空空。</span>'}</div>
+   ${D.length?`<div class="secth"><h2>離開咗嘅人</h2></div><div class="cards">${D.map(id=>tag(id,true)).join('')}</div>`:''}`;
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
+  $('#aeq').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動`:'而家已經係最好配搭')};
+  const on=$('#opnew');if(on)on.onclick=openOpNew;
+  document.querySelectorAll('[data-opadd]').forEach(b=>b.onclick=()=>openOpAdd(b.dataset.opadd));
+  document.querySelectorAll('[data-opclose]').forEach(b=>{let armed=false;b.onclick=()=>{if(!armed){armed=true;b.textContent='再撳一次確認';b.classList.add('danger');return}opMembers(G,b.dataset.opclose).forEach(u=>u.op=null);delete G.outposts[b.dataset.opclose];save();render();toast('分部已撤銷，人員返回後備名單')}});
+}
+function openOpNew(){
+  const cand=opCands(G);
+  modal(`<div class="modal dismiss"><div class="eyebrow">設立分部</div><p class="muted" style="margin:0">揀一個地點。分部會自己分工搜括、守夜，每日將剩餘物資運返主據點。食唔飽或者冇人理，忠誠會跌，太低有機會叛變。</p>
+    <div class="stack" style="gap:6px">${cand.map(k=>{const b=BASES[k];return `<button class="eqpick" data-k="${k}"><div class="row" style="justify-content:space-between"><b>${esc(b.n)}</b><span class="muted type" style="font-size:12px">${b.beds} 人 · 圍牆 ${b.wall}</span></div><div style="font-size:12px">${esc(b.pd)}</div></button>`}).join('')}</div>
+    <div class="row"><button class="btn pri sm" id="cx" style="margin-left:auto">取消</button></div></div>`,()=>{
+    $('#cx').onclick=closeOv;
+    document.querySelectorAll('.eqpick').forEach(b=>b.onclick=()=>{G.outposts=G.outposts||{};G.outposts[b.dataset.k]={loy:70,last:''};save();closeOv();openOpAdd(b.dataset.k)});
+  });
+}
+function openOpAdd(id){
+  const b=BASES[id];
+  const draw=()=>{const M=opMembers(G,id),Rs=reserveFree(G);
+    modal(`<div class="modal dismiss"><div class="eyebrow">${esc(b.n)}分部 · ${M.filter(x=>!isAnimal(x)).length}/${b.beds} 人</div><p class="muted" style="margin:0">撳後備人員派佢過去；撳分部入面嘅人召返後備。</p>
+      <div class="lbl">分部入面</div><div class="chips">${M.map(u=>`<button class="chip opm" data-back="${u.id}">${esc(nm(u))} ✕</button>`).join('')||'<span class="muted">冇人</span>'}</div>
+      <div class="lbl">後備名單</div><div class="stack" style="gap:4px">${Rs.map(u=>{const best=OPJOB.reduce((a,j)=>apt(u,j)>apt(u,a)?j:a,'scav');return `<button class="eqpick" data-send="${u.id}" ${M.filter(x=>!isAnimal(x)).length>=b.beds?'disabled':''}><div class="row" style="justify-content:space-between"><b>${esc(nm(u))}</b><span class="muted" style="font-size:12px">${esc(CH[u.id].job)} · 擅長${JOBS[best].n}</span></div></button>`}).join('')||'<span class="muted">冇後備人員</span>'}</div>
+      <div class="row"><button class="btn pri sm" id="cx" style="margin-left:auto">完成</button></div></div>`,()=>{
+      $('#cx').onclick=closeOv;
+      document.querySelectorAll('[data-send]').forEach(x=>x.onclick=()=>{const u=uOf(x.dataset.send);u.op=id;u.job='rest';save();draw()});
+      document.querySelectorAll('[data-back]').forEach(x=>x.onclick=()=>{const u=uOf(x.dataset.back);u.op=null;save();draw()});
+    })};
+  draw();
 }
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
