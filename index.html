@@ -276,6 +276,8 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .eqrow .lbl{width:34px;flex:none}
 .eqpick{text-align:left;background:var(--slab2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
 .eqpick:hover{border-color:var(--sodium)}
+.eqpick.worn{border-style:dashed}
+.wornby{font-size:11px;color:var(--steel)}
 .inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
 .invi{background:var(--slab);border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
 .plan{grid-auto-rows:minmax(104px,auto)}
@@ -2085,18 +2087,23 @@ function openUnit(id){
 }
 function openEquip(id,sl){
   const u=uOf(id),cur=u.eq&&u.eq[sl];
-  const opts=Object.keys(G.inv).filter(k=>ITEMS[k]&&ITEMS[k].slot===sl&&G.inv[k]>0);
+  const opts=Object.keys(G.inv).filter(k=>ITEMS[k]&&ITEMS[k].slot===sl&&G.inv[k]>0).map(k=>({k,from:null}));
+  G.units.forEach(o=>{if(o!==u&&o.eq&&o.eq[sl])opts.push({k:o.eq[sl],from:o.id})});
+  opts.sort((a,b)=>RANK.indexOf(ITEMS[a.k].r)-RANK.indexOf(ITEMS[b.k].r)||(a.from?1:0)-(b.from?1:0));
   modal(`<div class="modal">
-    <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}</div>
-    <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色用效果 ×1.5。</p>
+    <div class="eyebrow">${esc(nm(u))} · ${SLOTS[sl]}${cur?` · 而家用緊：${esc(ITEMS[cur].n)}`:''}</div>
+    <p class="muted" style="margin:0">力量 ${stat(u,'str')}。裝備重過力量會打折兼多耗體力；專精角色用效果 ×1.5。其他人用緊嘅裝備都可以調過嚟，對方會即刻除低。</p>
     <div class="stack" style="gap:6px">
-      ${opts.map(k=>{const it=ITEMS[k],note=eqNote(u,it);return `<button class="eqpick" data-k="${k}"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${it.w} · 背包 ${G.inv[k]}</span></div><div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">背包入面冇${SLOTS[sl]}。去搜括會搵到。</p>`}
+      ${opts.map((o,i)=>{const it=ITEMS[o.k],note=eqNote(u,it),ow=o.from&&uOf(o.from);return `<button class="eqpick ${ow?'worn':''}" data-i="${i}"><div class="row" style="justify-content:space-between"><b>${rk(it.r)} ${esc(it.n)}</b><span class="muted type" style="font-size:12px">重 ${iw(u,it)}${o.from?'':` · 背包 ${G.inv[o.k]}`}</span></div>${ow?`<div class="wornby">${esc(nm(ow))}${ow.act?'':'（後備）'}用緊 · 撳一下調俾${esc(nm(u))}</div>`:''}<div style="font-size:12px">${esc(itemFx(u,it))}</div>${note?`<div style="font-size:11px;color:var(--sodium2)">${esc(note)}</div>`:''}<div class="muted" style="font-size:11px">${esc(it.d)}</div></button>`}).join('')||`<p class="muted">冇${SLOTS[sl]}。去搜括或者物資空投會搵到。</p>`}
     </div>
     <div class="row">${cur?'<button class="btn sm" id="off">卸下</button>':''}<button class="btn pri sm" id="back" style="margin-left:auto">返回</button></div>
   </div>`,()=>{
     $('#back').onclick=()=>openUnit(id);
     const off=$('#off');if(off)off.onclick=()=>{equip(u,sl,null);save();openUnit(id)};
-    document.querySelectorAll('.eqpick').forEach(b=>b.onclick=()=>{equip(u,sl,b.dataset.k);save();openUnit(id)});
+    document.querySelectorAll('.eqpick').forEach(b=>b.onclick=()=>{
+      const o=opts[+b.dataset.i];
+      if(o.from){const ow=uOf(o.from);if(ow&&ow.eq&&ow.eq[sl]===o.k){equip(ow,sl,null);toast(`${ITEMS[o.k].n} 由 ${nm(ow)} 身上調咗俾 ${nm(u)}`)}}
+      equip(u,sl,o.k);save();openUnit(id)});
   });
 }
 
