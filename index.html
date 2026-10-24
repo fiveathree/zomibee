@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>屍城日誌</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="喪屍末日回合制生存遊戲：廣播招募倖存者，分配搜括、巡邏、保安、維修、煮飯、醫療，撐過每一晚。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@400;500;700&family=Special+Elite&display=swap">
+<style>
+/* Layout: a shelter logbook under sodium streetlight — sticky header with supply tally + hazard band, tabbed views, survivor rows as manila ID tags */
+:root{
+  --ash:#14110e; --slab:#1e1a15; --slab2:#28221b; --line:#3b3127; --line2:#54463a;
+  --bone:#ece3d2; --dust:#a8977e; --sodium:#ffa23a; --sodium2:#ffc27a;
+  --blood:#e0503b; --bile:#a6c94e; --steel:#86afcf; --calm:#7fcf9a;
+  --f-disp:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-type:"Special Elite","Courier New",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(90% 55% at 50% -12%,rgba(255,162,58,.16),transparent 70%) fixed,var(--ash);color:var(--bone);font-family:var(--f-body);font-size:14px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ash)}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(20,17,14,.94);backdrop-filter:blur(8px)}
+header::after{content:"";display:block;height:5px;background:repeating-linear-gradient(-45deg,var(--sodium) 0 10px,#2a1f12 10px 20px);opacity:.85}
+.hbar{display:flex;align-items:center;gap:10px 16px;padding-block:10px 8px;flex-wrap:wrap}
+.logo{font-family:var(--f-disp);font-weight:900;font-size:22px;letter-spacing:.06em;line-height:1;display:flex;align-items:baseline;gap:8px}
+.logo small{font-family:var(--f-type);font-size:12px;color:var(--sodium);letter-spacing:.12em;font-weight:400}
+.daystamp{font-family:var(--f-type);font-size:13px;color:var(--dust);border:1px dashed var(--line2);padding:2px 8px;border-radius:3px}
+.daystamp b{color:var(--sodium2);font-weight:400;font-size:16px}
+.tabs{display:flex;gap:2px;margin-left:auto}
+.tabs button{padding:6px 12px;border-radius:4px;color:var(--dust);font-weight:700;font-size:14px}
+.tabs button[aria-selected="true"]{background:var(--sodium);color:#1c1206}
+.supply{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:8px}
+.sp{display:flex;align-items:center;gap:5px;background:var(--slab);border:1px solid var(--line);border-radius:4px;padding:2px 8px 2px 6px;font-size:12px;color:var(--dust)}
+.sp b{font-family:var(--f-type);font-weight:400;color:var(--bone);font-size:14px;font-variant-numeric:tabular-nums}
+.sp.low b{color:var(--blood)}
+.sp i{font-style:normal;width:16px;height:16px;border-radius:3px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#1c1206}
+
+main{padding-block:18px 60px}
+h2{font-family:var(--f-disp);font-weight:900;font-size:20px;margin:0;text-wrap:balance;letter-spacing:.03em}
+h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
+.muted{color:var(--dust)}
+.lbl{font-size:11px;letter-spacing:.14em;color:var(--dust);text-transform:uppercase}
+.type{font-family:var(--f-type)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:5px;background:var(--slab2);border:1px solid var(--line2);font-weight:700;font-size:14px}
+.btn:hover{border-color:var(--sodium)}
+.btn.pri{background:var(--sodium);color:#1c1206;border-color:var(--sodium)}
+.btn.pri:hover{background:var(--sodium2)}
+.btn.danger{background:var(--blood);border-color:var(--blood);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px}
+
+.panel{background:var(--slab);border:1px solid var(--line);border-radius:8px;padding:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* chapter */
+.chap{position:relative;padding:16px;border-radius:8px;background:linear-gradient(120deg,#2b2016,#1b1712 70%);border:1px solid var(--line2);overflow:hidden}
+.chap .no{font-family:var(--f-type);color:var(--sodium);font-size:12px;letter-spacing:.2em}
+.chap h2{font-size:24px;margin-top:2px}
+.chap p{margin:6px 0 0;color:var(--dust);max-width:62ch}
+.goal{margin-top:10px;display:flex;gap:8px;align-items:center;font-size:13px}
+.goal .chk{width:16px;height:16px;border:1.5px solid var(--sodium);border-radius:3px;display:grid;place-items:center;font-size:11px;color:#1c1206}
+.goal.done .chk{background:var(--sodium)}
+
+/* forecast */
+.fc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fc div{background:var(--slab2);border-radius:6px;padding:8px 10px}
+.fc b{display:block;font-family:var(--f-type);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums}
+.fc span{font-size:11px;color:var(--dust)}
+.fc .bad b{color:var(--blood)}.fc .ok b{color:var(--calm)}
+
+/* survivor rows */
+.urow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px;border-radius:8px;background:var(--slab);border:1px solid var(--line)}
+.urow.off{opacity:.55}
+.urow .who{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;min-width:0}
+.urow .who b{font-size:15px}
+.bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.bar{font-size:10px;color:var(--dust);display:flex;flex-direction:column;gap:2px}
+.bar s{display:block;height:5px;background:var(--line);border-radius:3px;overflow:hidden;text-decoration:none}
+.bar s i{display:block;height:100%;border-radius:3px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line2);color:var(--dust);white-space:nowrap}
+.chip.bad{border-color:var(--blood);color:var(--blood)}
+.chip.inf{border-color:var(--bile);color:var(--bile)}
+.chip.good{border-color:var(--calm);color:var(--calm)}
+.chip.warn{border-color:var(--sodium);color:var(--sodium)}
+.jobs{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:8px}
+@media (max-width:560px){.jobs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.jb{padding:5px 2px;border-radius:5px;background:var(--slab2);border:1px solid var(--line);font-size:12px;display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.jb em{font-style:normal;font-family:var(--f-type);font-size:13px}
+.jb[aria-pressed="true"]{background:var(--sodium);border-color:var(--sodium);color:#1c1206}
+.jb[aria-pressed="true"] em{color:#1c1206!important}
+.jb:disabled{opacity:.35;cursor:not-allowed}
+.gS{color:#ffb8f5}.gA{color:var(--sodium2)}.gB{color:var(--calm)}.gC{color:var(--steel)}.gD{color:var(--dust)}
+
+/* avatar tag */
+.av{--c1:#6b6257;--c2:#3c352d;width:46px;height:56px;border-radius:5px 5px 5px 14px;background:linear-gradient(160deg,var(--c1),var(--c2));display:grid;place-items:center;position:relative;font-family:var(--f-disp);font-weight:900;font-size:24px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);flex:none;grid-row:span 2}
+.av::before{content:"";position:absolute;top:5px;left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--ash);box-shadow:0 0 0 1.5px rgba(255,255,255,.35)}
+.av span{position:absolute;bottom:2px;right:4px;font-family:var(--f-type);font-size:10px;font-weight:400}
+.r-UR{--c1:#f2a6e6;--c2:#6c4fc2}.r-SSR{--c1:#f2c552;--c2:#9a6510}.r-SR{--c1:#a77ff0;--c2:#4c2c8f}.r-R{--c1:#6fa0e8;--c2:#25477e}.r-C{--c1:#8d867c;--c2:#47413a}
+.av.dead{filter:grayscale(1) brightness(.6)}
+.rk{font-family:var(--f-type);font-size:11px;padding:0 5px;border-radius:3px;color:#1c1206}
+.rk.UR{background:linear-gradient(90deg,#ffc3f3,#b9e9ff,#fff1b0)}.rk.SSR{background:#f2c552}.rk.SR{background:#b993ff}.rk.R{background:#7eaaf0}.rk.C{background:#a59e93}
+.stars{color:var(--sodium);font-size:11px;letter-spacing:1px}
+
+/* settings selects */
+.sel{width:100%;background:var(--slab2);color:var(--bone);border:1px solid var(--line2);border-radius:5px;padding:7px 8px;font:inherit}
+.field{display:flex;flex-direction:column;gap:4px}
+
+/* facilities */
+.fac{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.fac div{background:var(--slab2);border-radius:5px;padding:6px 8px;font-size:12px;display:flex;justify-content:space-between;gap:6px}
+.fac b{font-family:var(--f-type);font-weight:400;color:var(--sodium2)}
+.wall{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:6px}
+.wall i{display:block;height:100%;background:repeating-linear-gradient(90deg,#8b7a63 0 14px,#6e604d 14px 16px)}
+
+/* roster */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tag{position:relative;background:#d9c9a8;color:#2a2117;border-radius:6px 6px 6px 18px;padding:10px 10px 10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;text-align:left;box-shadow:0 2px 0 #7b6a4f}
+.tag::before{content:"";position:absolute;top:8px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--ash)}
+.tag .tt{display:flex;gap:8px;align-items:center}
+.tag .av{width:40px;height:48px;font-size:20px;grid-row:auto}
+.tag b{font-size:14px;line-height:1.2}
+.tag small{font-size:11px;color:#6a5a43;display:block}
+.tag .chip{border-color:#8b7a5f;color:#5a4a33;background:rgba(255,255,255,.25)}
+.tag .chip.bad{border-color:#b33a28;color:#b33a28}.tag .chip.inf{border-color:#5f7e18;color:#5f7e18}
+.tag.res{background:#a9a08f;opacity:.85}
+.tag.gone{background:#5a534a;color:#ccc;cursor:default}
+.tag.gone small{color:#aaa}
+.secth{display:flex;align-items:baseline;gap:10px;margin:18px 0 10px}
+
+/* radio gacha */
+.radio{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:720px){.radio{grid-template-columns:minmax(0,1fr)}}
+.dial{position:relative;aspect-ratio:1.7;max-width:100%;border-radius:14px;background:linear-gradient(180deg,#3a2f24,#211a13);border:1px solid var(--line2);overflow:hidden;padding:16px;display:flex;flex-direction:column;justify-content:space-between}
+.scale{position:relative;height:46px;border-radius:6px;background:#120e0a;border:1px solid #4d3f30;overflow:hidden}
+.scale::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,194,122,.5) 0 1px,transparent 1px 10px);mask:linear-gradient(180deg,#000 0 40%,transparent 40%)}
+.scale .nums{position:absolute;inset:auto 0 4px;display:flex;justify-content:space-around;font-family:var(--f-type);font-size:10px;color:var(--sodium2)}
+.needle{position:absolute;top:0;bottom:0;width:2px;background:var(--blood);left:30%;box-shadow:0 0 8px var(--blood);transition:left 1.2s cubic-bezier(.3,1.4,.5,1)}
+.grill{flex:1;margin-top:12px;border-radius:8px;background:radial-gradient(circle,#0f0b08 1.6px,transparent 2px) 0 0/8px 8px,#2b2219}
+.rates{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px}
+.rate{background:var(--slab2);border-radius:6px;padding:6px;text-align:center}
+.rate b{font-family:var(--f-type);font-weight:400;display:block;font-size:14px}
+.rate span{font-size:11px;color:var(--dust)}
+
+/* log */
+.log{font-family:var(--f-type);font-size:14px;line-height:1.7;background:#e6dbc4;color:#2a2117;border-radius:6px;padding:18px 18px 18px 46px;position:relative;background-image:repeating-linear-gradient(180deg,transparent 0 23px,rgba(80,110,150,.25) 23px 24px);background-color:#e6dbc4}
+.log::before{content:"";position:absolute;left:30px;top:0;bottom:0;width:1px;background:rgba(200,60,50,.5)}
+.log h4{margin:14px 0 2px;font-size:15px;color:#7a2a1c;font-weight:400}
+.log h4:first-child{margin-top:0}
+.log p{margin:0;max-width:70ch}
+
+/* overlay */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(8,6,4,.86);backdrop-filter:blur(5px);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 24px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(16px,env(safe-area-inset-left,0px))}
+.modal{width:min(620px,100%);background:var(--slab);border:1px solid var(--line2);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
+.modal.paper{background:#e6dbc4;color:#2a2117;border-color:#b9a582}
+.modal.paper .muted{color:#6a5a43}
+.modal.paper h2{color:#2a2117}
+.modal .story{font-family:var(--f-type);font-size:15px;line-height:1.75;white-space:pre-line}
+.modal .eyebrow{font-family:var(--f-type);font-size:12px;letter-spacing:.2em;color:var(--sodium)}
+.modal.paper .eyebrow{color:#9a3a22}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;padding:10px 12px;border-radius:6px;border:1px solid #9c8a6a;background:rgba(255,255,255,.35);color:#2a2117;font-weight:700}
+.opt small{display:block;font-weight:400;color:#6a5a43;font-size:12px}
+.opt:hover:not(:disabled){background:#fff3d6;border-color:#9a3a22}
+.opt:disabled{opacity:.45;cursor:not-allowed}
+.result{font-family:var(--f-type);background:rgba(154,58,34,.08);border-left:3px solid #9a3a22;padding:10px 12px;white-space:pre-line}
+.rep{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.rep h4{margin:10px 0 2px;font-family:var(--f-disp);font-size:15px;color:var(--sodium2)}
+.rep h4:first-child{margin-top:0}
+.rep p{margin:0}
+.rep .b{color:var(--blood)}.rep .g{color:var(--calm)}.rep .y{color:var(--bile)}
+.night{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:var(--slab2);border-radius:8px;padding:12px;text-align:center}
+.night b{font-family:var(--f-type);font-weight:400;font-size:28px;display:block}
+.night .vs{font-family:var(--f-disp);color:var(--dust)}
+
+/* pull reveal */
+.pullgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.pullgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pc .tt{flex-direction:column;align-items:flex-start;gap:6px}
+.pc .tt b{word-break:break-word}
+.pullgrid.one{grid-template-columns:minmax(0,220px);justify-content:center}
+.pc{perspective:700px}
+.pc .in{position:relative;transition:transform .55s;transform-style:preserve-3d}
+.pc.open .in{transform:rotateY(180deg)}
+.pc .back,.pc .front{backface-visibility:hidden;border-radius:8px}
+.pc .back{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,#3a2f24 0 8px,#2a2219 8px 16px);border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--f-type);color:var(--sodium);font-size:12px}
+.pc .front{transform:rotateY(180deg)}
+.pc.g-UR .back{box-shadow:0 0 18px #f2a6e6}.pc.g-SSR .back{box-shadow:0 0 14px #f2c552}
+.badge{font-size:10px;font-family:var(--f-type);padding:0 5px;border-radius:3px;background:var(--blood);color:#fff;align-self:flex-start}
+.badge.dup{background:#6b5a3e}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--sodium);color:#1c1206;font-weight:700;padding:8px 16px;border-radius:6px;z-index:80;max-width:calc(100% - 32px);text-align:center}
+.statgrid{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;font-size:13px}
+.statgrid s{display:block;height:6px;background:var(--line);border-radius:3px;overflow:hidden;text-decoration:none}
+.statgrid s i{display:block;height:100%;background:var(--sodium)}
+.aptg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;text-align:center}
+.aptg div{background:var(--slab2);border-radius:5px;padding:4px 0;font-size:11px;color:var(--dust)}
+.aptg b{display:block;font-family:var(--f-type);font-weight:400;font-size:16px}
+@media (prefers-reduced-motion:reduce){.pc .in,.needle{transition:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hbar">
+      <div class="logo">屍城日誌 <small>ZOMIBEE</small></div>
+      <div class="daystamp" id="daystamp"></div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-v="base" aria-selected="true">據點</button>
+        <button role="tab" data-v="crew" aria-selected="false">倖存者</button>
+        <button role="tab" data-v="radio" aria-selected="false">廣播</button>
+        <button role="tab" data-v="log" aria-selected="false">日誌</button>
+        <button role="tab" data-v="menu" aria-selected="false">設定</button>
+      </nav>
+    </div>
+    <div class="supply" id="supply"></div>
+  </div>
+</header>
+<main class="wrap" id="main"></main>
+<div id="ovroot"></div>
+<script>
+/* ================= 數據 ================= */
+const KEY='zomibee_v1';
+const ST=['str','agi','per','tec','med','cok','wil'];
+const STN={str:'力量',agi:'敏捷',per:'感知',tec:'技術',med:'醫術',cok:'廚藝',wil:'意志'};
+const JOBS={
+  scav:  {n:'搜括',w:{agi:.35,per:.35,str:.3},sta:30,san:6,d:'出去搵物資，有機會受傷或者被咬'},
+  patrol:{n:'巡邏',w:{per:.5,agi:.3,wil:.2},sta:22,san:4,d:'清走附近喪屍，減少今晚屍潮，順手執啲嘢'},
+  guard: {n:'保安',w:{str:.5,per:.2,wil:.3},sta:25,san:3,d:'今晚守夜，每人用 1 發彈藥加強火力'},
+  repair:{n:'維修',w:{tec:.8,str:.2},sta:20,san:1,d:'修補圍牆或者升級設施'},
+  cook:  {n:'煮飯',w:{cok:.85,per:.15},sta:12,san:0,d:'慳食物、提升全隊意志'},
+  medic: {n:'醫療',w:{med:.8,wil:.2},sta:15,san:2,d:'醫傷者、處理重傷，用藥品'},
+  rest:  {n:'休息',w:{},sta:-40,san:-10,d:'回復體力同意志'}
+};
+const JK=['scav','patrol','guard','repair','cook','medic','rest'];
+const RANK=['UR','SSR','SR','R','C'];
+const RATES=[['UR',1.5],['SSR',5],['SR',15],['R',33],['C',45.5]];
+
+/* 特質：每個都係一組效果 */
+const TR={
+  owl:{n:'夜貓子',d:'保安效率 +20%',fx:{job:{guard:1.2}}},
+  coward:{n:'膽小',d:'意志跌得快 50%，但搜括時特別小心（風險 -30%）',fx:{sanDecay:1.5,risk:.7}},
+  sunny:{n:'樂天',d:'意志跌得慢一半',fx:{sanDecay:.5}},
+  glutton:{n:'大胃',d:'食量 ×1.5',fx:{eat:1.5}},
+  iron:{n:'鐵胃',d:'唔會病',fx:{noSick:1}},
+  selfish:{n:'自私',d:'搜括風險 -30%，但對其他人冇乜好處',fx:{risk:.7}},
+  hot:{n:'火爆',d:'保安 +15%，但較易同人嗌交',fx:{job:{guard:1.15},hot:1}},
+  young:{n:'年輕',d:'體力回復 +50%',fx:{staRec:1.5}},
+  old:{n:'老人家',d:'體力回復 -30%，意志跌得慢',fx:{staRec:.7,sanDecay:.7}},
+  small:{n:'細食',d:'食量 ×0.5',fx:{eat:.5}},
+  animal:{n:'動物',d:'唔識煮飯、維修、醫療',fx:{animal:1}},
+  loner:{n:'獨行俠',d:'單人搜括時效率 +40%',fx:{loner:1}},
+  pious:{n:'虔誠',d:'意志跌得慢 30%',fx:{sanDecay:.7}},
+  tough:{n:'硬淨',d:'受傷時傷害 -30%',fx:{tough:.7}},
+  lucky:{n:'好運',d:'被咬機會 -40%',fx:{bite:.6}},
+  liar:{n:'識呃人',d:'交易同談判事件更著數',fx:{deal:1}}
+};
+
+/* 角色：id, 名, 稀有度, 出身, 身份, [力 敏 感 技 醫 廚 意], 特質, 專長名, 專長說明, 專長效果, 簡介, 頭像字 */
+const CH_RAW=[
+ // ---------- UR ----------
+ ['u_shen','沈默','UR','中國','前特種部隊',[18,17,16,10,6,5,18],['tough'],'抗體宿主','對病毒免疫；佢喺據點時解藥研究速度 ×1.5，保安 +30%',{immune:1,research:1.5,job:{guard:1.3}},'喺一次秘密任務入面被咬過，三日後醒返，傷口結咗痂。佢唔講點解，只係比以前更沉默。','默'],
+ ['u_mio','宮本 澪','UR','日本','古流劍術傳人',[15,20,17,8,5,9,16],['loner'],'居合','搜括同保安唔使彈藥都有全火力；搜括受傷風險 -50%',{noAmmo:1,risk:.5,job:{scav:1.2,guard:1.25}},'京都道場第十七代。疫症爆發嗰日佢啱啱嚟港灣市表演，一把真刀斬出條血路。','澪'],
+ ['u_grace','Grace Holloway','UR','美國','CDC 病毒學家',[6,8,14,15,20,10,15],['pious'],'疫苗原型','做醫療時每日有 25% 機會治好一個感染者；解藥研究速度 ×2',{cure:.25,research:2,job:{medic:1.2}},'美國疾控中心派嚟亞洲調查不明腦炎嘅專家。佢係最早知道「佢哋唔係病人」嘅人之一。','G'],
+ ['u_han','韓 載勳','UR','韓國','前消防隊長',[17,13,15,14,12,8,20],['tough'],'絕不放棄','全隊每日意志 +6，無人會因崩潰而離隊；巡邏、保安 +20%',{teamSan:6,calm:1,job:{patrol:1.2,guard:1.2}},'釜山消防局退役隊長，喺火車站救過一整卡車廂嘅人。佢講：「一個都唔可以少。」','勳'],
+ // ---------- SSR ----------
+ ['s_ho','何定邦','SSR','香港','前疊碼仔',[9,13,15,9,4,8,12],['liar','lucky'],'偏門財路','每日自動多 15 電池；搜括電池收穫 ×2',{bat:15,loot:{bat:2}},'喺澳門賭場打滾廿年，末日對佢嚟講只係另一張枱。佢永遠知道邊度有嘢可以換。','邦'],
+ ['s_lin','林阿明','SSR','台灣','夜市總舖師',[11,8,12,9,5,20,13],['sunny'],'辦桌','煮飯效率 ×1.6，全隊每日意志 +4',{job:{cook:1.6},teamSan:4},'台南夜市辦桌出身，一個鑊可以餵飽一條村。「天塌落嚟都要食飯先講。」','明'],
+ ['s_olga','Olga Petrova','SSR','俄羅斯','核電廠工程師',[12,8,13,20,6,7,14],['iron'],'拆東補西','維修效率 +30%，零件消耗 -50%',{job:{repair:1.3},partsSave:.5},'見過車諾比式嘅事故報告，所以佢從來唔信「安全區」三個字。佢信扳手。','O'],
+ ['s_hawk','Marcus Reed','SSR','美國','前海軍陸戰隊狙擊手',[13,12,19,10,8,6,14],['owl'],'一發入魂','保安唔使彈藥，夜間防禦 +10',{noAmmo:1,def:10,job:{guard:1.15}},'代號 Hawk。佢喺天台可以一個晚上唔郁，數住街上每一隻。','鷹'],
+ ['s_park','朴 秀珍','SSR','韓國','急症室護士長',[8,10,14,10,18,10,15],['iron'],'夜更護理','醫療效率 +40%，全隊每日 HP +5',{job:{medic:1.4},heal:5},'首爾大學醫院急症室做咗十五年夜更，第一個「病人」咬人嗰晚佢就喺度。','珍'],
+ ['s_fei','阿飛','SSR','香港','跑酷 YouTuber',[11,20,15,7,4,6,11],['young'],'天台路線','搜括受傷風險 -50%，搜括收穫 +20%',{risk:.5,job:{scav:1.2}},'訂閱者四十萬，專拍喺唐樓天台之間飛嚟飛去。而家呢條路線救咗佢條命。','飛'],
+ ['s_mao','茅一清','SSR','中國','茅山道士後人',[10,10,15,9,12,8,19],['pious'],'鎮屍符','每晚屍潮 -15%，全隊每日意志 +3',{horde:.85,teamSan:3},'祖上捉殭屍，佢以為只係家族故事。直到佢發現，啲符真係令佢哋停一停。','茅'],
+ ['s_sofia','Sofia Reyes','SSR','墨西哥','電單車速遞員',[13,17,13,11,5,7,12],['loner'],'速遞','搜括帶返嘅物資 +40%',{lootAll:1.4},'由墨西哥城騎到港灣市送件，末日之後佢仲係送 ——送物資、送藥、送人。','S'],
+ // ---------- SR ----------
+ ['r_rin','早乙女 凜','SR','日本','高中劍道部長',[12,16,13,6,5,7,13],['young'],'木刀','保安 +25%，搜括 +10%',{job:{guard:1.25,scav:1.1}},'對面中學嘅交換生，劍道全國八強。佢帶住成班同學喺天台頂咗三日。','凜'],
+ ['r_dale','Dale Brennan','SR','美國','小鎮副警長',[14,10,13,9,7,6,13],['hot'],'槍械管理','搜括彈藥收穫 ×2，保安 +10%',{loot:{ammo:2},job:{guard:1.1}},'喺佐治亞州醫院昏迷醒返，發現成個世界變咗。佢仲戴住個警章。','D'],
+ ['r_choi','崔 智宇','SR','韓國','基金經理',[8,11,13,12,6,6,9],['selfish','liar'],'算盤','每日 +6 電池，交易更著數',{bat:6},'喺列車上第一個將人推出車廂嘅人。佢後悔過，但下次可能都會照做。','崔'],
+ ['r_hung','陳大雄','SR','香港','貨櫃碼頭搬運工',[18,9,10,11,4,9,11],['glutton','tough'],'硬膊頭','維修、保安 +20%',{job:{repair:1.2,guard:1.2}},'葵涌碼頭出名大力，一個人推得郁一架私家車。食得都多。','雄'],
+ ['r_mei','張美玲','SR','台灣','藥劑師',[7,9,12,11,15,8,11],[],'調配','醫療藥品消耗 -50%',{medSave:.5,job:{medic:1.1}},'台北社區藥房嘅藥劑師，背得出每一隻藥嘅分子式同埋代替品。','玲'],
+ ['r_hannah','Hannah Becker','SR','德國','天台農夫',[10,9,11,12,7,11,12],['sunny'],'天台農場','每日自動產 3 食物',{food:3},'柏林城市農耕組織嘅成員。佢喺任何有陽光嘅地方都種得出嘢。','H'],
+ ['r_kenji','渡邊 健司','SR','日本','白帽黑客',[6,10,12,16,5,6,10],['owl'],'頻率掃描','每日 +10 電池，巡邏 +15%',{bat:10,job:{patrol:1.15}},'秋葉原自由工作者，用一部改裝收音機聽晒成個城市嘅軍方頻道。','健'],
+ ['r_darnell','Darnell Brooks','SR','英國','業餘拳擊手',[16,14,11,6,5,6,12],['hot'],'狂戰','HP 低過一半時保安 ×1.5',{berserk:1,job:{guard:1.1}},'倫敦東區拳館出身，嚟亞洲打表演賽。佢話喪屍「冇防守意識」。','B'],
+ ['r_maria','Maria 修女','SR','意大利','修女',[6,7,11,7,12,10,17],['pious'],'禱告','全隊每日意志 +4',{teamSan:4},'喺港灣市天主教堂服務咗三十年。佢唔怕死，佢怕嘅係大家唔再相信明天。','瑪'],
+ ['r_lee','李志強','SR','香港','消防員',[14,12,12,12,8,6,12],['tough'],'破拆','搜括零件收穫 +50%，維修 +10%',{loot:{parts:1.5},job:{repair:1.1}},'九龍消防局，識得用一把斧頭打開任何一道門。','強'],
+ ['r_lulu','露露','SR','中國','直播主',[7,11,12,9,5,9,8],['coward'],'直播求援','每日 +12 電池',{bat:12},'一百萬粉絲嘅美食主播。部手機仲有訊號嘅時候，佢每日都喺直播求救。','露'],
+ ['r_zhou','周伯','SR','台灣','退伍軍醫',[9,7,12,10,15,8,14],['old'],'截肢','做醫療時每日 20% 機會救返一個感染者',{cure:.2},'金門當過三十年軍醫。佢話：「隻手冇咗都仲係人，個頭冇咗就唔係。」','周'],
+ // ---------- R ----------
+ ['c_may','小美','R','台灣','便利店店員',[8,10,12,8,5,10,9],[],'庫存管理','搜括食物同水收穫 +30%',{loot:{food:1.3,water:1.3}},'夜班店員，知道全區每間便利店倉底藏咗乜。','美'],
+ ['c_cheung','阿祥','R','香港','外賣仔',[10,13,11,7,4,7,9],['young'],'熟路','搜括受傷風險 -20%',{risk:.8,job:{scav:1.05}},'踩單車送外賣五年，條條後巷都識行。','祥'],
+ ['c_wong','老黃','R','香港','的士司機',[10,8,12,11,5,8,10],['owl'],'夜更司機','保安 +15%，巡邏 +10%',{job:{guard:1.15,patrol:1.1}},'開咗廿年夜更的士，乜嘢怪人都見過。今次只係怪得多啲。','黃'],
+ ['c_keung','強哥','R','香港','地盤師傅',[13,8,9,12,4,7,10],['glutton'],'紮鐵','維修 +15%',{job:{repair:1.15}},'做咗幾十年紮鐵，圍牆交俾佢放心。食飯就唔好同佢爭。','哥'],
+ ['c_emily','Emily Clarke','R','澳洲','獸醫',[8,9,11,8,12,7,10],[],'動物溝通','醫療 +10%，全隊每日 HP +2',{heal:2,job:{medic:1.1}},'喺港灣市寵物醫院工作嘅澳洲人。佢第一件事係將診所啲狗放走。','E'],
+ ['c_david','David Okafor','R','尼日利亞','商場保安',[12,9,11,7,5,7,11],[],'職業保安','保安 +15%',{job:{guard:1.15}},'喺尖東商場做咗六年保安，第一次真係要保護人。','D'],
+ ['c_mrwong','王 sir','R','香港','補習天王',[6,7,10,9,6,7,13],['liar'],'鼓勵','全隊每日意志 +2',{teamSan:2},'巴士車身賣廣告嘅名師，講嘢有種令人想繼續聽落去嘅力量。','王'],
+ ['c_chan','陳太','R','香港','家庭主婦',[8,7,11,7,7,14,12],['sunny'],'慳家','煮飯 +25%',{job:{cook:1.25}},'屋邨師奶，一斤菜可以煮出四味餸。佢唔准任何人浪費。','陳'],
+ ['c_minho','金 民浩','R','韓國','巴士司機',[10,9,12,11,5,6,10],[],'路線圖','巡邏 +15%',{job:{patrol:1.15}},'跟住旅行團嚟嘅韓國司機，記得住佢行過嘅每一條街。','浩'],
+ ['c_igor','Igor','R','烏克蘭','屠夫',[13,8,9,8,6,12,10],['iron'],'拆骨','煮飯時食物消耗再 -15%',{feed:1.15},'喺街市開肉檔嘅烏克蘭人。佢刀工好到令人唔舒服。','I'],
+ ['c_ana','Ana Santos','R','菲律賓','家務助理',[9,9,11,10,9,12,12],['sunny'],'全能','所有工作 +10%',{job:{scav:1.1,patrol:1.1,guard:1.1,repair:1.1,cook:1.1,medic:1.1}},'喺港灣市做咗十年姐姐。煮飯、照顧病人、修水喉，冇佢唔識。','A'],
+ ['c_tang','鄧伯','R','香港','退休海員',[9,6,11,10,6,9,15],['old'],'見慣風浪','全隊每日意志 +1，自己意志幾乎唔跌',{teamSan:1,sanDecay:.4},'行船四十年，見過颱風、海盜同沉船。「呢啲？未算大場面。」','鄧'],
+ ['c_ng','吳小智','R','台灣','高中生',[9,12,11,9,5,6,8],['young'],'青春','體力回復極快',{staRec:1.8},'被困喺中學天台嘅學生之一，成日講「如果係遊戲就好」。','智'],
+ // ---------- C ----------
+ ['n_tanaka','田中','C','日本','社畜',[8,8,9,9,5,7,8],['coward'],'加班魂','維修 +10%，唔會因為疲勞減效率',{noTired:1,job:{repair:1.1}},'東京上班族，出差到港灣市。佢第一個反應係打電話問公司使唔使返工。','田'],
+ ['n_ashley','Ashley','C','美國','交換生',[8,10,10,8,6,7,8],['young'],'急救證書','醫療 +15%',{job:{medic:1.15}},'嚟讀一個學期嘅大學生，啱啱考咗急救證書，從來冇諗過會用得著。','A'],
+ ['n_dou','豆豆','C','香港','小朋友',[3,9,12,3,2,4,10],['small','sunny'],'童言','全隊每日意志 +3',{teamSan:3},'七歲，同屋企人失散。佢唔明發生咩事，但佢會唱歌俾大家聽。','豆'],
+ ['n_tofu','豆腐','C','港灣市','唐狗',[7,15,17,0,0,0,9],['animal'],'嗅覺','巡邏 +40%，夜間防禦 +4',{job:{patrol:1.4},def:4},'一隻黃色唐狗，識喺喪屍行近之前低聲吠。大家都爭住摸佢個頭。','犬'],
+ ['n_kuro','黑糖','C','港灣市','流浪貓',[2,16,15,0,0,0,8],['animal','lucky'],'捉老鼠','全隊每日意志 +2，倉庫食物唔會被老鼠偷',{teamSan:2,noRats:1},'一隻黑貓，自己行入嚟就唔走。睡喺最暖嗰個人隔籬。','貓'],
+ ['n_fat','阿肥','C','台灣','電競宅男',[7,8,11,10,4,6,7],[],'手眼協調','保安 +10%，巡邏 +10%',{job:{guard:1.1,patrol:1.1}},'打咗十年喪屍遊戲。佢發現現實入面冇得 save。','肥'],
+ ['n_brad','Brad','C','美國','健身教練',[13,10,7,5,5,6,7],['coward','glutton'],'蛋白粉','力量型工作 +10%',{job:{guard:1.1,repair:1.05}},'肌肉好大，膽好細。見到第一隻喪屍嗰陣喊到收唔到聲。','B'],
+ ['n_rosa','Rosa','C','西班牙','酒保',[8,9,10,7,6,10,9],['sunny'],'調酒','全隊每日意志 +1，煮飯 +10%',{teamSan:1,job:{cook:1.1}},'蘭桂坊酒吧嘅調酒師，口袋永遠有半支酒。','R'],
+ ['n_kwok','阿 Kit','C','香港','大學生',[8,10,10,9,6,6,8],[],'通識','所有工作 +5%',{job:{scav:1.05,patrol:1.05,guard:1.05,repair:1.05,cook:1.05,medic:1.05}},'港灣大學三年級，主修冇乜用嘅科目，但乜都識少少。','傑'],
+ ['n_sun','孫婆婆','C','中國','退休中醫',[4,5,10,5,11,9,12],['old'],'草藥','醫療唔夠藥時仍有一半效果',{herbal:1},'佢話佢見過更差嘅年代。一手煲湯一手執藥。','孫']
+];
+const CH={};
+CH_RAW.forEach(([id,n,g,o,job,s,tr,skn,skd,fx,bio,av])=>{CH[id]={id,n,g,o,job,s,tr,sk:{n:skn,d:skd},fx,bio,av:av||n[0]};});
+const BY_G={};RANK.forEach(g=>BY_G[g]=CH_RAW.filter(r=>r[2]===g).map(r=>r[0]));
+
+/* 搜括地點 */
+const LOCS=[
+ {id:'store',n:'街口便利店',ch:1,dg:.10,loot:{food:1.1,water:1.3,bat:.5,med:.15}},
+ {id:'market',n:'街市',ch:1,dg:.14,loot:{food:2.0,water:.8}},
+ {id:'estate',n:'公共屋邨',ch:1,dg:.18,loot:{food:.8,water:1,parts:.6,bat:1,med:.25}},
+ {id:'hardware',n:'五金舖',ch:1,dg:.18,loot:{parts:1.7,ammo:.15}},
+ {id:'clinic',n:'街坊診所',ch:1,dg:.24,loot:{med:1.2,food:.2}},
+ {id:'police',n:'警署',ch:2,dg:.36,loot:{ammo:1.7,parts:.5,med:.3}},
+ {id:'metro',n:'地鐵站',ch:2,dg:.34,loot:{bat:2.2,parts:.8,water:.8}},
+ {id:'school',n:'對面中學',ch:3,dg:.32,loot:{food:1.3,med:.6,bat:.8,water:.6}},
+ {id:'museum',n:'歷史博物館',ch:4,dg:.42,loot:{bat:1.4,parts:.7}},
+ {id:'barracks',n:'軍營',ch:5,dg:.52,loot:{ammo:2.2,med:.8,food:1.1,parts:1}},
+ {id:'lab',n:'製藥廠研究所',ch:6,dg:.6,loot:{med:2.2,bat:1,serum:.06}}
+];
+const RES={food:{n:'食物',c:'#d9a35b',s:'食'},water:{n:'水',c:'#86afcf',s:'水'},med:{n:'藥品',c:'#e0503b',s:'藥'},parts:{n:'零件',c:'#a8977e',s:'件'},ammo:{n:'彈藥',c:'#c9b458',s:'彈'},bat:{n:'電池',c:'#ffa23a',s:'電'},core:{n:'晶核',c:'#b993ff',s:'核'},serum:{n:'血清',c:'#a6c94e',s:'清'}};
+const LSCALE={food:3.2,water:3,med:1.2,parts:2.2,ammo:2.4,bat:10};
+
+/* 設施 */
+const FAC={
+ wall:{n:'圍牆',max:5,d:'圍牆耐久上限 +30',cost:l=>8+l*7,work:l=>10+l*8},
+ beds:{n:'床位',max:4,d:'可同時收留人數 +2',cost:l=>6+l*6,work:l=>8+l*6},
+ kitchen:{n:'廚房',max:3,d:'煮飯效率 +25%',cost:l=>5+l*6,work:l=>8+l*6},
+ clinic:{n:'醫務室',max:3,d:'醫療效率 +25%',cost:l=>6+l*7,work:l=>10+l*6},
+ rain:{n:'雨水收集',max:4,d:'每日 +4 水',cost:l=>4+l*4,work:l=>6+l*5},
+ garden:{n:'天台菜園',max:3,d:'每日 +3 食物',cost:l=>6+l*5,work:l=>10+l*6},
+ radio:{n:'無線電台',max:3,d:'每日 +10 電池',cost:l=>10+l*8,work:l=>12+l*8}
+};
+const FK=Object.keys(FAC);
+
+/* 章節 */
+const CHAPS=[
+ {n:1,day:1,t:'爆發',src:'港產',p:'港灣市一夜淪陷。你同幾個陌生人躲入咗旺角一棟舊商場，捲閘外面嘅聲音成晚冇停過。',goal:'將圍牆升到 2 級',ok:g=>g.fac.wall>=2,r:{bat:200,parts:5},hm:1},
+ {n:2,day:8,t:'南下列車',src:'韓式',p:'電台話有最後一班列車開往南方安全區。有人想走，有人覺得留低先係生路。',goal:'囤積 30 發彈藥',ok:g=>g.res.ammo>=30,r:{bat:200,med:4},hm:1},
+ {n:3,day:15,t:'學園默示錄',src:'日式',p:'對面中學嘅天台，有人用鏡反光打摩斯密碼。三短、三長、三短。',goal:'救出中學天台嘅學生',ok:g=>!!g.flags.rescued,r:{bat:250},hm:1.05},
+ {n:4,day:22,t:'生死草',src:'朝鮮古疫',p:'一段韓語廣播提到博物館入面一本朝鮮王朝古籍，記載住一種令死人復生嘅草。病毒，可能唔係由實驗室開始。',goal:'喺歷史博物館搵到《疫屍錄》',ok:g=>!!g.flags.codex,r:{bat:300,core:1},hm:1.1},
+ {n:5,day:29,t:'進化',src:'國產網文',p:'佢哋開始跑。有啲變到兩米高，有啲識得叫同伴。死咗嘅變異體頭殼入面，有粒會發光嘅晶核。',goal:'累計收集 5 粒晶核',ok:g=>(g.flags.coreTotal||0)>=5,r:{bat:300},hm:1.2},
+ {n:6,day:36,t:'人禍',src:'美式',p:'一隊自稱「獵人幫」嘅倖存者佔咗附近幾條街。末日之後，人比喪屍更危險。',goal:'擊退獵人幫（或者同佢哋講掂數）',ok:g=>!!g.flags.raidWon,r:{bat:400,ammo:20},hm:1.25},
+ {n:7,day:43,t:'解藥',src:'西方藥廠',p:'製藥廠研究所仲有電。只要有足夠嘅醫療人手同藥品，或者可以由頭開始。',goal:'完成解藥研究',ok:g=>g.research>=100,r:{},hm:1.3}
+];
+const ENDDAY=60;
+/* ================= 引擎 ================= */
+const R=Math.random, ri=(a,b)=>a+Math.floor(R()*(b-a+1)), rf=(a,b)=>a+R()*(b-a), cl=(v,a,b)=>Math.max(a,Math.min(b,v)), pick=a=>a[Math.floor(R()*a.length)];
+let G=null;
+const MULK=['sanDecay','risk','eat','staRec','tough','bite','partsSave','medSave','horde','lootAll','feed','research'];
+const FXC={};
+function fxOf(u){
+  if(FXC[u.id])return FXC[u.id];
+  const c=CH[u.id],f={job:{},loot:{}};
+  const add=x=>{for(const k in x){
+    if(k==='job'||k==='loot'){for(const j in x[k])f[k][j]=(f[k][j]||1)*x[k][j];}
+    else if(MULK.includes(k))f[k]=(f[k]??1)*x[k];
+    else f[k]=(f[k]||0)+x[k];
+  }};
+  c.tr.forEach(t=>add(TR[t].fx));add(c.fx);
+  MULK.forEach(k=>{if(f[k]===undefined)f[k]=1});
+  return FXC[u.id]=f;
+}
+const nm=u=>CH[u.id].n;
+const stat=(u,k)=>{const b=CH[u.id].s[ST.indexOf(k)];return b?Math.min(25,b+u.star):0};
+const maxHp=u=>60+stat(u,'str')*2+u.star*4;
+const bedCap=g=>6+g.fac.beds*2;
+const act=g=>g.units.filter(u=>u.act);
+const uOf=id=>G.units.find(u=>u.id===id);
+const fortMax=g=>40+g.fac.wall*30;
+const NOANIMAL=['repair','cook','medic'];
+
+function apt(u,j){
+  if(j==='rest')return 0;
+  if(fxOf(u).animal&&NOANIMAL.includes(j))return 0;
+  let a=0;for(const k in JOBS[j].w)a+=JOBS[j].w[k]*stat(u,k);return a;
+}
+function grade(a){return a>=16?'S':a>=13?'A':a>=10?'B':a>=7?'C':'D'}
+function canWork(u,j){if(j==='rest')return true;if(u.crit||u.iso)return false;if(fxOf(u).animal&&NOANIMAL.includes(j))return false;return true}
+function condMult(u){
+  const f=fxOf(u);let m=1;
+  if(u.inj)m*=.6; if(u.sick)m*=.7; if(u.hungry)m*=.85;
+  if(u.sta<30&&!f.noTired)m*=.7;
+  if(u.san<25)m*=.6;else if(u.san>=85)m*=1.15;
+  return m;
+}
+function eff(u,j){
+  if(!canWork(u,j)||j==='rest')return 0;
+  const f=fxOf(u);let e=apt(u,j)*condMult(u)*(f.job[j]||1);
+  if(f.berserk&&j==='guard'&&u.hp<maxHp(u)/2)e*=1.5;
+  return e;
+}
+function groups(g){
+  const by={};JK.forEach(j=>by[j]=[]);
+  act(g).forEach(u=>{const j=canWork(u,u.job)?u.job:'rest';by[j].push(u)});
+  return by;
+}
+function teamFx(g,k,mode){ // mode: 'sum' | 'mul' | 'max' | 'any'
+  const A=act(g);
+  if(mode==='sum')return A.reduce((s,u)=>s+(fxOf(u)[k]||0),0);
+  if(mode==='mul')return A.reduce((s,u)=>s*(fxOf(u)[k]??1),1);
+  if(mode==='max')return A.reduce((s,u)=>Math.max(s,fxOf(u)[k]??1),1);
+  return A.some(u=>fxOf(u)[k]);
+}
+function hordeBase(g){
+  const d=g.day;
+  return (5+d*1.15+Math.max(0,d-25)*.4)*CHAPS[g.ch-1].hm*teamFx(g,'horde','mul')*g.warn;
+}
+function raidTonight(g){return g.day===40&&!g.flags.allied&&!g.flags.paid}
+function forecast(g){
+  const by=groups(g);
+  const P=by.patrol.reduce((s,u)=>s+eff(u,'patrol'),0);
+  const red=Math.min(.4,P*.012);
+  let horde=hordeBase(g)*(1-red);
+  if(raidTonight(g))horde+=38+(g.flags.angry?10:0);
+  let ammo=g.res.ammo,gp=0;
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e});
+  const def=g.fort*.4+gp+teamFx(g,'def','sum')+act(g).filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0);
+  const A=act(g);
+  const eat=A.reduce((s,u)=>s+fxOf(u).eat,0);
+  const K=by.cook.reduce((s,u)=>s+eff(u,'cook'),0)*(1+.25*g.fac.kitchen)*by.cook.reduce((s,u)=>Math.max(s,fxOf(u).feed),1);
+  const ratio=A.length?cl(K/(A.length*3),0,1):0;
+  const food=Math.ceil(eat*(1-.35*ratio));
+  return {horde:Math.round(horde),lo:Math.round(horde*.85),hi:Math.round(horde*1.2),def:Math.round(def),food,water:A.length,red,P,ratio,by};
+}
+
+/* ---------- 單位操作 ---------- */
+function newUnit(id){const u={id,star:0,hp:0,sta:90,san:75,inj:0,crit:0,inf:0,sick:0,iso:0,hungry:0,job:'rest',act:true,joined:G?G.day:1};u.hp=maxHp(u);return u}
+function addUnit(g,id){
+  // returns {type:'new'|'star'|'max'|'dead', u}
+  g.dex[id]=1;
+  if(g.gone[id]&&g.gone[id].dead)return{type:'dead'};
+  const ex=g.units.find(u=>u.id===id);
+  if(ex){if(ex.star>=5)return{type:'max',u:ex};ex.star++;ex.hp=Math.min(maxHp(ex),ex.hp+8);return{type:'star',u:ex}}
+  delete g.gone[id];
+  const u=newUnit(id);u.joined=g.day;u.act=act(g).length<bedCap(g);g.units.push(u);
+  u.job=bestJob(u);
+  return{type:'new',u};
+}
+function bestJob(u){let b='rest',v=0;JK.forEach(j=>{if(j==='rest')return;const a=apt(u,j)*(fxOf(u).job[j]||1);if(a>v){v=a;b=j}});return b}
+function hurt(u,d){d=Math.round(d*fxOf(u).tough);u.hp-=d;u.inj=1;if(u.hp<maxHp(u)*.25&&u.hp>0)u.crit=1;return d}
+function infect(u,src){
+  if(fxOf(u).immune)return `${nm(u)} 被咬咗一啖……但傷口好快就埋口，佢對病毒免疫。`;
+  if(u.inf>0)return '';
+  u.inf=3;G.queue.push({id:'bitten',c:{u:u.id,src}});
+  return `${nm(u)} 被咬咗！`;
+}
+function killUnit(u,why){
+  G.units=G.units.filter(x=>x!==u);
+  G.gone[u.id]={d:G.day,why,dead:true};
+  act(G).forEach(x=>sanD(x,-8));
+  addLog(`${nm(u)} 死咗。${why}`);
+}
+function leaveUnit(u,why){G.units=G.units.filter(x=>x!==u);G.gone[u.id]={d:G.day,why,dead:false};addLog(`${nm(u)} 離開咗據點。${why}`)}
+function sanD(u,n){if(n<0)n*=fxOf(u).sanDecay;u.san=cl(u.san+n,0,100)}
+function allSan(n){act(G).forEach(u=>sanD(u,n))}
+function addRes(o){const out=[];for(const k in o){if(!o[k])continue;G.res[k]=Math.max(0,(G.res[k]||0)+o[k]);if(k==='core'&&o[k]>0)G.flags.coreTotal=(G.flags.coreTotal||0)+o[k];out.push(`${RES[k].n} ${o[k]>0?'+':''}${o[k]}`)}return out.join('、')}
+function bestBy(fn,filter){const A=act(G).filter(u=>!u.crit&&!u.iso&&(!filter||filter(u)));if(!A.length)return null;return A.reduce((a,b)=>fn(b)>fn(a)?b:a)}
+function addLog(t){G.log.push({d:G.day,t});if(G.log.length>400)G.log.splice(0,G.log.length-400)}
+
+/* ---------- 結束一日 ---------- */
+function endDay(){
+  const g=G;if(g.over)return null;
+  const A=act(g);const rep=[];const H=t=>rep.push({h:t});const L=(t,c='')=>{rep.push({t,c})};
+  const by=groups(g);
+  const fc=forecast(g);
+  A.forEach(u=>u.worked=canWork(u,u.job)?u.job:'rest');
+  H('白天');
+  // 搜括
+  if(by.scav.length){
+    const loc=LOCS.find(l=>l.id===g.loc&&l.ch<=g.ch)||LOCS[0];
+    const sc=by.scav;
+    let pw=sc.reduce((s,u)=>s+eff(u,'scav')*fxOf(u).lootAll,0);
+    if(sc.length===1&&fxOf(sc[0]).loner)pw*=1.4;
+    const dep=g.dep[loc.id]??1;const got={};
+    for(const r in loc.loot){
+      if(r==='serum'){if(R()<loc.loot.serum*pw/10)got.serum=1;continue}
+      let m=1;sc.forEach(u=>{const lm=fxOf(u).loot[r];if(lm)m=Math.max(m,lm)});
+      const n=Math.round(pw/10*loc.loot[r]*LSCALE[r]*dep*rf(.7,1.3)*m);
+      if(n>0)got[r]=n;
+    }
+    const txt=addRes(got);
+    L(`${sc.map(nm).join('、')} 去咗${loc.n}搜括：${txt||'乜都搵唔到'}${dep<.6?'（呢度已經畀人搜得七七八八）':''}`,txt?'g':'');
+    g.dep[loc.id]=Math.max(.35,dep*.85);
+    const tf=Math.max(.7,1-.07*(sc.length-1));
+    sc.forEach(u=>{
+      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf;
+      if(R()<base){const d=hurt(u,ri(12,28));L(`${nm(u)} 喺${loc.n}受傷（-${d} HP）${u.crit?'，傷勢嚴重！':''}`,'b')}
+      if(R()<base*.3*fxOf(u).bite){const t=infect(u,loc.n);if(t)L(t,fxOf(u).immune?'':'y')}
+    });
+    if(loc.id==='museum'&&!g.flags.codex&&!g.flags.codexQ){g.flags.codexQ=1;g.queue.push({id:'codex'})}
+    if(loc.id==='lab'&&!g.flags.labSeen){g.flags.labSeen=1;g.queue.push({id:'labfind'})}
+  }
+  // 巡邏
+  if(by.patrol.length){
+    const P=fc.P;
+    const got={food:Math.round(P*.1*rf(.3,1.5)),parts:Math.round(P*.07*rf(.3,1.5)),bat:Math.round(P*.6*rf(.6,1.4))};
+    L(`${by.patrol.map(nm).join('、')} 巡咗附近幾條街，清走一批遊蕩者（今晚屍潮 -${Math.round(fc.red*100)}%），順手執到 ${addRes(got)||'少少嘢'}`,'g');
+    by.patrol.forEach(u=>{if(R()<.05*fxOf(u).risk){const d=hurt(u,ri(8,18));L(`${nm(u)} 巡邏時被突襲（-${d} HP）`,'b')}});
+  }
+  // 維修
+  if(by.repair.length){
+    const W=by.repair.reduce((s,u)=>s+eff(u,'repair'),0);
+    const ps=by.repair.reduce((s,u)=>Math.min(s,fxOf(u).partsSave),1);
+    let pj=g.proj;if(pj!=='fort'&&g.fac[pj]>=FAC[pj].max)pj=g.proj='fort';
+    if(pj==='fort'){
+      const room=fortMax(g)-g.fort;
+      if(room<=0)L(`${by.repair.map(nm).join('、')} 檢查咗一輪，圍牆完好，冇嘢要修。`);
+      else{
+        let add=Math.min(room,Math.round(W*2.2));let cost=Math.ceil(add/18*ps);
+        if(cost>g.res.parts){add=Math.round(add*g.res.parts/Math.max(1,cost));cost=g.res.parts}
+        g.fort+=add;g.res.parts-=cost;
+        L(`${by.repair.map(nm).join('、')} 修補圍牆 +${add}（用咗 ${cost} 零件）${add===0?'——冇零件，乜都做唔到':''}`,add?'g':'b');
+      }
+    }else{
+      const lv=g.fac[pj],need=FAC[pj].work(lv);
+      g.prog[pj]=Math.min(need,(g.prog[pj]||0)+W);
+      if(g.prog[pj]>=need){
+        const cost=Math.round(FAC[pj].cost(lv)*ps);
+        if(g.res.parts>=cost){g.res.parts-=cost;g.fac[pj]++;g.prog[pj]=0;L(`${FAC[pj].n}升到 ${g.fac[pj]} 級！（用咗 ${cost} 零件）`,'g');addLog(`${FAC[pj].n}升到 ${g.fac[pj]} 級。`);if(pj==='wall')g.fort+=30;if(g.fac[pj]>=FAC[pj].max)g.proj='fort'}
+        else L(`${FAC[pj].n}嘅工程做好晒，但仲差零件（要 ${cost}，得 ${g.res.parts}）`,'b');
+      }else L(`${by.repair.map(nm).join('、')} 起緊${FAC[pj].n}（${Math.round(g.prog[pj])}/${need}）`);
+    }
+  }
+  // 醫療
+  if(by.medic.length){
+    let M=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*(1+.25*g.fac.clinic);
+    const ms=by.medic.reduce((s,u)=>Math.min(s,fxOf(u).medSave),1);
+    const herbal=by.medic.some(u=>fxOf(u).herbal);
+    const useMed=()=>{if(g.res.med<=0)return herbal&&R()<.5;if(ms>=1||R()<ms)g.res.med--;return true};
+    const pts=[...A].sort((a,b)=>(b.crit-a.crit)||(b.inj-a.inj)||(a.hp/maxHp(a)-b.hp/maxHp(b)));
+    const done=[];
+    for(const u of pts){
+      if(u.crit&&M>=6){if(useMed()){u.crit=0;M-=6;done.push(`${nm(u)} 脫離危險`)}}
+      if(u.inj&&!u.crit&&M>=4){if(useMed()){u.inj=0;M-=4;done.push(`${nm(u)} 傷口處理好`)}}
+      if(u.sick&&M>=2){u.sick=0;M-=2;done.push(`${nm(u)} 退咗燒`)}
+    }
+    // 治感染
+    by.medic.forEach(md=>{const c=fxOf(md).cure;if(!c)return;A.filter(u=>u.inf>0).forEach(u=>{if(R()<c){u.inf=0;u.iso=0;done.push(`${nm(md)} 救返 ${nm(u)}，感染清除咗！`)}})});
+    let heal=Math.round(M*2);const hl=[...A].sort((a,b)=>a.hp/maxHp(a)-b.hp/maxHp(b));
+    for(const u of hl){if(heal<=0)break;const n=Math.min(heal,maxHp(u)-u.hp);u.hp+=n;heal-=n}
+    L(`${by.medic.map(nm).join('、')} 照顧傷者：${done.length?done.join('；'):'冇乜大傷，幫大家換藥補血'}${g.res.med<=0?'（藥品用晒！）':''}`,g.res.med<=0?'b':'g');
+    if(g.ch>=7){
+      const rm=teamFx(g,'research','max');
+      const medOk=g.res.med>0;if(medOk)g.res.med--;
+      const add=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*.7*(g.flags.codex?1:.5)*rm*(medOk?1:.5)*(g.flags.labData?1.25:1);
+      g.research=Math.min(100,g.research+add);
+      L(`解藥研究 +${add.toFixed(1)}%（而家 ${g.research.toFixed(0)}%）${g.flags.codex?'':'——冇《疫屍錄》，進度減半'}`,'g');
+    }
+  }
+  // 被動
+  const pas={water:g.fac.rain*4,food:g.fac.garden*3+teamFx(g,'food','sum'),bat:g.fac.radio*10+teamFx(g,'bat','sum')};
+  const pt=addRes(pas);if(pt)L(`設施同專長每日產出：${pt}`);
+  const th=teamFx(g,'heal','sum');if(th)A.forEach(u=>u.hp=Math.min(maxHp(u),u.hp+th));
+  // 食飯
+  H('晚飯');
+  const need=fc.food,wneed=fc.water;
+  if(!by.cook.length){L('冇人煮飯，大家乾啃罐頭，意志 -3');allSan(-3)}
+  else{L(`${by.cook.map(nm).join('、')} 煮咗晚飯（慳咗 ${Math.round(35*fc.ratio)}% 食物）${fc.ratio>=.6?'，大家食得開心，意志 +3':''}`,'g');if(fc.ratio>=.6)allSan(3)}
+  A.forEach(u=>u.hungry=0);
+  if(g.res.food>=need)g.res.food-=need;
+  else{const short=need-g.res.food;g.res.food=0;const n=Math.min(A.length,Math.ceil(short));const v=[...A].sort(()=>R()-.5).slice(0,n);v.forEach(u=>{u.hungry=1;u.hp-=8;sanD(u,-8)});L(`食物唔夠！${v.map(nm).join('、')} 餓肚（-8 HP，意志 -8）`,'b')}
+  if(g.res.water>=wneed)g.res.water-=wneed;
+  else{const short=wneed-g.res.water;g.res.water=0;const v=[...A].sort(()=>R()-.5).slice(0,short);v.forEach(u=>{u.hp-=10;u.sta=Math.max(0,u.sta-15);sanD(u,-5);if(!fxOf(u).noSick&&R()<.3)u.sick=1});L(`食水唔夠！${v.map(nm).join('、')} 口渴脫水（-10 HP）`,'b')}
+  if(!teamFx(g,'noRats','any')&&R()<.1&&g.res.food>5){const n=ri(2,4);g.res.food-=n;L(`老鼠偷咗 ${n} 份食物`,'b')}
+  // 夜晚
+  H('夜晚');
+  const raid=raidTonight(g);
+  let horde=Math.round(hordeBase(g)*(1-fc.red)*rf(.85,1.2));
+  if(raid)horde+=38+(g.flags.angry?10:0);
+  let ammo=g.res.ammo,gp=0;
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e});
+  const used=g.res.ammo-ammo;g.res.ammo=ammo;
+  const def=Math.round(g.fort*.4+gp+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0));
+  const night={horde,def,raid,used};
+  if(g.ch>=5)L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
+  if(raid)L('獵人幫趁住屍潮夜襲，車頭燈照住成個據點！','b');
+  if(!by.guard.length)L('今晚冇人守夜……','b');
+  if(def>=horde){
+    const dmg=Math.round(horde*rf(.05,.15));g.fort=Math.max(0,g.fort-dmg);g.kills+=horde;
+    const bat=10+Math.floor(g.day*.8);const extra={bat};
+    if(g.ch>=5){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0);if(c)extra.core=c}
+    L(`守住咗！擊退 ${horde} 隻（${used?`用咗 ${used} 發彈藥，`:''}圍牆 -${dmg}）。天光後喺屍堆搵到 ${addRes(extra)}`,'g');
+    night.ok=true;allSan(1);
+    if(raid){g.flags.raidWon=1;addRes({ammo:15,med:4,food:10});L('獵人幫丟低車同物資逃走：彈藥 +15、藥品 +4、食物 +10','g');addLog('擊退咗獵人幫嘅夜襲。')}
+    by.guard.forEach(u=>{if(R()<.08*horde/Math.max(1,def)){const d=hurt(u,ri(5,12));L(`${nm(u)} 守夜時輕傷（-${d} HP）`,'b')}});
+  }else{
+    const diff=horde-def;night.ok=false;
+    const dmg=Math.round(diff*.8+horde*.08);g.fort=Math.max(0,g.fort-dmg);g.kills+=def;
+    L(`防線被衝破！屍潮 ${horde} 對防禦 ${def}，圍牆 -${dmg}`,'b');
+    const n=Math.min(A.length,Math.ceil(diff/15)+(g.fort===0?1:0));
+    const pool=[...A];const vs=[];
+    for(let i=0;i<n&&pool.length;i++){const w=pool.map(u=>u.job==='guard'?2:1);let r=R()*w.reduce((a,b)=>a+b,0),k=0;while(r>w[k]){r-=w[k];k++}vs.push(pool.splice(k,1)[0])}
+    vs.forEach(u=>{const d=hurt(u,Math.min(45,ri(10,20)+diff*.5));L(`${nm(u)} 喺混戰中受傷（-${d} HP）`,'b');if(R()<(.15+diff/250)*fxOf(u).bite){const t=infect(u,'夜襲');if(t)L(t,'y')}});
+    const lost={food:-ri(0,Math.ceil(diff*.2))};if(raid){lost.ammo=-Math.round(g.res.ammo*.3);lost.med=-Math.round(g.res.med*.3);lost.food-=Math.round(g.res.food*.25)}
+    const lt=addRes(lost);if(lt)L(`損失：${lt}`,'b');
+    allSan(-6);
+    if(raid){g.flags.raidLost=1;addLog('獵人幫夜襲得手，搶走咗大批物資。')}
+  }
+  // 狀態
+  H('狀態');
+  const calm=teamFx(g,'calm','any');
+  const teamSan=teamFx(g,'teamSan','sum');
+  [...A].forEach(u=>{
+    const f=fxOf(u),j=u.worked;
+    if(j==='rest'){u.sta=cl(u.sta+40*f.staRec,0,100);sanD(u,10);u.hp=Math.min(maxHp(u),u.hp+6);if(u.inj&&R()<.2)u.inj=0}
+    else{u.sta=cl(u.sta-JOBS[j].sta,0,100);sanD(u,-JOBS[j].san)}
+    if(j!=='guard'){u.sta=cl(u.sta+15*f.staRec,0,100);u.hp=Math.min(maxHp(u),u.hp+2)}
+    sanD(u,-(2+g.ch*.3));sanD(u,teamSan);
+    if(u.sta<=0)u.hp-=5;
+    if(u.inj)u.hp-=2; if(u.crit)u.hp-=8;
+    if(u.sick){u.hp-=3;u.sta=Math.max(0,u.sta-10);if(R()<.25)u.sick=0}
+    if(u.inf)sanD(u,-4);
+    if(calm)u.san=Math.max(u.san,1);
+  });
+  // 感染倒數
+  [...A].forEach(u=>{
+    if(!u.inf)return;u.inf--;
+    if(u.inf===0){
+      if(u.iso){killUnit(u,'喺隔離室入面屍變，大家隔住道門聽住佢抓咗成晚。');L(`${nm(u)} 喺隔離室屍變咗……`,'b')}
+      else{
+        killUnit(u,'喺據點入面屍變。');L(`${nm(u)} 喺大家瞓緊嘅時候屍變咗！`,'b');
+        const others=act(g).sort(()=>R()-.5).slice(0,ri(1,2));
+        others.forEach(o=>{const d=hurt(o,ri(10,25));L(`${nm(o)} 被屍變嘅同伴襲擊（-${d} HP）`,'b');if(R()<.3){const t=infect(o,'同伴');if(t)L(t,'y')}});
+      }
+    }
+  });
+  // 死亡
+  [...act(g)].forEach(u=>{if(u.hp<=0){killUnit(u,u.inf?'傷重不治，佢喺屍變之前斷咗氣。':'傷重不治。');L(`${nm(u)} 傷重不治……`,'b')}});
+  // 崩潰
+  act(g).forEach(u=>{if(u.san<=0&&!u.bd){u.bd=1;g.queue.push({id:'breakdown',c:{u:u.id}})}});
+  if(rep[rep.length-1].h)L('大家都撐住。','g');
+  // 新一日
+  g.day++;g.warn=1;
+  LOCS.forEach(l=>{if(g.dep[l.id]!==undefined)g.dep[l.id]=Math.min(1,g.dep[l.id]+.04)});
+  if(!act(g).length){const res=g.units.filter(u=>!u.act).slice(0,bedCap(g));res.forEach(u=>u.act=true);if(res.length)addLog(`據點冇人，後備名單上嘅 ${res.map(nm).join('、')} 收到訊號趕嚟。`)}
+  if(!g.units.length){g.over='dead';addLog('最後一個人都倒下咗。');save();return{rep,night}}
+  const nc=CHAPS.find(c=>c.day===g.day);
+  if(nc&&nc.n>g.ch){g.ch=nc.n;addLog(`第${'一二三四五六七'[nc.n-1]}章「${nc.t}」開始。`)}
+  const sd=STORY[g.day];if(sd)g.queue.push({id:sd});
+  if(g.day===40&&!g.flags.allied&&!g.flags.paid&&g.flags.huntersMet)g.queue.push({id:'s_raidwarn'});
+  checkObj();
+  if(g.research>=100&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_cure'})}
+  else if(g.day>ENDDAY&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_fort'})}
+  else if(R()<(sd?.3:.6))randomEvent();
+  addLog(`第 ${g.day-1} 晚：屍潮 ${horde}，防禦 ${def}，${night.ok?'守住':'失守'}。`);
+  // 自動清走唔可以再做嘅工作
+  act(g).forEach(u=>{if(!canWork(u,u.job))u.job='rest'});
+  save();
+  return{rep,night};
+}
+function checkObj(){
+  CHAPS.forEach(c=>{if(c.n<=G.ch&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;const t=addRes(c.r);if(t){addLog(`完成目標「${c.goal}」：${t}`);toast(`目標完成：${c.goal}　${t}`)}}});
+}
+function autoAssign(){
+  const A=act(G).filter(u=>!u.crit&&!u.iso);act(G).forEach(u=>u.job='rest');
+  const free=new Set(A.filter(u=>u.sta>=25||u.inf));
+  const take=j=>{let b=null,v=-1;free.forEach(u=>{const e=eff(u,j);if(e>v&&canWork(u,j)){v=e;b=u}});if(b&&v>0){b.job=j;free.delete(b)}return b};
+  const hurtN=act(G).filter(u=>u.inj||u.crit||u.sick||u.hp<maxHp(u)*.7).length;
+  const fortLow=G.fort<fortMax(G)*.5;
+  if(A.length>=3)take('cook');
+  if(hurtN||G.ch>=7)take('medic');
+  if(G.ch>=7&&A.length>=6)take('medic');
+  take('guard');
+  if(fortLow)take('repair');
+  take('scav');
+  let f=forecast(G);
+  while(free.size&&f.def<f.hi){if(!take('guard'))break;f=forecast(G)}
+  if(free.size>=2)take('scav');
+  if(!fortLow&&(G.fort<fortMax(G)*.8||G.proj!=='fort'))take('repair');
+  if(free.size)take('patrol');
+  [...free].forEach(u=>{u.job=bestJob(u);if(!canWork(u,u.job))u.job='rest'});
+  act(G).forEach(u=>{if(u.sta<25&&!u.inf)u.job='rest'});
+}
+/* ================= 事件 ================= */
+const STORY={1:'s_intro',4:'s_bridge',8:'s_train',11:'s_trainnews',15:'s_school',22:'s_herb',29:'s_evolve',36:'s_hunters',43:'s_cure'};
+const able=()=>act(G).filter(u=>!u.crit&&!u.iso);
+const scavPow=u=>apt(u,'scav')*condMult(u)*(fxOf(u).job.scav||1);
+function recruitText(id,why){
+  const r=addUnit(G,id);const c=CH[id];
+  if(r.type==='new')return `${c.n}（${c.g}·${c.job}）加入${r.u.act?'據點':'後備名單（床位唔夠）'}。${why||''}`;
+  if(r.type==='star')return `${c.n} 再次聯絡上，突破到 ${r.u.star} 星。`;
+  if(r.type==='dead'){addRes({bat:40});return `……可惜，佢已經唔喺度。（電池 +40）`}
+  addRes({bat:60});return `${c.n} 已經滿星。（電池 +60）`;
+}
+function randomRecruit(grades){
+  const pool=CH_RAW.filter(r=>grades.includes(r[2])&&!G.units.some(u=>u.id===r[0])&&!(G.gone[r[0]]&&G.gone[r[0]].dead)).map(r=>r[0]);
+  return pool.length?pick(pool):null;
+}
+function rescueSchool(){
+  const A=able();if(A.length<2)return null;
+  const top=[...A].sort((a,b)=>scavPow(b)-scavPow(a)).slice(0,2);
+  const pw=(scavPow(top[0])+scavPow(top[1]))*rf(.8,1.25);
+  if(pw>=22){
+    G.flags.rescued=1;
+    const t1=recruitText('r_rin'),t2=recruitText('c_ng');
+    addLog(`${top.map(nm).join('同')}由後樓梯殺上中學天台，救返啲學生。`);
+    return `${top.map(nm).join('同')}由消防梯爬上天台，清走樓梯口嘅喪屍。\n\n一個綁馬尾、揸住木刀嘅女仔企喺最前面，身後有十幾個學生。\n\n${t1}\n${t2}\n其他學生跟住老師去咗避難中心。（電池 +80）`+(addRes({bat:80}),'');
+  }
+  const v=pick(top);const d=hurt(v,ri(15,30));
+  return `樓梯間太多喪屍，${top.map(nm).join('同')}被逼撤退。${nm(v)} 受傷（-${d} HP）。\n天台嘅反光仲喺度閃緊……可能過兩日再試。`;
+}
+const EV={
+ /* ---------- 劇情 ---------- */
+ s_intro:{story:1,t:'第一章 · 爆發',txt:()=>`十月某個星期五，港灣市冇預兆咁淪陷。
+
+先係急症室爆滿，跟住地鐵停駛，到半夜，成條彌敦道都係尖叫聲。
+
+你同幾個陌生人躲入咗一棟舊商場，拉落咗捲閘。外面嘅聲音成晚冇停過。
+
+收音機斷斷續續咁講：「……唔好出街……唔好俾佢哋咬到……」
+
+【點玩】每日喺「據點」幫每個倖存者揀工作。每個人嘅數值決定佢擅長做咩（S 最好，D 最差）。撳「結束今日」之後會結算白天、晚飯同夜晚屍潮。
+用電池喺「廣播」招募更多倖存者。撐落去，跟住劇情行。`,opts:[{l:'拉實捲閘，開始點算物資',fx:()=>`大家圍埋一齊，有人喊，有人沉默。
+你數咗一數：幾箱罐頭、幾支水、一個急救箱。
+仲有一部收音機同一大袋電池——用嚟廣播，或者會有人聽到。`}]},
+ s_bridge:{story:1,t:'封橋',txt:()=>`收音機傳嚟消息：政府封鎖咗跨海大橋同所有隧道，「為咗控制疫情」。
+
+聽講橋頭聚集咗幾千人，軍隊喺另一邊。`,opts:[
+  {l:'派最快嗰個去橋頭睇吓',d:'可能有收穫，有風險',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);if(R()<.6){addRes({bat:120,food:4});return `${nm(u)} 喺橋頭見到軍隊開槍。佢冇停留，喺棄置嘅車入面執咗啲嘢返嚟。\n電池 +120、食物 +4\n「冇人會嚟救我哋。」佢講。`}const d=hurt(u,ri(15,25));return `橋頭一片混亂。${nm(u)} 喺人群中被推跌，受傷返嚟（-${d} HP）。\n「冇人會嚟救我哋。」`}},
+  {l:'留守，繼續聽收音機',fx:()=>{allSan(-3);return '收音機一直重複同一段錄音。大家都知道佢想講乜。\n全隊意志 -3'}}]},
+ s_train:{story:1,t:'第二章 · 南下列車',txt:()=>`緊急廣播：「明早七點，中央車站會開出最後一班南下列車，前往南方安全區。名額有限。」
+
+有人即刻開始執嘢。有人話車站一定擠爆，去就係送死。
+
+【新地點】警署、地鐵站已經可以搜括。`,opts:[
+  {l:'派一個人去車站探路',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);let t=`${nm(u)} 天未光就出發。\n\n車站已經失守。月台上面有一卡卡車廂，入面有嘢喺度撞玻璃。\n佢喺站長室搵到隧道地圖同一盒子彈。\n電池 +100、彈藥 +6`;addRes({bat:100,ammo:6});if(R()<.35){const d=hurt(u,ri(12,24));t+=`\n返嚟途中受傷（-${d} HP）`}return t}},
+  {l:'大家投票決定',fx:()=>{const b=bestBy(u=>stat(u,'wil'));if(b&&stat(b,'wil')>=14){allSan(4);return `${nm(b)} 企出嚟：「我哋有牆、有食物、有彼此。出面乜都冇。」\n投票結果：留低。大家好似定咗啲。\n全隊意志 +4`}allSan(-6);return '投票結果一半一半。最後大家都留低，但氣氛好差。\n全隊意志 -6'}},
+  {l:'當聽唔到',fx:()=>{allSan(-4);return '你熄咗收音機。冇人再提過列車。\n全隊意志 -4'}}]},
+ s_trainnews:{story:1,t:'列車上的消息',txt:()=>`夜晚，你一個人聽收音機，收到一段斷斷續續嘅求救：
+
+「……南下列車……車廂入面有人屍變……我哋鎖咗門……安全區……冇回應……」
+
+之後就係雜音。
+
+其他人仲未知。`,opts:[
+  {l:'話俾大家知',fx:()=>{const c=teamFx(G,'calm','any');allSan(c?-5:-10);G.flags.truth=1;return `大家聽完都好靜。有人喊咗出嚟。\n${c?'但隊長拍拍佢膊頭：「起碼我哋知道真相。」':''}\n全隊意志 ${c?-5:-10}`}},
+  {l:'收埋唔講',d:'而家冇事，之後可能會穿煲',fx:()=>{G.flags.hid=1;return '你熄咗收音機。聽朝大家問有冇新消息，你搖頭。'}}]},
+ s_school:{story:1,t:'第三章 · 學園默示錄',txt:()=>`對面中學嘅天台，有人用鏡反光打訊號。三短、三長、三短。
+
+用望遠鏡睇過去，天台上面有十幾個着校服嘅學生，最前面有個女仔揸住一把木刀。
+
+樓梯口已經被喪屍塞滿。
+
+【新地點】對面中學已經可以搜括。`,opts:[
+  {l:'組隊救援（派兩個最好嘅搜括手）',d:'需要至少 2 個可以出動嘅人',req:()=>able().length>=2,fx:()=>rescueSchool()},
+  {l:'用無線電教佢哋點樣自己落嚟',fx:()=>{if(R()<.5){G.flags.rescued=1;return `你用摩斯密碼教佢哋由後面消防梯落嚟。\n佢哋做到。\n\n${recruitText('r_rin')}\n${recruitText('c_ng')}`}allSan(-8);return '佢哋試咗……但喺三樓被截住。之後天台再冇反光。\n全隊意志 -8'}},
+  {l:'我哋自身難保',fx:()=>{allSan(-10);return '你拉埋窗簾。\n嗰晚冇人講嘢。\n全隊意志 -10'}}]},
+ s_herb:{story:1,t:'第四章 · 生死草',txt:()=>`一段韓語廣播，由一位自稱歷史學者嘅人播出：
+
+「……歷史博物館嘅朝鮮王朝特展……《疫屍錄》……記載咗一場宮廷疫症，同一種叫『生死草』嘅植物……令死人復生……佢哋同而家一模一樣……」
+
+廣播突然中斷。
+
+【新地點】歷史博物館已經可以搜括。搜括一次就有機會搵到《疫屍錄》。`,opts:[
+  {l:'記低博物館位置',fx:()=>{const m=G.units.find(u=>u.id==='s_mao'&&u.act);return m?'茅一清聽完，沉默咗好耐：「我祖師爺嘅筆記入面，都有提過一種草。」':'你喺地圖上圈咗博物館。'}},
+  {l:'呢啲鬼神之說……',fx:()=>'你半信半疑。但博物館入面，起碼有啲值錢嘢。'}]},
+ codex:{story:1,t:'《疫屍錄》',txt:()=>`喺博物館地庫，玻璃櫃已經爆咗。古籍仲喺度。
+
+泛黃嘅紙上用漢字寫住：某年宮中大疫，御醫以「生死草」救垂死世子。世子復醒，然而「不知飢飽，見人則噬」。疫由宮中蔓延至都城，最後以火焚城方止。
+
+最後一頁，有人用硃砂寫咗一個藥方。缺咗一味藥。`,opts:[{l:'帶返據點',fx:()=>{G.flags.codex=1;checkObj();addLog('喺歷史博物館搵到《疫屍錄》。');const s=G.units.find(u=>(u.id==='u_grace'||u.id==='u_shen')&&u.act);return `《疫屍錄》到手。之後研究解藥時進度唔會減半。${s?`\n\n${nm(s)} 睇完個藥方：「缺嗰味……可能就喺我哋身上。」`:''}`}}]},
+ s_evolve:{story:1,t:'第五章 · 進化',txt:()=>`今晚嘅屍潮唔同。
+
+有啲跑得好快，好似人一樣。有一隻兩米幾高，撞凹咗捲閘。有一隻識叫，一叫就成條街嘅都湧過嚟。
+
+天光之後，有人喺一隻變異體嘅頭殼入面，搵到一粒發住紫光嘅晶體。
+
+【新機制】由今日起守住夜襲有機會得到晶核。晶核可以喺「倖存者」度強化角色。屍潮會明顯變大。
+【新地點】軍營已經可以搜括。`,opts:[{l:'研究呢粒晶核',fx:()=>{addRes({core:1});return '晶核握喺手入面係暖嘅。\n將佢磨碎溶落水，有人飲完之後成個人精神咗。\n晶核 +1（用嚟強化倖存者）'}}]},
+ s_hunters:{story:1,t:'第六章 · 人禍',txt:()=>`三架改裝貨車停喺商場門口。帶頭嗰個光頭男人自稱「雷哥」，背後十幾個人揸住槍。
+
+「呢幾條街而家係獵人幫管。每個據點都要交保護費——一半食物，一半彈藥。四日後我哋返嚟收。唔交？我哋晚上嚟攞。」`,opts:[
+  {l:'交出一半食物同彈藥',fx:()=>{G.flags.huntersMet=1;G.flags.paid=1;G.flags.raidWon=1;const f=Math.floor(G.res.food/2),a=Math.floor(G.res.ammo/2);addRes({food:-f,ammo:-a});allSan(-6);checkObj();return `你叫人搬咗物資出去。雷哥笑住拍拍你塊面。\n食物 -${f}、彈藥 -${a}、全隊意志 -6\n佢哋唔會再嚟。暫時。`}},
+  {l:'同佢傾（派意志最強嗰個）',d:'成功會變盟友；失敗佢哋會更嬲',req:()=>able().length>0,fx:()=>{G.flags.huntersMet=1;const b=bestBy(u=>stat(u,'wil')+(fxOf(u).deal?4:0));const roll=stat(b,'wil')+(fxOf(b).deal?4:0)+rf(0,8);if(roll>=20){G.flags.allied=1;G.flags.raidWon=1;addRes({ammo:10,med:3});checkObj();return `${nm(b)} 同雷哥傾咗成個鐘。\n佢哋原來都有傷者，需要醫療人手。最後講掂：互相交換物資，互不侵犯。\n彈藥 +10、藥品 +3，獵人幫唔會夜襲。`}G.flags.angry=1;return `${nm(b)} 講到一半，雷哥一槍打爛咗門口嘅燈。\n「四日後，晚上見。」\n（第 40 晚會有更大規模嘅夜襲）`}},
+  {l:'叫佢哋滾',fx:()=>{G.flags.huntersMet=1;allSan(3);return '雷哥冇嬲，只係笑。\n「好。四日後，晚上見。」\n全隊意志 +3。第 40 晚獵人幫會趁屍潮夜襲，準備好彈藥同圍牆。'}}]},
+ s_raidwarn:{story:1,t:'今晚',txt:()=>`遠處傳嚟貨車引擎聲。
+
+今晚獵人幫會趁屍潮一齊嚟。多啲人守夜，彈藥同圍牆係關鍵。`,opts:[{l:'準備迎戰',fx:()=>{allSan(2);return '大家將所有可以用嘅嘢頂住捲閘。\n全隊意志 +2'}}]},
+ s_cure:{story:1,t:'第七章 · 解藥',txt:()=>`收音機收到一段英語廣播，來自城北嘅製藥廠研究所：
+
+「……後備發電機仍然運作……實驗室資料完整……需要醫療人員……」
+
+如果有足夠嘅醫療人手同藥品，或者可以完成解藥。
+
+【新地點】製藥廠研究所已經可以搜括（有機會搵到血清）。
+【研究】由今日起，做醫療嘅人會同時推進解藥研究，每日用 1 份藥品。完成 100% 就係結局。`,opts:[{l:'開始研究',fx:()=>{const g=G.units.find(u=>u.id==='u_grace'&&u.act);return g?'Grace 戴返副眼鏡：「俾我三個禮拜。」':'冇專家，只能夠由頭摸索。多派人做醫療會快啲。'}}]},
+ labfind:{story:1,t:'研究所',txt:()=>`研究所入面仲有電。白色走廊、閃爍嘅燈、一排排凍櫃。
+
+一部電腦仲開住，螢幕上係一份未完成嘅報告：「樣本對特定抗體有反應……」`,opts:[{l:'抄低所有資料',fx:()=>{G.flags.labData=1;return '研究資料到手。解藥研究速度 +25%。'}}]},
+ end_cure:{story:1,end:'cure',t:'結局 · 黎明',txt:()=>`第一支解藥喺凌晨三點完成。
+
+佢未必可以救返已經變咗嘅人，但可以令被咬嘅人唔再變。
+
+你用最後嘅電池，向全城廣播藥方。
+
+三日後，天空第一次出現直升機。`,opts:[{l:'完',fx:()=>{G.over='cure';return `你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。\n\n喺設定可以開始新一局。`}}]},
+ end_fort:{story:1,end:'fort',t:'結局 · 堡壘',txt:()=>`第六十日。
+
+解藥未出現，救援都未出現。但你哋仲喺度。
+
+商場變成咗一座小鎮：有菜園、有診所、有人夜晚喺天台唱歌。附近嘅倖存者開始搬過嚟。
+
+末日冇完。但你哋已經學識喺入面生活。`,opts:[{l:'完',fx:()=>{G.over='fort';return `你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。\n\n喺設定可以開始新一局。`}}]},
+ /* ---------- 決策 ---------- */
+ bitten:{t:'被咬',pre:c=>uOf(c.u)&&uOf(c.u).inf>0?c:null,txt:c=>{const u=uOf(c.u);return `${nm(u)} 手臂上有個齒印，已經開始發黑。
+
+佢話：「我冇事……真係冇事……」
+
+照計佢三日內會屍變。點處理？`},opts:[
+  {l:'用血清',d:'消耗 1 支血清，即刻治好',req:()=>G.res.serum>0,fx:c=>{const u=uOf(c.u);G.res.serum--;u.inf=0;u.iso=0;return `血清打落去，黑色嘅血管慢慢褪色。\n${nm(u)} 得救。`}},
+  {l:'搵醫生截肢',d:'需要一個醫術 14 以上、未受傷嘅人；一半機會成功',req:c=>!!bestBy(x=>stat(x,'med'),x=>x.id!==c.u&&stat(x,'med')>=14),fx:c=>{const u=uOf(c.u),d=bestBy(x=>stat(x,'med'),x=>x.id!==c.u);if(R()<.5+(fxOf(d).cure?.2:0)){u.inf=0;u.crit=1;u.inj=1;u.hp=Math.max(1,Math.round(maxHp(u)*.2));return `${nm(d)} 落刀好快。\n${nm(u)} 痛到暈咗，但感染止住咗。佢而家重傷，要人照顧。`}u.crit=1;u.hp=Math.max(1,Math.round(u.hp*.5));return `太遲了，病毒已經擴散。${nm(u)} 仲受咗重傷。\n佢仍然會屍變。`}},
+  {l:'隔離佢',d:'佢唔可以工作；如果屍變，唔會傷到其他人',fx:c=>{const u=uOf(c.u);u.iso=1;u.job='rest';return `${nm(u)} 自己行入咗後倉。\n佢叫大家唔好鎖門。大家都鎖咗。`}},
+  {l:'趁早了斷',d:'佢會死，全隊意志大跌',fx:c=>{const u=uOf(c.u);killUnit(u,'喺屍變之前，被同伴親手了斷。');allSan(-6);return `冇人想做，但總要有人做。\n${nm(u)} 最後講咗句多謝。\n全隊意志大跌`}},
+  {l:'相信佢會冇事',d:'佢可以繼續工作……',fx:c=>`${nm(uOf(c.u))} 繼續做嘢，好似咩事都冇發生過。\n大家都避開佢隻手。`}]},
+ breakdown:{t:'崩潰',pre:c=>uOf(c.u)?c:null,txt:c=>{const u=uOf(c.u);return `${nm(u)} 喺角落縮埋一嚿，不停喃喃自語。
+
+佢突然企起身，話要出去搵屋企人。`},opts:[
+  {l:'搵人安撫佢',d:'需要一個意志 12 以上嘅人',req:c=>!!bestBy(x=>stat(x,'wil'),x=>x.id!==c.u&&stat(x,'wil')>=12),fx:c=>{const u=uOf(c.u),b=bestBy(x=>stat(x,'wil'),x=>x.id!==c.u);u.san=35;u.bd=0;b.sta=Math.max(0,b.sta-15);return `${nm(b)} 陪咗佢成晚。\n${nm(u)} 終於喊咗出嚟，然後瞓著咗。\n${nm(u)} 意志回升到 35`}},
+  {l:'俾佢休息幾日',fx:c=>{const u=uOf(c.u);u.job='rest';if(R()<.3){leaveUnit(u,'崩潰之後，趁大家瞓著自己走咗。');return `第二朝，${nm(u)} 個床係空嘅。\n佢走咗。`}u.san=25;u.bd=0;return `${nm(u)} 瞓咗成日。醒返之後冇再講要走。`}},
+  {l:'由佢走',fx:c=>{const u=uOf(c.u);const f=Math.min(G.res.food,3);addRes({food:-f});leaveUnit(u,'崩潰之後離開咗據點。');return `${nm(u)} 帶住 ${f} 份食物行咗出去。\n冇人知佢去咗邊。`}}]},
+ /* ---------- 隨機 ---------- */
+ visitor:{w:3,t:'門外嘅母子',txt:()=>`捲閘外面有人拍門。一個女人抱住個細路，話佢哋兩日冇食過嘢。
+
+「求下你哋……我乜都識做……」`,opts:[
+  {l:'收留佢哋',d:'食物 -3，多一個人',fx:()=>{addRes({food:-3});const id=randomRecruit(['C','R']);if(!id){allSan(3);return '佢哋入咗嚟，食完嘢之後去咗避難中心。全隊意志 +3'}return recruitText(id,'\n（個細路跟咗佢去避難中心。）')}},
+  {l:'俾啲食物，叫佢哋去避難中心',d:'食物 -3',fx:()=>{addRes({food:-3});allSan(2);return '佢哋多謝完就走咗。\n全隊意志 +2'}},
+  {l:'唔開門',fx:()=>{allSan(-5);return '拍門聲持續咗好耐，然後停咗。\n全隊意志 -5'}}]},
+ quarrel:{w:3,t:'爭執',pre:()=>{const A=able();if(A.length<3)return null;const h=A.find(u=>fxOf(u).hot)||pick(A);const o=pick(A.filter(u=>u!==h));return{a:h.id,b:o.id}},txt:c=>`${nm(uOf(c.a))} 同 ${nm(uOf(c.b))} 為咗分配食物嗌到拍枱，差啲郁手。
+
+其他人望住你。`,opts:[
+  {l:c=>`撐 ${nm(uOf(c.a))}`,fx:c=>{sanD(uOf(c.a),8);sanD(uOf(c.b),-15);return `${nm(uOf(c.b))} 摔門走入房。`}},
+  {l:c=>`撐 ${nm(uOf(c.b))}`,fx:c=>{sanD(uOf(c.b),8);sanD(uOf(c.a),-15);return `${nm(uOf(c.a))} 好唔服氣。`}},
+  {l:'兩個都減糧一日',fx:c=>{sanD(uOf(c.a),-6);sanD(uOf(c.b),-6);addRes({food:2});return '兩個都收聲。省返 2 份食物。'}}]},
+ airdrop:{w:2,t:'空投',txt:()=>`一架直升機喺上空經過，丟咗個降落傘箱落兩條街外嘅球場。
+
+成區嘅喪屍都聽到。`,opts:[
+  {l:'派最快嗰個去搶',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);if(R()<.35*fxOf(u).risk){const d=hurt(u,ri(15,30));let t=`${nm(u)} 被一大群包圍，受傷撤退（-${d} HP）。`;if(R()<.3){const x=infect(u,'空投');if(x)t+='\n'+x}return t}return `${nm(u)} 搶到箱！入面有：${addRes({med:ri(3,6),ammo:ri(5,10),food:ri(4,8)})}`}},
+  {l:'唔好冒險',fx:()=>'第二朝，箱已經唔見咗。'}]},
+ rain:{w:2,t:'大雨',txt:()=>'落咗成晚大雨。雨聲蓋過咗外面嘅聲音，大家難得瞓得好。',opts:[{l:'用晒所有桶裝水',fx:()=>{allSan(3);return addRes({water:4+G.fac.rain*3})+'，全隊意志 +3'}}]},
+ trader:{w:2,t:'行商',txt:()=>`一個推住超市手推車嘅阿伯喺門口叫：「換嘢！換嘢！」
+
+${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`,opts:[
+  {l:()=>`5 食物 → ${teamFx(G,'deal','any')?6:4} 彈藥`,req:()=>G.res.food>=5,fx:()=>addRes({food:-5,ammo:teamFx(G,'deal','any')?6:4})},
+  {l:()=>`6 零件 → ${teamFx(G,'deal','any')?4:3} 藥品`,req:()=>G.res.parts>=6,fx:()=>addRes({parts:-6,med:teamFx(G,'deal','any')?4:3})},
+  {l:()=>`4 水 → ${teamFx(G,'deal','any')?90:60} 電池`,req:()=>G.res.water>=4,fx:()=>addRes({water:-4,bat:teamFx(G,'deal','any')?90:60})},
+  {l:'唔換',fx:()=>'阿伯推住車走咗，車轆吱吱聲。'}]},
+ nightmare:{w:2,t:'噩夢',pre:()=>{const A=act(G);return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 半夜大叫醒咗。佢夢見屋企人喺門外叫佢開門。`,opts:[
+  {l:'搵人陪佢傾',req:c=>act(G).length>1,fx:c=>{const b=bestBy(x=>stat(x,'wil'),x=>x.id!==c.u);if(!b){sanD(uOf(c.u),-12);return '冇人得閒。'}b.sta=Math.max(0,b.sta-10);sanD(uOf(c.u),18);return `${nm(b)} 陪佢坐到天光。\n${nm(uOf(c.u))} 意志 +18`}},
+  {l:'由佢',fx:c=>{sanD(uOf(c.u),-12);return `${nm(uOf(c.u))} 之後成日都冇講嘢。意志 -12`}}]},
+ bday:{w:2,t:'生日',pre:()=>{const A=act(G);return A.length>2?{u:pick(A).id}:null},txt:c=>`今日係 ${nm(uOf(c.u))} 生日。佢冇講，係其他人睇到佢身份證先知。`,opts:[
+  {l:'用罐頭整個蛋糕',d:'食物 -3',req:()=>G.res.food>=3,fx:c=>{addRes({food:-3});allSan(6);sanD(uOf(c.u),10);return '午餐肉疊成嘅蛋糕，插住一支蠟燭。\n全隊意志 +6'}},
+  {l:'下次先算',fx:c=>{sanD(uOf(c.u),-6);return `${nm(uOf(c.u))} 笑笑口話冇所謂。`}}]},
+ booze:{w:2,t:'一箱酒',txt:()=>'搜括嘅人喺貨倉搵到一整箱威士忌。',opts:[
+  {l:'今晚開派對',fx:()=>{allSan(9);act(G).forEach(u=>u.sta=Math.max(0,u.sta-12));return '有人唱歌，有人喊，有人笑到碌地。\n全隊意志 +9、體力 -12'}},
+  {l:'留嚟消毒傷口',fx:()=>addRes({med:3})},
+  {l:'拎去換電池',fx:()=>addRes({bat:70})}]},
+ hordewarn:{w:2,ch:2,t:'屍潮預警',txt:()=>'收音機傳嚟警告：一大群喪屍由東面向呢區移動，明晚會經過。',opts:[
+  {l:'即刻加固圍牆',d:'零件 -5，圍牆 +15',req:()=>G.res.parts>=5,fx:()=>{addRes({parts:-5});G.fort=Math.min(fortMax(G),G.fort+15);G.warn=1.4;return '大家通宵加固。\n圍牆 +15。今晚屍潮會特別大（×1.4），記得多派人守夜。'}},
+  {l:'知道，多派人守夜',fx:()=>{G.warn=1.4;return '今晚屍潮會特別大（×1.4）。'}}]},
+ desert:{w:3,t:'想走',pre:()=>{const A=act(G).filter(u=>u.san<40&&!u.iso);return A.length&&act(G).length>2?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 執好咗背囊。
+
+「我要去搵我屋企人。佢哋可能仲喺度。」`,opts:[
+  {l:'勸佢留低',d:'派意志最強嘅人',fx:c=>{const u=uOf(c.u),b=bestBy(x=>stat(x,'wil'),x=>x.id!==c.u);if(b&&stat(b,'wil')+rf(0,10)>=16){u.san=Math.max(u.san,45);return `${nm(b)} 同佢講咗好耐。\n${nm(u)} 放低咗背囊。`}leaveUnit(u,'執好背囊去搵屋企人。');return `勸唔到。${nm(u)} 天光就走咗。`}},
+  {l:'祝佢好運',fx:c=>{const u=uOf(c.u);addRes({food:-Math.min(2,G.res.food)});leaveUnit(u,'出發去搵屋企人。');allSan(-2);return `${nm(u)} 帶咗 2 份食物出發。\n大家喺門口送佢。`}},
+  {l:'鎖住佢',fx:c=>{const u=uOf(c.u);u.san=Math.max(0,u.san-20);u.job='rest';allSan(-4);return `${nm(u)} 被鎖喺房入面，喊咗成晚。\n全隊意志 -4`}}]},
+ fever:{w:2,t:'發燒',pre:()=>{const A=act(G).filter(u=>!fxOf(u).noSick&&!u.sick);return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 發高燒，額頭燙到不得了。大家第一個諗法：係咪被咬？
+
+佢話唔係。檢查過，冇傷口。`,opts:[
+  {l:'用藥',d:'藥品 -2',req:()=>G.res.med>=2,fx:c=>{addRes({med:-2});return `退燒藥食落去，聽朝 ${nm(uOf(c.u))} 已經冇事。`}},
+  {l:'隔離休息',fx:c=>{const u=uOf(c.u);u.sick=1;u.job='rest';return `${nm(u)} 病咗，要休息幾日。`}},
+  {l:'叫佢照做嘢',fx:c=>{const u=uOf(c.u);u.sick=1;const o=act(G).filter(x=>x!==u&&!fxOf(x).noSick&&R()<.4);o.forEach(x=>x.sick=1);return `${nm(u)} 帶病開工。${o.length?`${o.map(nm).join('、')} 都被傳染。`:''}`}}]},
+ rooftop:{w:2,t:'天台求救',txt:()=>'附近一棟大廈嘅天台，有人揮緊件紅色衫。',opts:[
+  {l:'去救',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);if(scavPow(u)*rf(.7,1.3)>=11){addRes({bat:60});const id=R()<.6?randomRecruit(['C','R','SR']):null;return `${nm(u)} 打通咗樓梯。\n${id?recruitText(id):'天台上嘅人多謝完就自己走咗，留低一啲電池。'}\n電池 +60`}const d=hurt(u,ri(12,25));return `${nm(u)} 救唔到，自己仲受傷（-${d} HP）。`}},
+  {l:'我哋幫唔到',fx:()=>{allSan(-5);return '個天台到夜晚就冇人再揮衫。\n全隊意志 -5'}}]},
+ dog:{w:2,t:'一隻唐狗',pre:()=>!G.units.some(u=>u.id==='n_tofu')&&!G.gone.n_tofu?{}:null,txt:()=>'搜括嘅人返嚟，後面跟住一隻黃色唐狗，條尾不停擺。佢對住外面低聲吠咗兩聲——三秒後，轉角行出一隻喪屍。',opts:[
+  {l:'收養佢',fx:()=>recruitText('n_tofu')},{l:'趕走佢',fx:()=>'唐狗喺門口坐咗一晚，第二朝走咗。'}]},
+ cat:{w:2,t:'一隻黑貓',pre:()=>!G.units.some(u=>u.id==='n_kuro')&&!G.gone.n_kuro?{}:null,txt:()=>'一隻黑貓由通風口鑽咗入嚟，坐喺倉庫門口，嘴入面咬住一隻老鼠。',opts:[
+  {l:'留低佢',fx:()=>recruitText('n_kuro')},{l:'放佢走',fx:()=>'黑貓望咗你一眼，自己行咗出去。'}]},
+ diary:{w:2,t:'日記',txt:()=>`喺一具屍體身上搵到本日記。最後一頁寫住：
+
+「第九日。佢哋好似識得記住邊度有人。我哋要搬。如果有人睇到呢本日記——唔好去中央車站。」`,opts:[{l:'收好',fx:()=>addRes({bat:30})}]},
+ secret:{w:4,ch:3,t:'穿煲',pre:()=>G.flags.hid&&!G.flags.secretOut?{}:null,txt:()=>'有人喺收音機旁邊搵到你寫低嘅筆記：「列車屍變，安全區失聯。」\n\n大家望住你。',opts:[{l:'承認',fx:()=>{G.flags.secretOut=1;allSan(-12);return '「點解唔講？」冇人再相信你講嘅消息。\n全隊意志 -12'}}]},
+ schoolRetry:{w:5,ch:3,t:'天台仲有反光',pre:()=>G.ch>=3&&!G.flags.rescued&&!G.flags.schoolGone?{}:null,txt:()=>'對面中學天台嘅反光仲喺度，但慢咗好多。',opts:[
+  {l:'再救一次',req:()=>able().length>=2,fx:()=>rescueSchool()},
+  {l:'放棄',fx:()=>{G.flags.schoolGone=1;allSan(-6);return '之後再冇反光。\n全隊意志 -6'}}]},
+ generator:{w:2,t:'發電機壞咗',txt:()=>'據點唯一一部發電機冒煙，燈全部熄晒。',opts:[
+  {l:'用零件修',d:'零件 -3',req:()=>G.res.parts>=3,fx:()=>addRes({parts:-3})+'，燈返咗'},
+  {l:'摸黑過一晚',fx:()=>{allSan(-5);return '成晚漆黑，每個聲音都好似喺門外。\n全隊意志 -5'}}]},
+ neighbor:{w:2,ch:2,t:'隔籬據點',txt:()=>'無線電接通咗兩條街外另一個據點。對方話有個人想過嚟，佢嗰邊食物唔夠。',opts:[
+  {l:'接佢過嚟',d:'食物 -4',req:()=>G.res.food>=4,fx:()=>{addRes({food:-4});const id=randomRecruit(['R','SR']);return id?recruitText(id):'對方最後冇過嚟。'}},
+  {l:'交換情報',fx:()=>addRes({bat:50})+'，對方報咗幾個有物資嘅地方'}]},
+ giant:{w:3,ch:5,t:'巨屍',txt:()=>'一隻兩米半高嘅巨屍喺附近遊蕩，佢頭殼入面發緊紫光。',opts:[
+  {l:'派最勁嘅人去獵',req:()=>able().length>0,fx:()=>{const u=bestBy(x=>eff(x,'guard'));if(eff(u,'guard')*rf(.7,1.3)>=14){return `${nm(u)} 引佢入窄巷，一擊入腦。\n${addRes({core:2})}`}const d=hurt(u,ri(20,35));return `${nm(u)} 被巨屍一掌拍飛（-${d} HP）。`}},
+  {l:'避開佢',fx:()=>'巨屍喺街上徘徊咗一日，然後走咗。'}]}
+};
+function randomEvent(){
+  const pool=[];
+  for(const id in EV){const e=EV[id];if(!e.w)continue;if(e.ch&&G.ch<e.ch)continue;let c={};if(e.pre){c=e.pre({});if(!c)continue}pool.push({id,c,w:e.w})}
+  if(!pool.length)return;
+  let r=R()*pool.reduce((s,p)=>s+p.w,0);for(const p of pool){r-=p.w;if(r<=0){G.queue.push({id:p.id,c:p.c});return}}
+}
+/* ================= 存檔 ================= */
+function fresh(){
+  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},proj:'fort',prog:{},loc:'store',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
+  ['c_chan','c_keung','c_cheung'].forEach(id=>addUnit(G,id));
+  G.units.forEach(u=>u.job=bestJob(u));
+  G.queue.push({id:'s_intro'});
+  addLog('第一章「爆發」開始。');
+  return G;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(G))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.units&&s.res)return s}catch(e){}return null}
+
+/* ================= 介面 ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let VIEW='base';
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+function av(id,extra=''){const c=CH[id];return `<div class="av r-${c.g} ${extra}">${esc(c.av)}<span>${c.g}</span></div>`}
+function stars(n){return n?`<span class="stars">${'★'.repeat(n)}</span>`:''}
+function bar(lbl,v,max,col){const p=cl(v/max*100,0,100);return `<div class="bar"><span>${lbl} ${Math.round(v)}</span><s><i style="width:${p}%;background:${col}"></i></s></div>`}
+function statusChips(u){
+  const c=[];
+  if(u.crit)c.push('<span class="chip bad">重傷</span>');else if(u.inj)c.push('<span class="chip bad">受傷</span>');
+  if(u.inf)c.push(`<span class="chip inf">感染·${u.inf}日</span>`);
+  if(u.iso)c.push('<span class="chip inf">隔離中</span>');
+  if(u.sick)c.push('<span class="chip warn">發燒</span>');
+  if(u.hungry)c.push('<span class="chip warn">肚餓</span>');
+  if(u.sta<30&&!fxOf(u).noTired)c.push('<span class="chip warn">疲勞</span>');
+  if(u.san<25)c.push('<span class="chip bad">恐慌</span>');else if(u.san>=85)c.push('<span class="chip good">振奮</span>');
+  return c.join('');
+}
+function renderHead(){
+  const c=CHAPS[G.ch-1];
+  $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${'一二三四五六七'[G.ch-1]}章 ${c.t}`;
+  const fc=forecast(G);
+  const low={food:G.res.food<fc.food*2,water:G.res.water<fc.water*2,med:G.res.med<2,ammo:G.res.ammo<2};
+  $('#supply').innerHTML=Object.keys(RES).map(k=>`<div class="sp ${low[k]?'low':''}" title="${RES[k].n}"><i style="background:${RES[k].c}">${RES[k].s}</i>${RES[k].n}<b>${G.res[k]}</b></div>`).join('');
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===VIEW));
+}
+function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,menu:rMenu})[VIEW]();}
+
+/* ---------- 據點 ---------- */
+function rBase(){
+  const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act);
+  const avail=LOCS.filter(l=>l.ch<=G.ch);
+  const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
+  const done=!!G.obj[c.n];
+  $('#main').innerHTML=`
+  <section class="chap">
+    <div class="no">CHAPTER ${c.n} · ${esc(c.src)}</div>
+    <h2>${esc(c.t)}</h2>
+    <p>${esc(c.p)}</p>
+    <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>目標：${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
+    ${G.over?`<div class="row" style="margin-top:12px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
+  </section>
+  <div class="grid2" style="margin-top:16px">
+    <section class="stack">
+      <div class="row" style="justify-content:space-between">
+        <h2>今日分工 <span class="muted type" style="font-size:13px">${A.length}/${bedCap(G)} 床</span></h2>
+        <div class="row"><button class="btn sm" id="auto">自動分配</button><button class="btn pri" id="end" ${G.over?'disabled':''}>結束第 ${G.day} 日</button></div>
+      </div>
+      ${A.length?A.map(uRow).join(''):'<div class="panel muted">據點冇人。去「廣播」招募倖存者。</div>'}
+      ${res.length?`<div class="panel row" style="justify-content:space-between"><span class="muted">後備名單有 ${res.length} 人等緊床位</span><button class="btn sm" data-go="crew">去調動</button></div>`:''}
+    </section>
+    <aside class="stack">
+      <div class="panel stack">
+        <h3>今晚預報</h3>
+        <div class="fc">
+          <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>預計屍潮${raidTonight(G)?'＋獵人幫':''}${G.warn>1?' ⚠':''}</span></div>
+          <div class="${danger}"><b>${fc.def}</b><span>預計防禦</span></div>
+          <div class="${G.res.food<fc.food?'bad':''}"><b>${fc.food}/${fc.water}</b><span>今晚食物/水</span></div>
+        </div>
+        <p class="muted" style="margin:0;font-size:12px">防禦 = 圍牆 ×0.4 + 保安 + 全員自衛。保安每人用 1 發彈藥火力 ×1.5。巡邏可以減少屍潮。</p>
+      </div>
+      <div class="panel stack">
+        <div class="field"><label class="lbl" for="loc">搜括地點</label>
+          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.n} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%</option>`).join('')}</select>
+          <span class="muted" style="font-size:12px">${(()=>{const l=LOCS.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、'):''})()}</span>
+        </div>
+        <div class="field"><label class="lbl" for="proj">維修項目</label>
+          <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select>
+          <span class="muted" style="font-size:12px">${G.proj==='fort'?'用零件修補圍牆':esc(FAC[G.proj].d)}</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>據點</h3>
+        <div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted">圍牆耐久</span><span class="type">${G.fort}/${fortMax(G)}</span></div>
+        <div class="wall"><i style="width:${G.fort/fortMax(G)*100}%"></i></div>
+        <div class="fac" style="margin-top:10px">${FK.map(k=>`<div title="${esc(FAC[k].d)}"><span>${FAC[k].n}</span><b>Lv${G.fac[k]}</b></div>`).join('')}</div>
+        <p class="muted" style="margin:10px 0 0;font-size:12px">擊退 ${G.kills} 隻 · ${Object.values(G.gone).filter(x=>x.dead).length} 人犧牲</p>
+      </div>
+    </aside>
+  </div>`;
+  $('#end').onclick=doEnd;
+  $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
+  $('#loc').onchange=e=>{G.loc=e.target.value;save();render()};
+  $('#proj').onchange=e=>{G.proj=e.target.value;save();render()};
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  document.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{const u=uOf(b.dataset.u);u.job=b.dataset.j;save();render()});
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
+  const ng=$('#newgame');if(ng)ng.onclick=()=>{fresh();save();go('base');showQueue()};
+}
+function uRow(u){
+  const c=CH[u.id];
+  return `<div class="urow ${u.iso?'off':''}">
+    <button data-open="${u.id}" aria-label="睇${esc(c.n)}資料">${av(u.id)}</button>
+    <div style="min-width:0">
+      <div class="who"><b>${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.o)} · ${esc(c.job)}</span><div class="chips">${statusChips(u)}</div></div>
+      <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
+    </div>
+    <div class="jobs">${JK.map(j=>{const a=apt(u,j),ok=canWork(u,j);const g=j==='rest'?'':grade(a*(fxOf(u).job[j]||1));return `<button class="jb" data-u="${u.id}" data-j="${j}" aria-pressed="${u.job===j}" ${ok?'':'disabled'} title="${esc(JOBS[j].d)}">${JOBS[j].n}<em class="g${g}">${j==='rest'?'—':g}</em></button>`}).join('')}</div>
+  </div>`;
+}
+function go(v){VIEW=v;render();window.scrollTo(0,0)}
+
+/* ---------- 結算 ---------- */
+function doEnd(){
+  const A=act(G);if(!A.length){toast('據點冇人');return}
+  const r=endDay();if(!r)return;
+  const n=r.night;
+  modal(`<div class="modal">
+    <div class="eyebrow">DAY ${G.day-1} 報告</div>
+    <div class="night"><div><b style="color:var(--blood)">${n.horde}</b><span class="muted">屍潮${n.raid?'＋獵人幫':''}</span></div><div class="vs">VS</div><div><b style="color:${n.ok?'var(--calm)':'var(--blood)'}">${n.def}</b><span class="muted">防禦</span></div></div>
+    <div class="rep">${r.rep.map(x=>x.h?`<h4>${x.h}</h4>`:`<p class="${x.c}">${esc(x.t)}</p>`).join('')}</div>
+    <button class="btn pri" id="cont">${G.queue.length?'繼續（有事發生）':'迎接第 '+G.day+' 日'}</button>
+  </div>`,()=>{$('#cont').onclick=()=>{closeOv();showQueue()}});
+  render();
+}
+function modal(html,bind){$('#ovroot').innerHTML=`<div class="ov" role="dialog" aria-modal="true">${html}</div>`;bind&&bind();const f=$('#ovroot button');f&&f.focus({preventScroll:true})}
+function closeOv(){$('#ovroot').innerHTML='';render()}
+function showQueue(){
+  while(G.queue.length){
+    const q=G.queue[0],e=EV[q.id];let c=q.c||{};
+    if(!e){G.queue.shift();continue}
+    if(['u','a','b'].some(k=>c[k]&&!uOf(c[k]))){G.queue.shift();continue}
+    if(e.pre&&!e.w){c=e.pre(c);if(!c){G.queue.shift();continue}}
+    showEvent(q.id,c);return;
+  }
+  save();render();
+  if(G.over&&!G.flags.overShown){G.flags.overShown=1;save();if(G.over==='dead')modal(`<div class="modal paper"><div class="eyebrow">GAME OVER</div><h2>全滅</h2><div class="story">捲閘外面嘅聲音，終於冇再停過。\n\n你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。</div><button class="btn pri" id="ng">開新一局</button></div>`,()=>{$('#ng').onclick=()=>{fresh();save();closeOv();go('base');showQueue()}})}
+}
+function showEvent(id,c){
+  const e=EV[id];
+  const lbl=o=>typeof o.l==='function'?o.l(c):o.l;
+  modal(`<div class="modal paper">
+    <div class="eyebrow">${e.story?'劇情':'事件'} · 第 ${G.day} 日</div>
+    <h2>${esc(e.t)}</h2>
+    <div class="story">${esc(e.txt(c))}</div>
+    <div class="opts">${e.opts.map((o,i)=>{const ok=!o.req||o.req(c);return `<button class="opt" data-i="${i}" ${ok?'':'disabled'}>${esc(lbl(o))}${o.d?`<small>${esc(o.d)}</small>`:''}</button>`}).join('')}</div>
+  </div>`,()=>{
+    document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const o=e.opts[+b.dataset.i];const out=o.fx(c)||'';
+      G.queue.shift();addLog(`【${e.t}】${lbl(o)}`);checkObj();save();renderHead();
+      modal(`<div class="modal paper"><div class="eyebrow">${esc(e.t)}</div><div class="result">${esc(out||'……')}</div><button class="btn pri" id="nx">繼續</button></div>`,()=>{$('#nx').onclick=()=>{closeOv();showQueue()}});
+    });
+  });
+}
+
+/* ---------- 倖存者 ---------- */
+function tag(u,gone){
+  const c=CH[u.id||u];
+  if(gone){const g=G.gone[c.id];return `<div class="tag gone"><div class="tt">${av(c.id,'dead')}<div><b>${esc(c.n)}</b><small>${g.dead?'第 '+g.d+' 日犧牲':'第 '+g.d+' 日離開'}</small></div></div><small>${esc(g.why)}</small></div>`}
+  return `<button class="tag ${u.act?'':'res'}" data-open="${c.id}"><div class="tt">${av(c.id)}<div><b>${esc(c.n)}</b>${stars(u.star)}<small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${statusChips(u)||`<span class="chip">${u.act?JOBS[u.job].n:'後備'}</span>`}</div></button>`;
+}
+function rCrew(){
+  const A=act(G),Rs=G.units.filter(u=>!u.act),D=Object.keys(G.gone);
+  $('#main').innerHTML=`
+   <div class="secth"><h2>據點內</h2><span class="muted type">${A.length}/${bedCap(G)}</span></div>
+   <div class="cards">${A.map(u=>tag(u)).join('')||'<span class="muted">冇人</span>'}</div>
+   <div class="secth"><h2>後備名單</h2><span class="muted">無線電聯絡中，有床位先可以加入；唔使食糧</span></div>
+   <div class="cards">${Rs.map(u=>tag(u)).join('')||'<span class="muted">冇人。升級床位可以收留更多人。</span>'}</div>
+   ${D.length?`<div class="secth"><h2>離開咗嘅人</h2></div><div class="cards">${D.map(id=>tag(id,true)).join('')}</div>`:''}`;
+  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
+}
+function openUnit(id){
+  const u=uOf(id);if(!u)return;const c=CH[id];
+  const coreCost=2+u.star;let armed=false;
+  modal(`<div class="modal">
+    <div class="row" style="align-items:flex-start;gap:14px">${av(id)}<div style="min-width:0;flex:1"><div class="row" style="gap:6px"><span class="rk ${c.g}">${c.g}</span><h2>${esc(c.n)}</h2>${stars(u.star)}</div><div class="muted">${esc(c.o)} · ${esc(c.job)}</div><div class="chips" style="margin-top:4px">${statusChips(u)}</div></div></div>
+    <p style="margin:0">${esc(c.bio)}</p>
+    <div class="bars">${bar('HP',u.hp,maxHp(u),'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
+    <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
+    <div class="aptg">${JK.filter(j=>j!=='rest').map(j=>{const g=canWork({...u,crit:0,iso:0},j)?grade(apt(u,j)*(fxOf(u).job[j]||1)):'—';return `<div>${JOBS[j].n}<b class="g${g}">${g}</b></div>`}).join('')}</div>
+    <div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">專長 · ${esc(c.sk.n)}</b><div style="font-size:13px">${esc(c.sk.d)}</div>
+      ${c.tr.map(t=>`<div style="font-size:13px;margin-top:4px"><span class="chip">${TR[t].n}</span> <span class="muted">${esc(TR[t].d)}</span></div>`).join('')}</div>
+    <div class="row">
+      ${u.act?`<button class="btn sm" id="mv">移去後備</button>`:`<button class="btn sm" id="mv" ${act(G).length>=bedCap(G)?'disabled':''}>加入據點${act(G).length>=bedCap(G)?'（冇床位）':''}</button>`}
+      <button class="btn sm" id="up" ${u.star>=5||G.res.core<coreCost?'disabled':''}>用 ${coreCost} 晶核強化${u.star>=5?'（滿星）':''}</button>
+      <button class="btn sm" id="bye">遣散</button>
+      <button class="btn pri sm" id="cx" style="margin-left:auto">關閉</button>
+    </div>
+  </div>`,()=>{
+    $('#cx').onclick=closeOv;
+    $('#mv').onclick=()=>{if(u.act&&(u.inf||u.iso)){toast('感染者唔可以送走後備');return}u.act=!u.act;if(u.act)u.job=bestJob(u);save();closeOv();openUnit(id)};
+    $('#up').onclick=()=>{G.res.core-=coreCost;u.star++;u.hp=Math.min(maxHp(u),u.hp+10);save();toast(`${c.n} 強化到 ${u.star} 星，全能力 +1`);closeOv();openUnit(id)};
+    $('#bye').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認遣散';e.target.classList.add('danger');return}leaveUnit(u,'被遣散。');addRes({bat:20});save();closeOv()};
+  });
+}
+
+/* ---------- 廣播（抽卡） ---------- */
+function roll(){let r=R()*100;for(const [g,p] of RATES){if((r-=p)<=0)return g}return 'C'}
+function pull(n){
+  const cost=n===10?900:100;
+  if(G.res.bat<cost){toast('電池唔夠。搜括屋邨、地鐵站，或者撐過夜晚都會有');return}
+  G.res.bat-=cost;
+  const out=[];
+  for(let i=0;i<n;i++){
+    let g=roll();G.pity++;
+    if(G.pity>=50&&g!=='UR')g='SSR';
+    if(n===10&&i===9&&!out.some(o=>['UR','SSR','SR'].includes(CH[o.id].g))&&!['UR','SSR','SR'].includes(g))g='SR';
+    if(g==='UR'||g==='SSR')G.pity=0;
+    const id=pick(BY_G[g]);const r=addUnit(G,id);
+    if(r.type==='dead')addRes({bat:30});if(r.type==='max')addRes({bat:50});
+    out.push({id,type:r.type,act:r.u&&r.u.act});
+  }
+  G.pulls+=n;save();renderHead();
+  const lab={new:'NEW',star:'突破 +1★',dead:'已犧牲 · 電池 +30',max:'滿星 · 電池 +50'};
+  modal(`<div class="modal" style="width:min(900px,100%)">
+    <div class="eyebrow">廣播收到 ${n} 個回應</div>
+    <div class="pullgrid ${n===1?'one':''}">${out.map((o,k)=>{const c=CH[o.id];return `<div class="pc g-${c.g}" data-k="${k}"><div class="in"><div class="back">· · ·</div><div class="front"><div class="tag" style="cursor:default;height:100%"><div class="tt">${av(o.id)}<div style="min-width:0"><b>${esc(c.n)}</b><small>${esc(c.job)}</small></div></div><span class="badge ${o.type==='new'?'':'dup'}">${lab[o.type]}</span>${o.type==='new'&&!o.act?'<small>床位滿，入咗後備</small>':''}</div></div></div></div>`}).join('')}</div>
+    <div class="row" style="justify-content:center"><button class="btn" id="again">再廣播 ${n} 次（${n===10?900:100} 電池）</button><button class="btn pri" id="ok">收到</button></div>
+  </div>`,()=>{
+    const cards=[...document.querySelectorAll('.pc')];const t=cards.map((c,i)=>setTimeout(()=>c.classList.add('open'),250+i*180));
+    $('#ok').onclick=()=>{t.forEach(clearTimeout);closeOv()};
+    $('#again').onclick=()=>{t.forEach(clearTimeout);closeOv();pull(n)};
+  });
+}
+function rRadio(){
+  const total=CH_RAW.length,got=Object.keys(G.dex).length;
+  $('#main').innerHTML=`
+  <div class="radio">
+    <div class="dial"><div class="scale"><div class="nums"><span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span></div><div class="needle" id="needle"></div></div><div class="grill"></div></div>
+    <div class="stack">
+      <h2>緊急廣播</h2>
+      <p class="muted" style="margin:0;max-width:52ch">用電池向全城廣播你嘅位置。每個回應嘅人都有自己嘅專長——醫生、廚師、工程師、軍人，甚至一隻狗。床位唔夠嘅會入後備名單，唔使食糧。</p>
+      <div class="row"><button class="btn" id="p1">廣播 1 次 · 100 電池</button><button class="btn pri" id="p10">廣播 10 次 · 900 電池</button></div>
+      <p class="muted" style="margin:0;font-size:12px">10 連保證至少一個 SR 或以上 · 連續 50 次冇 SSR 必出 SSR（而家 ${G.pity}/50）· 重複角色會突破 +1★（全能力 +1）</p>
+      <div class="rates">${RATES.map(([g,p])=>`<div class="rate"><b><span class="rk ${g}">${g}</span></b><span>${p}%</span></div>`).join('')}</div>
+    </div>
+  </div>
+  <div class="secth"><h2>倖存者圖鑑</h2><span class="muted type">${got}/${total}</span></div>
+  <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b>${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
+  $('#p1').onclick=()=>{spin();setTimeout(()=>pull(1),500)};
+  $('#p10').onclick=()=>{spin();setTimeout(()=>pull(10),500)};
+}
+function spin(){const n=$('#needle');if(n)n.style.left=ri(8,90)+'%'}
+
+/* ---------- 日誌 ---------- */
+function rLog(){
+  const by={};G.log.forEach(l=>{(by[l.d]=by[l.d]||[]).push(l.t)});
+  const days=Object.keys(by).map(Number).sort((a,b)=>b-a);
+  $('#main').innerHTML=`<div class="secth"><h2>據點日誌</h2><span class="muted">最新喺最上</span></div><div class="log">${days.map(d=>`<h4>第 ${d} 日</h4>${by[d].map(t=>`<p>${esc(t)}</p>`).join('')}`).join('')||'<p>未有紀錄。</p>'}</div>`;
+}
+
+/* ---------- 設定 ---------- */
+function rMenu(){
+  let armed=false;
+  $('#main').innerHTML=`<div class="stack" style="max-width:640px">
+    <div class="panel stack"><h3>點玩</h3>
+      <p style="margin:0">每日幫每個倖存者揀一份工作。卡上嘅字母代表佢做呢份工嘅適合程度（S 最好，D 最差），數值、狀態同專長都會影響。</p>
+      <p style="margin:0" class="muted">搜括帶返物資但有機會受傷被咬；巡邏減少今晚屍潮；保安守夜；維修修圍牆同起設施；煮飯慳食物兼提升意志；醫療醫傷者。疲勞、受傷、恐慌都會令效率下降。被咬嘅人三日內會屍變。</p>
+      <p style="margin:0" class="muted">跟住七章劇情行：完成解藥研究或者撐到第 ${ENDDAY} 日就係結局。</p>
+    </div>
+    <div class="panel stack"><h3>兌換碼</h3><div class="row"><input class="sel" id="code" style="flex:1;min-width:0" placeholder="輸入兌換碼" autocomplete="off"><button class="btn" id="redeem">兌換</button></div><span class="muted" id="cmsg"></span></div>
+    <div class="panel stack"><h3>重新開始</h3><p class="muted" style="margin:0">清走而家嘅進度，由第 1 日再嚟。</p><div><button class="btn" id="reset">開新一局</button></div></div>
+  </div>`;
+  $('#redeem').onclick=()=>{const c=$('#code').value.trim().toUpperCase();let m='代碼無效';
+    if(c==='BRAINS'&&!G.flags.c1){G.flags.c1=1;addRes({bat:1000});m='電池 +1000'}
+    else if(c==='ZOMIBEE'&&!G.flags.c2){G.flags.c2=1;addRes({food:20,water:20,med:10,parts:20,ammo:20});m='物資大禮包已到'}
+    else if(['BRAINS','ZOMIBEE'].includes(c))m='呢個代碼已經用過';
+    save();renderHead();$('#cmsg').textContent=m};
+  $('#reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認';e.target.classList.add('danger');return}fresh();save();go('base');showQueue()};
+}
+
+/* ================= 啟動 ================= */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+G=load();
+if(G){Object.assign(G.flags,{overShown:G.flags.overShown});}else{fresh();save()}
+render();
+if(G.queue.length)showQueue();
+</script>
+</body>
+</html>
