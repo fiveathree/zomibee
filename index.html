@@ -26,7 +26,7 @@ body{margin:0;background:radial-gradient(90% 55% at 50% -12%,rgba(255,162,58,.16
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ash)}
 button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
-.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* header */
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(20,17,14,.94);backdrop-filter:blur(8px)}
@@ -305,6 +305,19 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .syn{display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:13px}
 .syn-m{font-size:11px;color:var(--dust)}
 .pc.g-UR .back{box-shadow:0 0 18px #f2a6e6}.pc.g-SSR .back{box-shadow:0 0 14px #f2c552}
+/* base layout v2 */
+.basegrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:14px;align-items:start;margin-top:14px}
+@media (max-width:900px){.basegrid{grid-template-columns:minmax(0,1fr)}}
+.side{gap:10px}.side .panel{padding:12px}
+.side .fc b{font-size:17px}
+.planhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.planhead .acts{gap:6px;justify-content:flex-end}
+.zh .zc{font-style:normal;margin-left:auto;font-family:var(--f-type);font-size:12px;color:var(--dust)}
+.linkbtn{color:var(--sodium2);text-decoration:underline;font-size:12px;padding:0}
+.tok{touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
+.tok.dragging{opacity:.25}
+.ghost{position:fixed;z-index:70;pointer-events:none;transform:translate(-50%,-65%) scale(1.25);filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.zone.hover{outline:3px solid var(--sodium)!important;outline-offset:-3px;background-color:rgba(255,162,58,.12)}
 @media (prefers-reduced-motion:reduce){.pc .in,.needle{transition:none}}
 </style>
 </head>
@@ -2493,6 +2506,136 @@ function rAch(){
   <div class="inv">${SCRIPTS.map(d=>{const on=G.dun[d.id];const a=ACH.find(x=>x.unlock===d.id);return `<div class="invi ${on?'':'off'}"><div class="row" style="justify-content:space-between"><b>${esc(d.n)}</b><span class="chip">${esc(d.genre)}</span></div><div style="font-size:12px">${on?`${(G.clear[d.id]||0)>=100?'✓ 已完成':'進度 '+Math.round(G.clear[d.id]||0)+'%'} · 加成：${d.bonus.map(f=>FA[f]).join('、')}`:`解鎖條件：獎章「${esc(a.n)}」（${esc(a.d)}）`}</div></div>`}).join('')}</div>`;
 }
 function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,menu:rMenu,ach:rAch})[VIEW]();showPop()}
+/* ================= 據點頁新版面：平面圖做主角、資料放右邊、可拖放 ================= */
+let DRAGGED=false;
+function rBase(){
+  const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act);
+  const avail=allLocs(G);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
+  const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
+  const done=!!G.obj[c.n];
+  $('#main').innerHTML=`
+  <section class="chap">
+    <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
+      <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
+      <span class="nxt">${c.n<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${CNUM[c.n]}章`:`完成目標解鎖第${CNUM[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
+      <details class="chd"><summary>劇情（已解鎖 ${c.n}/${CHAPS.length} 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${CNUM[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
+    </div>
+    ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
+  </section>
+  <div class="basegrid">
+    ${planHTML(A,res)}
+    <aside class="stack side">
+      <div class="panel stack">
+        <h3>今晚預報</h3>
+        <div class="fc">
+          <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>預計屍潮${raidTonight(G)?'＋'+raidTonight(G).n:''}${G.warn>1?' ⚠':''}</span></div>
+          <div class="${danger}"><b>${fc.def}</b><span>預計防禦</span></div>
+          <div class="${G.res.food<fc.food?'bad':''}"><b>${fc.food}/${fc.water}</b><span>今晚食物/水</span></div>
+        </div>
+        <p class="muted" style="margin:0;font-size:11px">防禦 = 圍牆 ×0.4 + 保安 + 全員自衛。保安每人用 1 發彈藥火力 ×1.5。巡邏減少屍潮，冇人巡邏屍潮 +10%。</p>
+      </div>
+      <div class="panel stack">
+        <div class="field"><label class="lbl" for="loc">搜括地點</label>
+          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.script?'【劇本】':l.dun?'【副本】':''}${l.n.replace(/^(劇本|.+本) · /,'')} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]||l.dun||l.id==='dungeon'?` · ${(G.clear[l.id]||0)>=100?'已完成':(l.dun?'進度 ':'清場 ')+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select>
+          <span class="muted" style="font-size:11px">${(()=>{const l=avail.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、')+(BASES[l.id]?`。清場後可以搬去做據點（${BASES[l.id].beds} 床）`:'')+(l.dun?`。${l.bonus.map(f=>FA[f]).join('、')}陣營有加成；普通人去受傷風險 ×${l.mortal.risk}、意志 -${l.mortal.san}`:''):''})()}</span>
+        </div>
+        <div class="field"><label class="lbl" for="proj">維修項目</label>
+          <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select>
+          <span class="muted" style="font-size:11px">${G.proj==='fort'?'用零件修補圍牆':esc(FAC[G.proj].d)}</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="row" style="justify-content:space-between"><h3>據點</h3><span class="muted type" style="font-size:12px">${A.length}/${bedCap(G)} 床</span></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px"><span class="muted">圍牆耐久</span><span class="type">${G.fort}/${fortMax(G)}</span></div>
+        <div class="wall"><i style="width:${G.fort/fortMax(G)*100}%"></i></div>
+        <div class="fac" style="margin-top:8px">${FK.map(k=>`<div title="${esc(FAC[k].d)}"><span>${FAC[k].n}</span><b>Lv${G.fac[k]}</b></div>`).join('')}</div>
+        <p class="muted" style="margin:8px 0 0;font-size:12px">擊退 ${G.kills} 隻 · ${Object.values(G.gone).filter(x=>x.dead).length} 人犧牲${res.length?` · 後備 ${res.length} 人 <button class="linkbtn" data-go="crew">調動</button>`:''}</p>
+      </div>
+      <div class="panel">
+        <h3>陣營加成</h3>
+        <div class="syn">${synList().map(x=>`<div><b>${FA[x.f]}</b> <span class="muted">${x.n} 人 · 全工作 +${x.b}%</span><div class="syn-m">${x.m.map(u=>esc(nm(u))).join('、')}</div></div>`).join('')||'<span class="muted" style="font-size:12px">同陣營嘅人有兩個或以上喺據點就有加成；做同一份工再加。</span>'}</div>
+        <p class="muted" style="margin:6px 0 0;font-size:11px">同陣營同做一份工：每個拍檔該工作再 +8%。</p>
+      </div>
+    </aside>
+  </div>`;
+  $('#end').onclick=doEnd;
+  $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
+  $('#aeq2').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動（專屬裝備優先俾主人，休息嘅人除裝）`:'而家已經係最好配搭')};
+  $('#loc').onchange=e=>{G.loc=e.target.value;save();render()};
+  $('#proj').onchange=e=>{G.proj=e.target.value;save();render()};
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  bindPlan();
+  const ng=$('#newgame');if(ng)ng.onclick=()=>{fresh();save();go('base');showQueue()};
+}
+function planHTML(A,res){
+  const b=BS(G),loc=allLocs(G).find(l=>l.id===G.loc);
+  const sel=SEL&&uOf(SEL),fr=G.fort/fortMax(G),mv=canMove(G);
+  const zones=JK.map(k=>{
+    const z=b.z[k];const us=A.filter(u=>(canWork(u,u.job)?u.job:'rest')===k);
+    const cls=sel?(canWork(sel,k)?'drop':'no'):'';
+    return `<div class="zone z-${k} ${cls}" style="grid-area:${k}" data-z="${k}" role="button" tabindex="0" aria-label="${esc(z[0])}（${z[1]}）">
+      <div class="zh"><b>${esc(z[0])}</b><span>${z[1]}${k==='scav'&&loc?' → '+esc(loc.n):''}</span><em class="zc">${us.length||''}</em></div>
+      ${z[2]?`<div class="zp">${esc(z[2])}</div>`:''}
+      <div class="toks">${us.map(tok).join('')||(k==='scav'||k==='patrol'?'':'<span class="zp">（冇人）</span>')}</div>
+    </div>`}).join('');
+  return `<section class="panel planwrap">
+    <div class="planhead">
+      <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:12px">${esc(b.pd)}</div></div>
+      <div class="row acts">
+        <button class="btn sm" id="aeq2">自動配裝</button>
+        <button class="btn sm" id="auto">自動分配</button>
+        <button class="btn sm" id="move">${mv.length?`搬據點（${mv.length}）`:'搬據點'}</button>
+        <button class="btn pri" id="end" ${G.over?'disabled':''}>結束第 ${G.day} 日</button>
+      </div>
+    </div>
+    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>，撳或者拖去一個區域派佢去；撳其他地方取消。`:'拖住人去唔同區域就可以調工；撳一下睇狀態同裝備。'}${A.length?'':' 據點冇人，去「廣播」招募倖存者。'}</p>
+    <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
+  </section>`;
+}
+function assignTo(u,k){
+  if(!u)return false;
+  if(!canWork(u,k)){toast(u.crit?`${nm(u)} 重傷，只可以休息`:u.iso?`${nm(u)} 隔離緊`:`${nm(u)} 做唔到${JOBS[k].n}`);return false}
+  u.job=k;save();return true;
+}
+function bindPlan(){
+  document.querySelectorAll('[data-tok]').forEach(b=>{
+    b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}SEL=SEL===b.dataset.tok?null:b.dataset.tok;render()};
+    b.onpointerdown=e=>startDrag(e,b);
+  });
+  document.querySelectorAll('.zone').forEach(z=>{
+    const go=()=>{if(!SEL)return;const u=uOf(SEL);if(!u){SEL=null;return render()}if(assignTo(u,z.dataset.z)){SEL=null;render()}};
+    z.onclick=go;z.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+  });
+  $('#move').onclick=openMove;
+}
+function startDrag(e,b){
+  if(e.button>0)return;
+  const id=b.dataset.tok,u=uOf(id);if(!u)return;
+  const sx=e.clientX,sy=e.clientY;let ghost=null,over=null;
+  const zones=[...document.querySelectorAll('.zone')];
+  const move=ev=>{
+    const x=ev.clientX,y=ev.clientY;
+    if(!ghost){
+      if(Math.hypot(x-sx,y-sy)<6)return;
+      ghost=b.cloneNode(true);ghost.classList.add('ghost');ghost.classList.remove('sel');document.body.appendChild(ghost);
+      b.classList.add('dragging');$('#pop').hidden=true;
+      zones.forEach(z=>z.classList.add(canWork(u,z.dataset.z)?'drop':'no'));
+    }
+    ev.preventDefault();
+    ghost.style.left=x+'px';ghost.style.top=y+'px';
+    const el=document.elementFromPoint(x,y);const z=el&&el.closest('.zone');
+    if(z!==over){if(over)over.classList.remove('hover');over=z;if(over&&over.classList.contains('drop'))over.classList.add('hover')}
+  };
+  const up=()=>{
+    removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+    if(!ghost)return;
+    ghost.remove();DRAGGED=true;setTimeout(()=>DRAGGED=false,50);
+    const k=over&&over.dataset.z;
+    if(k&&k!==u.job){if(assignTo(u,k))toast(`${nm(u)} → ${BS(G).z[k][0]}（${JOBS[k].n}）`)}
+    SEL=null;render();
+  };
+  addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
