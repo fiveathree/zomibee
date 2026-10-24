@@ -209,6 +209,30 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .aptg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;text-align:center}
 .aptg div{background:var(--slab2);border-radius:5px;padding:4px 0;font-size:11px;color:var(--dust)}
 .aptg b{display:block;font-family:var(--f-type);font-weight:400;font-size:16px}
+
+/* floor plan */
+.plan{display:grid;gap:6px;grid-auto-columns:minmax(0,1fr);grid-auto-rows:minmax(92px,auto);border:6px solid #5b4c3c;border-radius:6px;padding:6px;background:#0d0a08}
+.zone{position:relative;border-radius:4px;padding:6px 8px;border:1px solid var(--line);display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 22px),#2a241d}
+.zone:hover{border-color:var(--line2)}
+.zone.drop{outline:2px dashed var(--sodium);outline-offset:-3px}
+.zone.no{opacity:.35}
+.z-scav{background:linear-gradient(transparent calc(50% - 1px),transparent calc(50% - 1px)),repeating-linear-gradient(90deg,rgba(255,194,122,.3) 0 18px,transparent 18px 36px) center/100% 2px no-repeat,#1c1a18;border-style:dashed}
+.z-patrol{background:repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 6px,transparent 6px 12px),#181512;border-style:dashed}
+.z-guard{border-top:5px solid transparent;border-image:repeating-linear-gradient(-45deg,var(--sodium) 0 8px,#2a1f12 8px 16px) 5 0 0 0 / 5px 0 0 0}
+.z-rest{background:repeating-linear-gradient(0deg,rgba(134,175,207,.05) 0 1px,transparent 1px 14px),#25221f}
+.z-medic{background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 22px),#2b2826}
+.zh{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.zh b{font-family:var(--f-disp);font-size:14px}
+.zh span{font-size:11px;color:var(--sodium2)}
+.zp{font-size:10px;color:var(--dust);opacity:.75}
+.toks{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:auto;padding-top:4px}
+.tok{display:flex;flex-direction:column;align-items:center;gap:1px;width:44px}
+.tok .d{width:32px;height:32px;border-radius:50%;background:linear-gradient(160deg,var(--c1),var(--c2));display:grid;place-items:center;font-family:var(--f-disp);font-weight:900;font-size:15px;color:#fff;box-shadow:0 0 0 2px var(--ring,transparent),0 2px 4px rgba(0,0,0,.5);position:relative}
+.tok small{font-size:10px;max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bone)}
+.tok.sel .d{box-shadow:0 0 0 2px var(--sodium),0 0 14px var(--sodium)}
+.tok i{position:absolute;top:-4px;right:-7px;font-style:normal;font-size:9px;line-height:1.3;background:#ffb8f5;color:#1c1206;border-radius:3px;padding:0 3px;font-family:var(--f-type)}
+@media (max-width:560px){.plan{gap:4px;padding:4px;border-width:5px}.zone{padding:5px}.zh b{font-size:12px}.zp{display:none}.tok{width:36px}.tok .d{width:28px;height:28px;font-size:13px}.tok small{max-width:36px}}
 @media (prefers-reduced-motion:reduce){.pc .in,.needle{transition:none}}
 </style>
 </head>
@@ -360,15 +384,55 @@ const FK=Object.keys(FAC);
 
 /* 章節 */
 const CHAPS=[
- {n:1,day:1,t:'爆發',src:'港產',p:'港灣市一夜淪陷。你同幾個陌生人躲入咗旺角一棟舊商場，捲閘外面嘅聲音成晚冇停過。',goal:'將圍牆升到 2 級',ok:g=>g.fac.wall>=2,r:{bat:200,parts:5},hm:1},
+ {n:1,day:1,t:'爆發',src:'港產',p:'港灣市一夜淪陷。你同幾個陌生人搵到個地方躲埋，捲閘外面嘅聲音成晚冇停過。',goal:'將圍牆升到 2 級',ok:g=>g.fac.wall>=2,r:{bat:200,parts:5},hm:1},
  {n:2,day:8,t:'南下列車',src:'韓式',p:'電台話有最後一班列車開往南方安全區。有人想走，有人覺得留低先係生路。',goal:'囤積 30 發彈藥',ok:g=>g.res.ammo>=30,r:{bat:200,med:4},hm:1},
  {n:3,day:15,t:'學園默示錄',src:'日式',p:'對面中學嘅天台，有人用鏡反光打摩斯密碼。三短、三長、三短。',goal:'救出中學天台嘅學生',ok:g=>!!g.flags.rescued,r:{bat:250},hm:1.05},
- {n:4,day:22,t:'生死草',src:'朝鮮古疫',p:'一段韓語廣播提到博物館入面一本朝鮮王朝古籍，記載住一種令死人復生嘅草。病毒，可能唔係由實驗室開始。',goal:'喺歷史博物館搵到《疫屍錄》',ok:g=>!!g.flags.codex,r:{bat:300,core:1},hm:1.1},
- {n:5,day:29,t:'進化',src:'國產網文',p:'佢哋開始跑。有啲變到兩米高，有啲識得叫同伴。死咗嘅變異體頭殼入面，有粒會發光嘅晶核。',goal:'累計收集 5 粒晶核',ok:g=>(g.flags.coreTotal||0)>=5,r:{bat:300},hm:1.2},
- {n:6,day:36,t:'人禍',src:'美式',p:'一隊自稱「獵人幫」嘅倖存者佔咗附近幾條街。末日之後，人比喪屍更危險。',goal:'擊退獵人幫（或者同佢哋講掂數）',ok:g=>!!g.flags.raidWon,r:{bat:400,ammo:20},hm:1.25},
- {n:7,day:43,t:'解藥',src:'西方藥廠',p:'製藥廠研究所仲有電。只要有足夠嘅醫療人手同藥品，或者可以由頭開始。',goal:'完成解藥研究',ok:g=>g.research>=100,r:{},hm:1.3}
+ {n:4,day:22,t:'生死草',src:'朝鮮古疫',p:'一段韓語廣播提到博物館入面一本朝鮮王朝古籍，記載住一種令死人復生嘅草。病毒，可能唔係由實驗室開始。',goal:'喺歷史博物館搵到《疫屍錄》',ok:g=>!!g.flags.codex,r:{bat:300,core:1},hm:1.15},
+ {n:5,day:29,t:'進化',src:'國產網文',p:'佢哋開始跑。有啲變到兩米高，有啲識得叫同伴。死咗嘅變異體頭殼入面，有粒會發光嘅晶核。',goal:'累計收集 5 粒晶核',ok:g=>(g.flags.coreTotal||0)>=5,r:{bat:300},hm:1.35},
+ {n:6,day:36,t:'人禍',src:'美式',p:'一隊自稱「獵人幫」嘅倖存者佔咗附近幾條街。末日之後，人比喪屍更危險。',goal:'擊退獵人幫（或者同佢哋講掂數）',ok:g=>!!g.flags.raidWon,r:{bat:400,ammo:20},hm:1.5},
+ {n:7,day:43,t:'解藥',src:'西方藥廠',p:'製藥廠研究所仲有電。只要有足夠嘅醫療人手同藥品，或者可以由頭開始。',goal:'完成解藥研究',ok:g=>g.research>=100,r:{},hm:1.65}
 ];
 const ENDDAY=60;
+
+/* 據點：beds 基本床位、wall 基本圍牆、perk 每日產出/加成、areas 平面圖格局、z 各區名稱同擺設 */
+const A3=['scav scav scav','guard guard patrol','rest cook medic','rest repair medic'];
+const A4=['scav scav scav scav','patrol guard guard rest','cook repair medic rest'];
+const A5=['scav scav scav','guard rest patrol','cook rest medic','repair repair medic'];
+const BASES={
+ store:{n:'街口便利店',start:1,beds:5,wall:40,d:'細細間，一道捲閘好守。倉底仲有存貨。',perk:{food:1,water:2},pd:'倉底存貨：每日食物 +1、水 +2',areas:A3,
+   z:{scav:['出面街道','搜括'],guard:['捲閘','保安'],patrol:['後巷','巡邏'],rest:['貨架之間','休息','零食架 · 雜誌架'],cook:['微波爐櫃位','煮飯','熱水爐 · 關東煮'],repair:['倉底','維修','紙皮箱 · 工具箱'],medic:['收銀枱後','醫療','急救箱 · 退熱貼']}},
+ mall:{n:'舊商場',start:1,beds:7,wall:30,horde:1.1,d:'地方大、床位多，但出入口多，好難守。',perk:{bat:5},pd:'電器舖存貨：每日電池 +5；屍潮 +10%',areas:A4,
+   z:{scav:['彌敦道','搜括'],guard:['正門捲閘','保安'],patrol:['天橋通道','巡邏'],rest:['舊戲院','休息','絨布座椅'],cook:['美食廣場','煮飯','鐵板燒爐'],repair:['電器舖','維修','零件 · 電線'],medic:['藥房','醫療','藥櫃']}},
+ tenement:{n:'唐樓天台',start:1,beds:5,wall:52,horde:.9,d:'得一條樓梯上嚟，易守難攻，但地方淺窄。',perk:{water:3},pd:'天台水箱：每日水 +3；屍潮 -10%',areas:A5,
+   z:{scav:['樓下街市街','搜括'],guard:['樓梯鐵閘','保安'],patrol:['鄰棟天台','巡邏'],rest:['天台屋','休息','碌架床'],cook:['天台爐頭','煮飯','石油氣罐'],repair:['水箱房','維修','水喉 · 鐵線'],medic:['騎樓','醫療','藥箱 · 曬衫架']}},
+ market:{n:'街市',beds:7,wall:45,d:'凍房仲有啲存貨，二樓熟食中心可以瞓人。',perk:{food:4},pd:'凍房：每日食物 +4',areas:A4,
+   z:{scav:['街市外圍','搜括'],guard:['鐵閘','保安'],patrol:['行人天橋','巡邏'],rest:['熟食中心','休息','摺枱 · 膠櫈'],cook:['大排檔爐頭','煮飯','鑊 · 火水爐'],repair:['魚檔凍房','維修','壓縮機'],medic:['肉檔','醫療','砧板 · 酒精']}},
+ estate:{n:'公共屋邨',beds:10,wall:40,horde:1.1,d:'一整層單位，床位好多，但大堂難守。',perk:{bat:5,water:1},pd:'鄰居留低嘅嘢：每日電池 +5、水 +1；屍潮 +10%',areas:A3,
+   z:{scav:['屋邨平台','搜括'],guard:['大堂閘口','保安'],patrol:['走廊','巡邏'],rest:['一層單位','休息','碌架床 × 10'],cook:['單位廚房','煮飯','石油氣爐'],repair:['管理處','維修','閉路電視 · 工具'],medic:['互委會','醫療','摺床']}},
+ hardware:{n:'五金舖',beds:5,wall:58,d:'鐵閘厚，工具一應俱全。',perk:{parts:3},pd:'貨架上嘅零件：每日零件 +3',areas:A5,
+   z:{scav:['大街','搜括'],guard:['雙層鐵閘','保安'],patrol:['後巷','巡邏'],rest:['閣樓','休息','帆布床'],cook:['後巷爐頭','煮飯','火水爐'],repair:['工具牆','維修','電鑽 · 燒焊機'],medic:['收銀位','醫療','膠布 · 繃帶']}},
+ clinic:{n:'街坊診所',beds:6,wall:45,medic:1.25,d:'有診症室同藥櫃，醫療效率高。',perk:{med:2},pd:'藥櫃：每日藥品 +2；醫療效率 +25%',areas:A3,
+   z:{scav:['大街','搜括'],guard:['玻璃門（已封）','保安'],patrol:['後樓梯','巡邏'],rest:['候診區','休息','長櫈'],cook:['茶水間','煮飯','電飯煲'],repair:['X光室','維修','後備電池'],medic:['診症室','醫療','診療床 · 藥櫃']}},
+ police:{n:'警署',beds:8,wall:75,def:10,d:'防彈玻璃加高牆，仲有槍房。',perk:{ammo:2},pd:'槍房：每日彈藥 +2；夜間防禦 +10',areas:A4,
+   z:{scav:['警署外街','搜括'],guard:['報案室大閘','保安'],patrol:['停車場','巡邏'],rest:['羈留室','休息','鐵床'],cook:['飯堂','煮飯','大鑊'],repair:['車房','維修','衝鋒車'],medic:['急救室','醫療','擔架']}},
+ metro:{n:'地鐵站',beds:10,wall:60,horde:.8,d:'喺地底，屍潮好難搵到你，但冇陽光。',perk:{bat:5},pd:'站內便利店：每日電池 +5；屍潮 -20%',areas:A4,
+   z:{scav:['出口 A','搜括'],guard:['閘機','保安'],patrol:['路軌隧道','巡邏'],rest:['月台','休息','停駛車廂'],cook:['站內小食店','煮飯','微波爐'],repair:['控制室','維修','訊號板'],medic:['客務中心','醫療','急救站']}},
+ school:{n:'對面中學',beds:12,wall:50,horde:1.05,d:'課室多到瞓唔晒，操場可以種嘢。',perk:{food:2,bat:3},pd:'校園：每日食物 +2、電池 +3；屍潮 +5%',areas:A3,
+   z:{scav:['校外街道','搜括'],guard:['校門','保安'],patrol:['操場','巡邏'],rest:['課室','休息','書枱拼床'],cook:['家政室','煮飯','焗爐'],repair:['設計與科技室','維修','車床'],medic:['醫療室','醫療','病床']}},
+ barracks:{n:'軍營',beds:12,wall:95,def:15,d:'鐵絲網、哨塔、彈藥庫。末日最安全嘅地方之一。',perk:{ammo:3,food:1},pd:'軍需庫：每日彈藥 +3、食物 +1；夜間防禦 +15',areas:A4,
+   z:{scav:['營外公路','搜括'],guard:['哨塔','保安'],patrol:['鐵絲網外圍','巡邏'],rest:['營房','休息','軍床'],cook:['伙食團','煮飯','野戰廚房'],repair:['軍械庫','維修','裝甲車'],medic:['軍醫室','醫療','手術燈']}},
+ lab:{n:'製藥廠研究所',beds:8,wall:70,research:1.3,d:'有後備電源同實驗室，研究解藥最快。',perk:{med:2},pd:'實驗室：每日藥品 +2；解藥研究 +30%',areas:A3,
+   z:{scav:['廠區','搜括'],guard:['保安室','保安'],patrol:['貨櫃碼頭','巡邏'],rest:['員工宿舍','休息','雙層床'],cook:['員工餐廳','煮飯','蒸櫃'],repair:['發電機房','維修','後備電源'],medic:['實驗室','醫療','離心機 · 凍櫃']}}
+};
+/* S 級專屬能力 */
+const SPERK={
+ scav:{n:'滿載而歸',d:'有佢喺隊，搜括收穫 +30%，佢自己受傷風險減半，仲有 5% 機會搵到血清'},
+ patrol:{n:'掃蕩',d:'每個 S 級巡邏額外減少今晚屍潮 10%（上限 55%），25% 機會搵到倖存者留低嘅電池'},
+ guard:{n:'一夫當關',d:'夜間防禦 +8；防線被破時少一個人受傷，佢自己唔會被咬'},
+ repair:{n:'巧手',d:'維修效率 +30%，零件消耗 -30%'},
+ cook:{n:'盛宴',d:'食物消耗再 -15%，全隊意志額外 +3'},
+ medic:{n:'妙手回春',d:'冇藥都照樣醫到傷，每日 15% 機會治好一個感染者'}
+};
 /* ================= 引擎 ================= */
 const R=Math.random, ri=(a,b)=>a+Math.floor(R()*(b-a+1)), rf=(a,b)=>a+R()*(b-a), cl=(v,a,b)=>Math.max(a,Math.min(b,v)), pick=a=>a[Math.floor(R()*a.length)];
 let G=null;
@@ -389,10 +453,14 @@ function fxOf(u){
 const nm=u=>CH[u.id].n;
 const stat=(u,k)=>{const b=CH[u.id].s[ST.indexOf(k)];return b?Math.min(25,b+u.star):0};
 const maxHp=u=>60+stat(u,'str')*2+u.star*4;
-const bedCap=g=>6+g.fac.beds*2;
+const BS=g=>BASES[g.base]||BASES.store;
+const bedCap=g=>BS(g).beds+g.fac.beds*2;
 const act=g=>g.units.filter(u=>u.act);
 const uOf=id=>G.units.find(u=>u.id===id);
-const fortMax=g=>40+g.fac.wall*30;
+const fortMax=g=>BS(g).wall+g.fac.wall*30;
+const isS=(u,j)=>j!=='rest'&&canWork({...u,crit:0,iso:0},j)&&grade(apt(u,j)*(fxOf(u).job[j]||1))==='S';
+const isAnimal=u=>!!fxOf(u).animal;
+const talker=u=>!isAnimal(u);
 const NOANIMAL=['repair','cook','medic'];
 
 function apt(u,j){
@@ -429,24 +497,26 @@ function teamFx(g,k,mode){ // mode: 'sum' | 'mul' | 'max' | 'any'
 }
 function hordeBase(g){
   const d=g.day;
-  return (5+d*1.15+Math.max(0,d-25)*.4)*CHAPS[g.ch-1].hm*teamFx(g,'horde','mul')*g.warn;
+  return (5+d*1.3+Math.max(0,d-25)*.55)*CHAPS[g.ch-1].hm*(BS(g).horde||1)*teamFx(g,'horde','mul')*g.warn;
 }
 function raidTonight(g){return g.day===40&&!g.flags.allied&&!g.flags.paid}
 function forecast(g){
   const by=groups(g);
   const P=by.patrol.reduce((s,u)=>s+eff(u,'patrol'),0);
-  const red=Math.min(.4,P*.012);
+  const sP=by.patrol.filter(u=>isS(u,'patrol')).length;
+  const red=Math.min(.4+(sP?.15:0),P*.012+sP*.1);
   let horde=hordeBase(g)*(1-red);
   if(raidTonight(g))horde+=38+(g.flags.angry?10:0);
   let ammo=g.res.ammo,gp=0;
-  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e});
-  const def=g.fort*.4+gp+teamFx(g,'def','sum')+act(g).filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0);
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)});
+  const def=g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+act(g).filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0);
   const A=act(g);
   const eat=A.reduce((s,u)=>s+fxOf(u).eat,0);
   const K=by.cook.reduce((s,u)=>s+eff(u,'cook'),0)*(1+.25*g.fac.kitchen)*by.cook.reduce((s,u)=>Math.max(s,fxOf(u).feed),1);
   const ratio=A.length?cl(K/(A.length*3),0,1):0;
-  const food=Math.ceil(eat*(1-.35*ratio));
-  return {horde:Math.round(horde),lo:Math.round(horde*.85),hi:Math.round(horde*1.2),def:Math.round(def),food,water:A.length,red,P,ratio,by};
+  const sC=by.cook.some(u=>isS(u,'cook'));
+  const food=Math.ceil(eat*(1-.35*ratio-(sC?.15:0)));
+  return {sC,horde:Math.round(horde),lo:Math.round(horde*.85),hi:Math.round(horde*1.2),def:Math.round(def),food,water:A.length,red,P,ratio,by};
 }
 
 /* ---------- 單位操作 ---------- */
@@ -493,10 +563,11 @@ function endDay(){
   H('白天');
   // 搜括
   if(by.scav.length){
-    const loc=LOCS.find(l=>l.id===g.loc&&l.ch<=g.ch)||LOCS[0];
+    const loc=LOCS.find(l=>l.id===g.loc&&l.ch<=g.ch&&l.id!==g.base)||LOCS.find(l=>l.id!==g.base);
     const sc=by.scav;
     let pw=sc.reduce((s,u)=>s+eff(u,'scav')*fxOf(u).lootAll,0);
     if(sc.length===1&&fxOf(sc[0]).loner)pw*=1.4;
+    const sS=sc.some(u=>isS(u,'scav'));if(sS)pw*=1.3;
     const dep=g.dep[loc.id]??1;const got={};
     for(const r in loc.loot){
       if(r==='serum'){if(R()<loc.loot.serum*pw/10)got.serum=1;continue}
@@ -504,15 +575,19 @@ function endDay(){
       const n=Math.round(pw/10*loc.loot[r]*LSCALE[r]*dep*rf(.7,1.3)*m);
       if(n>0)got[r]=n;
     }
+    if(sS&&!got.serum&&R()<.05)got.serum=1;
     const txt=addRes(got);
     L(`${sc.map(nm).join('、')} 去咗${loc.n}搜括：${txt||'乜都搵唔到'}${dep<.6?'（呢度已經畀人搜得七七八八）':''}`,txt?'g':'');
     g.dep[loc.id]=Math.max(.35,dep*.85);
     const tf=Math.max(.7,1-.07*(sc.length-1));
     sc.forEach(u=>{
-      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf;
+      const base=loc.dg*cl(1.45-eff(u,'scav')/20,.4,1.4)*fxOf(u).risk*tf*(isS(u,'scav')?.5:1);
       if(R()<base){const d=hurt(u,ri(12,28));L(`${nm(u)} 喺${loc.n}受傷（-${d} HP）${u.crit?'，傷勢嚴重！':''}`,'b')}
       if(R()<base*.3*fxOf(u).bite){const t=infect(u,loc.n);if(t)L(t,fxOf(u).immune?'':'y')}
     });
+    const pc=g.clear[loc.id]||0;g.clear[loc.id]=Math.min(100,pc+pw*.8);
+    if(pc<100&&g.clear[loc.id]>=100){addLog(`${loc.n}已經清場。`);if(BASES[loc.id])g.queue.push({id:'cleared',c:{loc:loc.id}})}
+    else if(BASES[loc.id])L(`${loc.n}清場進度 ${Math.round(g.clear[loc.id])}%`);
     if(loc.id==='museum'&&!g.flags.codex&&!g.flags.codexQ){g.flags.codexQ=1;g.queue.push({id:'codex'})}
     if(loc.id==='lab'&&!g.flags.labSeen){g.flags.labSeen=1;g.queue.push({id:'labfind'})}
   }
@@ -521,12 +596,13 @@ function endDay(){
     const P=fc.P;
     const got={food:Math.round(P*.1*rf(.3,1.5)),parts:Math.round(P*.07*rf(.3,1.5)),bat:Math.round(P*.6*rf(.6,1.4))};
     L(`${by.patrol.map(nm).join('、')} 巡咗附近幾條街，清走一批遊蕩者（今晚屍潮 -${Math.round(fc.red*100)}%），順手執到 ${addRes(got)||'少少嘢'}`,'g');
+    by.patrol.forEach(u=>{if(isS(u,'patrol')&&R()<.25){L(`${nm(u)}【掃蕩】喺一個空單位搵到倖存者留低嘅嘢：${addRes({bat:40})}`,'g')}});
     by.patrol.forEach(u=>{if(R()<.05*fxOf(u).risk){const d=hurt(u,ri(8,18));L(`${nm(u)} 巡邏時被突襲（-${d} HP）`,'b')}});
   }
   // 維修
   if(by.repair.length){
-    const W=by.repair.reduce((s,u)=>s+eff(u,'repair'),0);
-    const ps=by.repair.reduce((s,u)=>Math.min(s,fxOf(u).partsSave),1);
+    const W=by.repair.reduce((s,u)=>s+eff(u,'repair')*(isS(u,'repair')?1.3:1),0);
+    const ps=by.repair.reduce((s,u)=>Math.min(s,fxOf(u).partsSave),1)*(by.repair.some(u=>isS(u,'repair'))?.7:1);
     let pj=g.proj;if(pj!=='fort'&&g.fac[pj]>=FAC[pj].max)pj=g.proj='fort';
     if(pj==='fort'){
       const room=fortMax(g)-g.fort;
@@ -549,10 +625,11 @@ function endDay(){
   }
   // 醫療
   if(by.medic.length){
-    let M=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*(1+.25*g.fac.clinic);
+    let M=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*(1+.25*g.fac.clinic)*(BS(g).medic||1);
+    const sM=by.medic.some(u=>isS(u,'medic'));
     const ms=by.medic.reduce((s,u)=>Math.min(s,fxOf(u).medSave),1);
     const herbal=by.medic.some(u=>fxOf(u).herbal);
-    const useMed=()=>{if(g.res.med<=0)return herbal&&R()<.5;if(ms>=1||R()<ms)g.res.med--;return true};
+    const useMed=()=>{if(g.res.med<=0)return sM||(herbal&&R()<.5);if(ms>=1||R()<ms)g.res.med--;return true};
     const pts=[...A].sort((a,b)=>(b.crit-a.crit)||(b.inj-a.inj)||(a.hp/maxHp(a)-b.hp/maxHp(b)));
     const done=[];
     for(const u of pts){
@@ -561,12 +638,12 @@ function endDay(){
       if(u.sick&&M>=2){u.sick=0;M-=2;done.push(`${nm(u)} 退咗燒`)}
     }
     // 治感染
-    by.medic.forEach(md=>{const c=fxOf(md).cure;if(!c)return;A.filter(u=>u.inf>0).forEach(u=>{if(R()<c){u.inf=0;u.iso=0;done.push(`${nm(md)} 救返 ${nm(u)}，感染清除咗！`)}})});
+    by.medic.forEach(md=>{const c=(fxOf(md).cure||0)+(isS(md,'medic')?.15:0);if(!c)return;A.filter(u=>u.inf>0).forEach(u=>{if(R()<c){u.inf=0;u.iso=0;done.push(`${nm(md)} 救返 ${nm(u)}，感染清除咗！`)}})});
     let heal=Math.round(M*2);const hl=[...A].sort((a,b)=>a.hp/maxHp(a)-b.hp/maxHp(b));
     for(const u of hl){if(heal<=0)break;const n=Math.min(heal,maxHp(u)-u.hp);u.hp+=n;heal-=n}
     L(`${by.medic.map(nm).join('、')} 照顧傷者：${done.length?done.join('；'):'冇乜大傷，幫大家換藥補血'}${g.res.med<=0?'（藥品用晒！）':''}`,g.res.med<=0?'b':'g');
     if(g.ch>=7){
-      const rm=teamFx(g,'research','max');
+      const rm=teamFx(g,'research','max')*(BS(g).research||1);
       const medOk=g.res.med>0;if(medOk)g.res.med--;
       const add=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*.7*(g.flags.codex?1:.5)*rm*(medOk?1:.5)*(g.flags.labData?1.25:1);
       g.research=Math.min(100,g.research+add);
@@ -575,13 +652,14 @@ function endDay(){
   }
   // 被動
   const pas={water:g.fac.rain*4,food:g.fac.garden*3+teamFx(g,'food','sum'),bat:g.fac.radio*10+teamFx(g,'bat','sum')};
-  const pt=addRes(pas);if(pt)L(`設施同專長每日產出：${pt}`);
+  const bp=BS(g).perk||{};for(const k in bp)pas[k]=(pas[k]||0)+bp[k];
+  const pt=addRes(pas);if(pt)L(`${BS(g).n}、設施同專長每日產出：${pt}`);
   const th=teamFx(g,'heal','sum');if(th)A.forEach(u=>u.hp=Math.min(maxHp(u),u.hp+th));
   // 食飯
   H('晚飯');
   const need=fc.food,wneed=fc.water;
   if(!by.cook.length){L('冇人煮飯，大家乾啃罐頭，意志 -3');allSan(-3)}
-  else{L(`${by.cook.map(nm).join('、')} 煮咗晚飯（慳咗 ${Math.round(35*fc.ratio)}% 食物）${fc.ratio>=.6?'，大家食得開心，意志 +3':''}`,'g');if(fc.ratio>=.6)allSan(3)}
+  else{L(`${by.cook.map(nm).join('、')} 煮咗晚飯（慳咗 ${Math.round(35*fc.ratio)}% 食物）${fc.ratio>=.6?'，大家食得開心，意志 +3':''}`,'g');if(fc.ratio>=.6)allSan(3);if(fc.sC){allSan(3);L('【盛宴】今晚嘅飯餸好似太平年代咁，意志再 +3','g')}}
   A.forEach(u=>u.hungry=0);
   if(g.res.food>=need)g.res.food-=need;
   else{const short=need-g.res.food;g.res.food=0;const n=Math.min(A.length,Math.ceil(short));const v=[...A].sort(()=>R()-.5).slice(0,n);v.forEach(u=>{u.hungry=1;u.hp-=8;sanD(u,-8)});L(`食物唔夠！${v.map(nm).join('、')} 餓肚（-8 HP，意志 -8）`,'b')}
@@ -594,9 +672,9 @@ function endDay(){
   let horde=Math.round(hordeBase(g)*(1-fc.red)*rf(.85,1.2));
   if(raid)horde+=38+(g.flags.angry?10:0);
   let ammo=g.res.ammo,gp=0;
-  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e});
+  by.guard.forEach(u=>{let e=eff(u,'guard');if(fxOf(u).noAmmo)e*=1.5;else if(ammo>0){ammo--;e*=1.5}gp+=e+(isS(u,'guard')?8:0)});
   const used=g.res.ammo-ammo;g.res.ammo=ammo;
-  const def=Math.round(g.fort*.4+gp+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0));
+  const def=Math.round(g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0));
   const night={horde,def,raid,used};
   if(g.ch>=5)L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
   if(raid)L('獵人幫趁住屍潮夜襲，車頭燈照住成個據點！','b');
@@ -613,10 +691,12 @@ function endDay(){
     const diff=horde-def;night.ok=false;
     const dmg=Math.round(diff*.8+horde*.08);g.fort=Math.max(0,g.fort-dmg);g.kills+=def;
     L(`防線被衝破！屍潮 ${horde} 對防禦 ${def}，圍牆 -${dmg}`,'b');
-    const n=Math.min(A.length,Math.ceil(diff/15)+(g.fort===0?1:0));
+    const sG=by.guard.filter(u=>isS(u,'guard'));
+    const n=Math.max(0,Math.min(A.length,Math.ceil(diff/15)+(g.fort===0?1:0)-sG.length));
+    if(sG.length)L(`${sG.map(nm).join('、')}【一夫當關】頂住咗缺口`,'g');
     const pool=[...A];const vs=[];
     for(let i=0;i<n&&pool.length;i++){const w=pool.map(u=>u.job==='guard'?2:1);let r=R()*w.reduce((a,b)=>a+b,0),k=0;while(r>w[k]){r-=w[k];k++}vs.push(pool.splice(k,1)[0])}
-    vs.forEach(u=>{const d=hurt(u,Math.min(45,ri(10,20)+diff*.5));L(`${nm(u)} 喺混戰中受傷（-${d} HP）`,'b');if(R()<(.15+diff/250)*fxOf(u).bite){const t=infect(u,'夜襲');if(t)L(t,'y')}});
+    vs.forEach(u=>{const d=hurt(u,Math.min(45,ri(10,20)+diff*.5));L(`${nm(u)} 喺混戰中受傷（-${d} HP）`,'b');if(!isS(u,'guard')&&R()<(.15+diff/250)*fxOf(u).bite){const t=infect(u,'夜襲');if(t)L(t,'y')}});
     const lost={food:-ri(0,Math.ceil(diff*.2))};if(raid){lost.ammo=-Math.round(g.res.ammo*.3);lost.med=-Math.round(g.res.med*.3);lost.food-=Math.round(g.res.food*.25)}
     const lt=addRes(lost);if(lt)L(`損失：${lt}`,'b');
     allSan(-6);
@@ -697,10 +777,30 @@ function autoAssign(){
   [...free].forEach(u=>{u.job=bestJob(u);if(!canWork(u,u.job))u.job='rest'});
   act(G).forEach(u=>{if(u.sta<25&&!u.inf)u.job='rest'});
 }
+
+function canMove(g){return Object.keys(BASES).filter(k=>k!==g.base&&!BASES[k].start&&(g.clear[k]||0)>=100&&LOCS.find(l=>l.id===k).ch<=g.ch)}
+function relocate(id){
+  const g=G,old=BS(g),b=BASES[id],prev=g.base;
+  const lost={food:-Math.floor(g.res.food*.25),water:-Math.floor(g.res.water*.25),parts:-Math.floor(g.res.parts*.25)};
+  const lt=addRes(lost);
+  g.base=id;
+  FK.forEach(k=>{g.fac[k]=Math.max(k==='wall'?1:0,g.fac[k]-1)});
+  g.prog={};g.proj='fort';g.fort=Math.round(fortMax(g)*.6);
+  if(g.loc===id)g.loc='store';
+  if(LOCS.find(l=>l.id===prev))g.dep[prev]=.2;
+  act(g).forEach(u=>{u.sta=Math.max(0,u.sta-20)});
+  const room=bedCap(g)-act(g).length;
+  g.units.filter(u=>!u.act).slice(0,Math.max(0,room)).forEach(u=>{u.act=true;u.job=bestJob(u)});
+  let over=act(g).length-bedCap(g);
+  if(over>0)[...act(g)].reverse().forEach(u=>{if(over>0&&!u.inf&&!u.iso){u.act=false;over--}});
+  addLog(`由${old.n}搬到${b.n}。`);
+  return `大家連夜搬去${b.n}。帶唔晒嘅嘢只好留低（${lt||'冇損失'}）。\n設施拆唔走，要喺新地方重新起，每樣跌 1 級。\n${b.pd}\n床位：${bedCap(g)}`;
+}
 /* ================= 事件 ================= */
 const STORY={1:'s_intro',4:'s_bridge',8:'s_train',11:'s_trainnews',15:'s_school',22:'s_herb',29:'s_evolve',36:'s_hunters',43:'s_cure'};
 const able=()=>act(G).filter(u=>!u.crit&&!u.iso);
 const scavPow=u=>apt(u,'scav')*condMult(u)*(fxOf(u).job.scav||1);
+const bestTalker=(fn,f)=>bestBy(fn,u=>talker(u)&&(!f||f(u)));
 function recruitText(id,why){
   const r=addUnit(G,id);const c=CH[id];
   if(r.type==='new')return `${c.n}（${c.g}·${c.job}）加入${r.u.act?'據點':'後備名單（床位唔夠）'}。${why||''}`;
@@ -709,7 +809,7 @@ function recruitText(id,why){
   addRes({bat:60});return `${c.n} 已經滿星。（電池 +60）`;
 }
 function randomRecruit(grades){
-  const pool=CH_RAW.filter(r=>grades.includes(r[2])&&!G.units.some(u=>u.id===r[0])&&!(G.gone[r[0]]&&G.gone[r[0]].dead)).map(r=>r[0]);
+  const pool=CH_RAW.filter(r=>grades.includes(r[2])&&!CH[r[0]].tr.includes('animal')&&!G.units.some(u=>u.id===r[0])&&!(G.gone[r[0]]&&G.gone[r[0]].dead)).map(r=>r[0]);
   return pool.length?pick(pool):null;
 }
 function rescueSchool(){
@@ -731,26 +831,30 @@ const EV={
 
 先係急症室爆滿，跟住地鐵停駛，到半夜，成條彌敦道都係尖叫聲。
 
-你同幾個陌生人躲入咗一棟舊商場，拉落咗捲閘。外面嘅聲音成晚冇停過。
+你同幾個陌生人一路逃一路避，身後嘅尖叫聲越嚟越近。前面有幾個地方仲可以躲。
 
 收音機斷斷續續咁講：「……唔好出街……唔好俾佢哋咬到……」
 
 【點玩】每日喺「據點」幫每個倖存者揀工作。每個人嘅數值決定佢擅長做咩（S 最好，D 最差）。撳「結束今日」之後會結算白天、晚飯同夜晚屍潮。
-用電池喺「廣播」招募更多倖存者。撐落去，跟住劇情行。`,opts:[{l:'拉實捲閘，開始點算物資',fx:()=>`大家圍埋一齊，有人喊，有人沉默。
-你數咗一數：幾箱罐頭、幾支水、一個急救箱。
-仲有一部收音機同一大袋電池——用嚟廣播，或者會有人聽到。`}]},
+用電池喺「廣播」招募更多倖存者。撐落去，跟住劇情行。
+
+你哋要喺邊度過第一晚？`,opts:['store','mall','tenement'].map(k=>({l:BASES[k].n,d:`${BASES[k].d} 床位 ${BASES[k].beds}、圍牆 ${BASES[k].wall}。${BASES[k].pd}`,fx:()=>{G.base=k;G.fort=Math.round(fortMax(G)*.8);G.units.forEach((u,i)=>u.act=i<bedCap(G));addLog(`喺${BASES[k].n}落腳。`);return `你哋拉實${BASES[k].z.guard[0]}，喺${BASES[k].n}入面點算物資。
+幾箱罐頭、幾支水、一個急救箱。
+仲有一部收音機同一大袋電池——用嚟廣播，或者會有人聽到。
+
+清場其他地點之後，可以搬去更大更好守嘅據點。`}}))},
  s_bridge:{story:1,t:'封橋',txt:()=>`收音機傳嚟消息：政府封鎖咗跨海大橋同所有隧道，「為咗控制疫情」。
 
 聽講橋頭聚集咗幾千人，軍隊喺另一邊。`,opts:[
-  {l:'派最快嗰個去橋頭睇吓',d:'可能有收穫，有風險',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);if(R()<.6){addRes({bat:120,food:4});return `${nm(u)} 喺橋頭見到軍隊開槍。佢冇停留，喺棄置嘅車入面執咗啲嘢返嚟。\n電池 +120、食物 +4\n「冇人會嚟救我哋。」佢講。`}const d=hurt(u,ri(15,25));return `橋頭一片混亂。${nm(u)} 喺人群中被推跌，受傷返嚟（-${d} HP）。\n「冇人會嚟救我哋。」`}},
+  {l:'派最快嗰個去橋頭睇吓',d:'可能有收穫，有風險',req:()=>able().length>0,fx:()=>{const u=bestTalker(scavPow);if(R()<.6){addRes({bat:120,food:4});return `${nm(u)} 喺橋頭見到軍隊開槍。佢冇停留，喺棄置嘅車入面執咗啲嘢返嚟。\n電池 +120、食物 +4\n「冇人會嚟救我哋。」佢講。`}const d=hurt(u,ri(15,25));return `橋頭一片混亂。${nm(u)} 喺人群中被推跌，受傷返嚟（-${d} HP）。\n「冇人會嚟救我哋。」`}},
   {l:'留守，繼續聽收音機',fx:()=>{allSan(-3);return '收音機一直重複同一段錄音。大家都知道佢想講乜。\n全隊意志 -3'}}]},
  s_train:{story:1,t:'第二章 · 南下列車',txt:()=>`緊急廣播：「明早七點，中央車站會開出最後一班南下列車，前往南方安全區。名額有限。」
 
 有人即刻開始執嘢。有人話車站一定擠爆，去就係送死。
 
 【新地點】警署、地鐵站已經可以搜括。`,opts:[
-  {l:'派一個人去車站探路',req:()=>able().length>0,fx:()=>{const u=bestBy(scavPow);let t=`${nm(u)} 天未光就出發。\n\n車站已經失守。月台上面有一卡卡車廂，入面有嘢喺度撞玻璃。\n佢喺站長室搵到隧道地圖同一盒子彈。\n電池 +100、彈藥 +6`;addRes({bat:100,ammo:6});if(R()<.35){const d=hurt(u,ri(12,24));t+=`\n返嚟途中受傷（-${d} HP）`}return t}},
-  {l:'大家投票決定',fx:()=>{const b=bestBy(u=>stat(u,'wil'));if(b&&stat(b,'wil')>=14){allSan(4);return `${nm(b)} 企出嚟：「我哋有牆、有食物、有彼此。出面乜都冇。」\n投票結果：留低。大家好似定咗啲。\n全隊意志 +4`}allSan(-6);return '投票結果一半一半。最後大家都留低，但氣氛好差。\n全隊意志 -6'}},
+  {l:'派一個人去車站探路',req:()=>able().length>0,fx:()=>{const u=bestTalker(scavPow);let t=`${nm(u)} 天未光就出發。\n\n車站已經失守。月台上面有一卡卡車廂，入面有嘢喺度撞玻璃。\n佢喺站長室搵到隧道地圖同一盒子彈。\n電池 +100、彈藥 +6`;addRes({bat:100,ammo:6});if(R()<.35){const d=hurt(u,ri(12,24));t+=`\n返嚟途中受傷（-${d} HP）`}return t}},
+  {l:'大家投票決定',fx:()=>{const b=bestTalker(u=>stat(u,'wil'));if(b&&stat(b,'wil')>=14){allSan(4);return `${nm(b)} 企出嚟：「我哋有牆、有食物、有彼此。出面乜都冇。」\n投票結果：留低。大家好似定咗啲。\n全隊意志 +4`}allSan(-6);return '投票結果一半一半。最後大家都留低，但氣氛好差。\n全隊意志 -6'}},
   {l:'當聽唔到',fx:()=>{allSan(-4);return '你熄咗收音機。冇人再提過列車。\n全隊意志 -4'}}]},
  s_trainnews:{story:1,t:'列車上的消息',txt:()=>`夜晚，你一個人聽收音機，收到一段斷斷續續嘅求救：
 
@@ -797,7 +901,7 @@ const EV={
 
 「呢幾條街而家係獵人幫管。每個據點都要交保護費——一半食物，一半彈藥。四日後我哋返嚟收。唔交？我哋晚上嚟攞。」`,opts:[
   {l:'交出一半食物同彈藥',fx:()=>{G.flags.huntersMet=1;G.flags.paid=1;G.flags.raidWon=1;const f=Math.floor(G.res.food/2),a=Math.floor(G.res.ammo/2);addRes({food:-f,ammo:-a});allSan(-6);checkObj();return `你叫人搬咗物資出去。雷哥笑住拍拍你塊面。\n食物 -${f}、彈藥 -${a}、全隊意志 -6\n佢哋唔會再嚟。暫時。`}},
-  {l:'同佢傾（派意志最強嗰個）',d:'成功會變盟友；失敗佢哋會更嬲',req:()=>able().length>0,fx:()=>{G.flags.huntersMet=1;const b=bestBy(u=>stat(u,'wil')+(fxOf(u).deal?4:0));const roll=stat(b,'wil')+(fxOf(b).deal?4:0)+rf(0,8);if(roll>=20){G.flags.allied=1;G.flags.raidWon=1;addRes({ammo:10,med:3});checkObj();return `${nm(b)} 同雷哥傾咗成個鐘。\n佢哋原來都有傷者，需要醫療人手。最後講掂：互相交換物資，互不侵犯。\n彈藥 +10、藥品 +3，獵人幫唔會夜襲。`}G.flags.angry=1;return `${nm(b)} 講到一半，雷哥一槍打爛咗門口嘅燈。\n「四日後，晚上見。」\n（第 40 晚會有更大規模嘅夜襲）`}},
+  {l:'同佢傾（派意志最強嗰個）',d:'成功會變盟友；失敗佢哋會更嬲',req:()=>able().some(talker),fx:()=>{G.flags.huntersMet=1;const b=bestTalker(u=>stat(u,'wil')+(fxOf(u).deal?4:0));const roll=stat(b,'wil')+(fxOf(b).deal?4:0)+rf(0,8);if(roll>=20){G.flags.allied=1;G.flags.raidWon=1;addRes({ammo:10,med:3});checkObj();return `${nm(b)} 同雷哥傾咗成個鐘。\n佢哋原來都有傷者，需要醫療人手。最後講掂：互相交換物資，互不侵犯。\n彈藥 +10、藥品 +3，獵人幫唔會夜襲。`}G.flags.angry=1;return `${nm(b)} 講到一半，雷哥一槍打爛咗門口嘅燈。\n「四日後，晚上見。」\n（第 40 晚會有更大規模嘅夜襲）`}},
   {l:'叫佢哋滾',fx:()=>{G.flags.huntersMet=1;allSan(3);return '雷哥冇嬲，只係笑。\n「好。四日後，晚上見。」\n全隊意志 +3。第 40 晚獵人幫會趁屍潮夜襲，準備好彈藥同圍牆。'}}]},
  s_raidwarn:{story:1,t:'今晚',txt:()=>`遠處傳嚟貨車引擎聲。
 
@@ -827,23 +931,38 @@ const EV={
 商場變成咗一座小鎮：有菜園、有診所、有人夜晚喺天台唱歌。附近嘅倖存者開始搬過嚟。
 
 末日冇完。但你哋已經學識喺入面生活。`,opts:[{l:'完',fx:()=>{G.over='fort';return `你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。\n\n喺設定可以開始新一局。`}}]},
+ cleared:{t:'清場完成',pre:c=>c.loc&&BASES[c.loc]&&G.base!==c.loc?c:null,txt:c=>{const b=BASES[c.loc];return `${b.n}入面最後一隻喪屍倒低咗。
+
+呢度可以做新據點：床位 ${b.beds}（而家 ${bedCap(G)}）、基本圍牆 ${b.wall}（而家 ${BS(G).wall}）。
+${b.d}
+${b.pd}
+
+搬過去要放棄約四分一帶唔走嘅物資，所有設施各跌 1 級。之後喺「據點」頁都可以隨時搬。`},opts:[
+  {l:c=>`而家搬去${BASES[c.loc].n}`,fx:c=>relocate(c.loc)},
+  {l:'遲啲先算',fx:()=>'你喺地圖上記低咗呢個位置。'}]},
  /* ---------- 決策 ---------- */
- bitten:{t:'被咬',pre:c=>uOf(c.u)&&uOf(c.u).inf>0?c:null,txt:c=>{const u=uOf(c.u);return `${nm(u)} 手臂上有個齒印，已經開始發黑。
+ bitten:{t:'被咬',pre:c=>uOf(c.u)&&uOf(c.u).inf>0?c:null,txt:c=>{const u=uOf(c.u);return isAnimal(u)?`${nm(u)} 後腿有個齒印，已經開始發黑。
+
+佢一拐一拐咁行返嚟，伏喺你腳邊，舐住個傷口，條尾仲擺緊。
+
+照計佢三日內會屍變。點處理？`:`${nm(u)} 手臂上有個齒印，已經開始發黑。
 
 佢話：「我冇事……真係冇事……」
 
 照計佢三日內會屍變。點處理？`},opts:[
   {l:'用血清',d:'消耗 1 支血清，即刻治好',req:()=>G.res.serum>0,fx:c=>{const u=uOf(c.u);G.res.serum--;u.inf=0;u.iso=0;return `血清打落去，黑色嘅血管慢慢褪色。\n${nm(u)} 得救。`}},
-  {l:'搵醫生截肢',d:'需要一個醫術 14 以上、未受傷嘅人；一半機會成功',req:c=>!!bestBy(x=>stat(x,'med'),x=>x.id!==c.u&&stat(x,'med')>=14),fx:c=>{const u=uOf(c.u),d=bestBy(x=>stat(x,'med'),x=>x.id!==c.u);if(R()<.5+(fxOf(d).cure?.2:0)){u.inf=0;u.crit=1;u.inj=1;u.hp=Math.max(1,Math.round(maxHp(u)*.2));return `${nm(d)} 落刀好快。\n${nm(u)} 痛到暈咗，但感染止住咗。佢而家重傷，要人照顧。`}u.crit=1;u.hp=Math.max(1,Math.round(u.hp*.5));return `太遲了，病毒已經擴散。${nm(u)} 仲受咗重傷。\n佢仍然會屍變。`}},
-  {l:'隔離佢',d:'佢唔可以工作；如果屍變，唔會傷到其他人',fx:c=>{const u=uOf(c.u);u.iso=1;u.job='rest';return `${nm(u)} 自己行入咗後倉。\n佢叫大家唔好鎖門。大家都鎖咗。`}},
-  {l:'趁早了斷',d:'佢會死，全隊意志大跌',fx:c=>{const u=uOf(c.u);killUnit(u,'喺屍變之前，被同伴親手了斷。');allSan(-6);return `冇人想做，但總要有人做。\n${nm(u)} 最後講咗句多謝。\n全隊意志大跌`}},
-  {l:'相信佢會冇事',d:'佢可以繼續工作……',fx:c=>`${nm(uOf(c.u))} 繼續做嘢，好似咩事都冇發生過。\n大家都避開佢隻手。`}]},
- breakdown:{t:'崩潰',pre:c=>uOf(c.u)?c:null,txt:c=>{const u=uOf(c.u);return `${nm(u)} 喺角落縮埋一嚿，不停喃喃自語。
+  {l:'搵醫生截肢',d:'需要一個醫術 14 以上、未受傷嘅人；一半機會成功',req:c=>!!bestTalker(x=>stat(x,'med'),x=>x.id!==c.u&&stat(x,'med')>=14),fx:c=>{const u=uOf(c.u),d=bestTalker(x=>stat(x,'med'),x=>x.id!==c.u&&stat(x,'med')>=14);if(R()<.5+(fxOf(d).cure?.2:0)){u.inf=0;u.crit=1;u.inj=1;u.hp=Math.max(1,Math.round(maxHp(u)*.2));return `${nm(d)} 落刀好快。\n${nm(u)} 痛到暈咗，但感染止住咗。佢而家重傷，要人照顧。`}u.crit=1;u.hp=Math.max(1,Math.round(u.hp*.5));return `太遲了，病毒已經擴散。${nm(u)} 仲受咗重傷。\n佢仍然會屍變。`}},
+  {l:'隔離佢',d:'佢唔可以工作；如果屍變，唔會傷到其他人',fx:c=>{const u=uOf(c.u);u.iso=1;u.job='rest';return isAnimal(u)?`${nm(u)} 被抱入咗後倉。\n佢喺門後面嗚咗成晚。`:`${nm(u)} 自己行入咗後倉。\n佢叫大家唔好鎖門。大家都鎖咗。`}},
+  {l:'趁早了斷',d:'佢會死，全隊意志大跌',fx:c=>{const u=uOf(c.u);killUnit(u,'喺屍變之前，被同伴親手了斷。');allSan(-6);return isAnimal(u)?`冇人想做，但總要有人做。\n${nm(u)} 到最後都仲望住你，條尾擺咗兩下。\n全隊意志大跌`:`冇人想做，但總要有人做。\n${nm(u)} 最後講咗句多謝。\n全隊意志大跌`}},
+  {l:'相信佢會冇事',d:'佢可以繼續工作……',fx:c=>isAnimal(uOf(c.u))?`${nm(uOf(c.u))} 照舊喺據點周圍行，大家摸佢之前都會猶豫一下。`:`${nm(uOf(c.u))} 繼續做嘢，好似咩事都冇發生過。\n大家都避開佢隻手。`}]},
+ breakdown:{t:'崩潰',pre:c=>uOf(c.u)?c:null,txt:c=>{const u=uOf(c.u);return isAnimal(u)?`${nm(u)} 成日縮喺角落，唔食嘢，有聲就嚇到彈起。
+
+今朝佢不停抓門，想衝出去。`:`${nm(u)} 喺角落縮埋一嚿，不停喃喃自語。
 
 佢突然企起身，話要出去搵屋企人。`},opts:[
-  {l:'搵人安撫佢',d:'需要一個意志 12 以上嘅人',req:c=>!!bestBy(x=>stat(x,'wil'),x=>x.id!==c.u&&stat(x,'wil')>=12),fx:c=>{const u=uOf(c.u),b=bestBy(x=>stat(x,'wil'),x=>x.id!==c.u);u.san=35;u.bd=0;b.sta=Math.max(0,b.sta-15);return `${nm(b)} 陪咗佢成晚。\n${nm(u)} 終於喊咗出嚟，然後瞓著咗。\n${nm(u)} 意志回升到 35`}},
-  {l:'俾佢休息幾日',fx:c=>{const u=uOf(c.u);u.job='rest';if(R()<.3){leaveUnit(u,'崩潰之後，趁大家瞓著自己走咗。');return `第二朝，${nm(u)} 個床係空嘅。\n佢走咗。`}u.san=25;u.bd=0;return `${nm(u)} 瞓咗成日。醒返之後冇再講要走。`}},
-  {l:'由佢走',fx:c=>{const u=uOf(c.u);const f=Math.min(G.res.food,3);addRes({food:-f});leaveUnit(u,'崩潰之後離開咗據點。');return `${nm(u)} 帶住 ${f} 份食物行咗出去。\n冇人知佢去咗邊。`}}]},
+  {l:'搵人安撫佢',d:'需要一個意志 12 以上嘅人',req:c=>!!bestTalker(x=>stat(x,'wil'),x=>x.id!==c.u&&stat(x,'wil')>=12),fx:c=>{const u=uOf(c.u),b=bestTalker(x=>stat(x,'wil'),x=>x.id!==c.u);u.san=35;u.bd=0;b.sta=Math.max(0,b.sta-15);return isAnimal(u)?`${nm(b)} 抱住佢坐咗成晚。\n${nm(u)} 終於喺佢懷入面瞓著咗。\n${nm(u)} 意志回升到 35`:`${nm(b)} 陪咗佢成晚。\n${nm(u)} 終於喊咗出嚟，然後瞓著咗。\n${nm(u)} 意志回升到 35`}},
+  {l:'俾佢休息幾日',fx:c=>{const u=uOf(c.u);u.job='rest';if(R()<.3){leaveUnit(u,'崩潰之後，趁大家瞓著自己走咗。');return isAnimal(u)?`第二朝，${nm(u)} 由通風口鑽咗出去，冇再返嚟。`:`第二朝，${nm(u)} 個床係空嘅。\n佢走咗。`}u.san=25;u.bd=0;return isAnimal(u)?`${nm(u)} 瞓咗成日，醒咗之後肯食返嘢。`:`${nm(u)} 瞓咗成日。醒返之後冇再講要走。`}},
+  {l:'由佢走',fx:c=>{const u=uOf(c.u);if(isAnimal(u)){leaveUnit(u,'跑咗出去，冇再返嚟。');return `你打開門。${nm(u)} 頭都唔回咁跑咗出去。`}const f=Math.min(G.res.food,3);addRes({food:-f});leaveUnit(u,'崩潰之後離開咗據點。');return `${nm(u)} 帶住 ${f} 份食物行咗出去。\n冇人知佢去咗邊。`}}]},
  /* ---------- 隨機 ---------- */
  visitor:{w:3,t:'門外嘅母子',txt:()=>`捲閘外面有人拍門。一個女人抱住個細路，話佢哋兩日冇食過嘢。
 
@@ -851,7 +970,7 @@ const EV={
   {l:'收留佢哋',d:'食物 -3，多一個人',fx:()=>{addRes({food:-3});const id=randomRecruit(['C','R']);if(!id){allSan(3);return '佢哋入咗嚟，食完嘢之後去咗避難中心。全隊意志 +3'}return recruitText(id,'\n（個細路跟咗佢去避難中心。）')}},
   {l:'俾啲食物，叫佢哋去避難中心',d:'食物 -3',fx:()=>{addRes({food:-3});allSan(2);return '佢哋多謝完就走咗。\n全隊意志 +2'}},
   {l:'唔開門',fx:()=>{allSan(-5);return '拍門聲持續咗好耐，然後停咗。\n全隊意志 -5'}}]},
- quarrel:{w:3,t:'爭執',pre:()=>{const A=able();if(A.length<3)return null;const h=A.find(u=>fxOf(u).hot)||pick(A);const o=pick(A.filter(u=>u!==h));return{a:h.id,b:o.id}},txt:c=>`${nm(uOf(c.a))} 同 ${nm(uOf(c.b))} 為咗分配食物嗌到拍枱，差啲郁手。
+ quarrel:{w:3,t:'爭執',pre:()=>{const A=able();if(A.length<3)return null;const T=A.filter(talker);if(T.length<2)return null;const h=T.find(u=>fxOf(u).hot)||pick(T);const o=pick(T.filter(u=>u!==h));return{a:h.id,b:o.id}},txt:c=>`${nm(uOf(c.a))} 同 ${nm(uOf(c.b))} 為咗分配食物嗌到拍枱，差啲郁手。
 
 其他人望住你。`,opts:[
   {l:c=>`撐 ${nm(uOf(c.a))}`,fx:c=>{sanD(uOf(c.a),8);sanD(uOf(c.b),-15);return `${nm(uOf(c.b))} 摔門走入房。`}},
@@ -870,10 +989,10 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
   {l:()=>`6 零件 → ${teamFx(G,'deal','any')?4:3} 藥品`,req:()=>G.res.parts>=6,fx:()=>addRes({parts:-6,med:teamFx(G,'deal','any')?4:3})},
   {l:()=>`4 水 → ${teamFx(G,'deal','any')?90:60} 電池`,req:()=>G.res.water>=4,fx:()=>addRes({water:-4,bat:teamFx(G,'deal','any')?90:60})},
   {l:'唔換',fx:()=>'阿伯推住車走咗，車轆吱吱聲。'}]},
- nightmare:{w:2,t:'噩夢',pre:()=>{const A=act(G);return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 半夜大叫醒咗。佢夢見屋企人喺門外叫佢開門。`,opts:[
-  {l:'搵人陪佢傾',req:c=>act(G).length>1,fx:c=>{const b=bestBy(x=>stat(x,'wil'),x=>x.id!==c.u);if(!b){sanD(uOf(c.u),-12);return '冇人得閒。'}b.sta=Math.max(0,b.sta-10);sanD(uOf(c.u),18);return `${nm(b)} 陪佢坐到天光。\n${nm(uOf(c.u))} 意志 +18`}},
+ nightmare:{w:2,t:'噩夢',pre:()=>{const A=act(G).filter(talker);return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 半夜大叫醒咗。佢夢見屋企人喺門外叫佢開門。`,opts:[
+  {l:'搵人陪佢傾',req:c=>act(G).length>1,fx:c=>{const b=bestTalker(x=>stat(x,'wil'),x=>x.id!==c.u);if(!b){sanD(uOf(c.u),-12);return '冇人得閒。'}b.sta=Math.max(0,b.sta-10);sanD(uOf(c.u),18);return `${nm(b)} 陪佢坐到天光。\n${nm(uOf(c.u))} 意志 +18`}},
   {l:'由佢',fx:c=>{sanD(uOf(c.u),-12);return `${nm(uOf(c.u))} 之後成日都冇講嘢。意志 -12`}}]},
- bday:{w:2,t:'生日',pre:()=>{const A=act(G);return A.length>2?{u:pick(A).id}:null},txt:c=>`今日係 ${nm(uOf(c.u))} 生日。佢冇講，係其他人睇到佢身份證先知。`,opts:[
+ bday:{w:2,t:'生日',pre:()=>{const A=act(G).filter(talker);return A.length>2?{u:pick(A).id}:null},txt:c=>`今日係 ${nm(uOf(c.u))} 生日。佢冇講，係其他人睇到佢身份證先知。`,opts:[
   {l:'用罐頭整個蛋糕',d:'食物 -3',req:()=>G.res.food>=3,fx:c=>{addRes({food:-3});allSan(6);sanD(uOf(c.u),10);return '午餐肉疊成嘅蛋糕，插住一支蠟燭。\n全隊意志 +6'}},
   {l:'下次先算',fx:c=>{sanD(uOf(c.u),-6);return `${nm(uOf(c.u))} 笑笑口話冇所謂。`}}]},
  booze:{w:2,t:'一箱酒',txt:()=>'搜括嘅人喺貨倉搵到一整箱威士忌。',opts:[
@@ -883,15 +1002,15 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
  hordewarn:{w:2,ch:2,t:'屍潮預警',txt:()=>'收音機傳嚟警告：一大群喪屍由東面向呢區移動，明晚會經過。',opts:[
   {l:'即刻加固圍牆',d:'零件 -5，圍牆 +15',req:()=>G.res.parts>=5,fx:()=>{addRes({parts:-5});G.fort=Math.min(fortMax(G),G.fort+15);G.warn=1.4;return '大家通宵加固。\n圍牆 +15。今晚屍潮會特別大（×1.4），記得多派人守夜。'}},
   {l:'知道，多派人守夜',fx:()=>{G.warn=1.4;return '今晚屍潮會特別大（×1.4）。'}}]},
- desert:{w:3,t:'想走',pre:()=>{const A=act(G).filter(u=>u.san<40&&!u.iso);return A.length&&act(G).length>2?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 執好咗背囊。
+ desert:{w:3,t:'想走',pre:()=>{const A=act(G).filter(u=>u.san<40&&!u.iso&&talker(u));return A.length&&act(G).length>2?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 執好咗背囊。
 
 「我要去搵我屋企人。佢哋可能仲喺度。」`,opts:[
-  {l:'勸佢留低',d:'派意志最強嘅人',fx:c=>{const u=uOf(c.u),b=bestBy(x=>stat(x,'wil'),x=>x.id!==c.u);if(b&&stat(b,'wil')+rf(0,10)>=16){u.san=Math.max(u.san,45);return `${nm(b)} 同佢講咗好耐。\n${nm(u)} 放低咗背囊。`}leaveUnit(u,'執好背囊去搵屋企人。');return `勸唔到。${nm(u)} 天光就走咗。`}},
+  {l:'勸佢留低',d:'派意志最強嘅人',fx:c=>{const u=uOf(c.u),b=bestTalker(x=>stat(x,'wil'),x=>x.id!==c.u);if(b&&stat(b,'wil')+rf(0,10)>=16){u.san=Math.max(u.san,45);return `${nm(b)} 同佢講咗好耐。\n${nm(u)} 放低咗背囊。`}leaveUnit(u,'執好背囊去搵屋企人。');return `勸唔到。${nm(u)} 天光就走咗。`}},
   {l:'祝佢好運',fx:c=>{const u=uOf(c.u);addRes({food:-Math.min(2,G.res.food)});leaveUnit(u,'出發去搵屋企人。');allSan(-2);return `${nm(u)} 帶咗 2 份食物出發。\n大家喺門口送佢。`}},
   {l:'鎖住佢',fx:c=>{const u=uOf(c.u);u.san=Math.max(0,u.san-20);u.job='rest';allSan(-4);return `${nm(u)} 被鎖喺房入面，喊咗成晚。\n全隊意志 -4`}}]},
- fever:{w:2,t:'發燒',pre:()=>{const A=act(G).filter(u=>!fxOf(u).noSick&&!u.sick);return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 發高燒，額頭燙到不得了。大家第一個諗法：係咪被咬？
+ fever:{w:2,t:'發燒',pre:()=>{const A=act(G).filter(u=>!fxOf(u).noSick&&!u.sick&&talker(u));return A.length?{u:pick(A).id}:null},txt:c=>`${nm(uOf(c.u))} 發高燒，額頭燙到不得了。大家第一個諗法：係咪被咬？
 
-佢話唔係。檢查過，冇傷口。`,opts:[
+檢查過，冇傷口。`,opts:[
   {l:'用藥',d:'藥品 -2',req:()=>G.res.med>=2,fx:c=>{addRes({med:-2});return `退燒藥食落去，聽朝 ${nm(uOf(c.u))} 已經冇事。`}},
   {l:'隔離休息',fx:c=>{const u=uOf(c.u);u.sick=1;u.job='rest';return `${nm(u)} 病咗，要休息幾日。`}},
   {l:'叫佢照做嘢',fx:c=>{const u=uOf(c.u);u.sick=1;const o=act(G).filter(x=>x!==u&&!fxOf(x).noSick&&R()<.4);o.forEach(x=>x.sick=1);return `${nm(u)} 帶病開工。${o.length?`${o.map(nm).join('、')} 都被傳染。`:''}`}}]},
@@ -927,7 +1046,7 @@ function randomEvent(){
 }
 /* ================= 存檔 ================= */
 function fresh(){
-  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},proj:'fort',prog:{},loc:'store',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
+  G={v:1,day:1,ch:1,res:{food:24,water:24,med:6,parts:14,ammo:12,bat:1000,core:0,serum:0},fort:55,fac:{wall:1,beds:0,kitchen:0,clinic:0,rain:1,garden:0,radio:0},base:'store',clear:{},proj:'fort',prog:{},loc:'market',dep:{},units:[],dex:{},gone:{},log:[],flags:{},pulls:0,pity:0,queue:[],warn:1,research:0,kills:0,obj:{},over:null};
   ['c_chan','c_keung','c_cheung'].forEach(id=>addUnit(G,id));
   G.units.forEach(u=>u.job=bestJob(u));
   G.queue.push({id:'s_intro'});
@@ -940,7 +1059,7 @@ function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.units&
 /* ================= 介面 ================= */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let VIEW='base';
+let VIEW='base',SEL=null;
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 function av(id,extra=''){const c=CH[id];return `<div class="av r-${c.g} ${extra}">${esc(c.av)}<span>${c.g}</span></div>`}
 function stars(n){return n?`<span class="stars">${'★'.repeat(n)}</span>`:''}
@@ -958,7 +1077,7 @@ function statusChips(u){
 }
 function renderHead(){
   const c=CHAPS[G.ch-1];
-  $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${'一二三四五六七'[G.ch-1]}章 ${c.t}`;
+  $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${'一二三四五六七'[G.ch-1]}章 ${c.t} · ${BS(G).n}`;
   const fc=forecast(G);
   const low={food:G.res.food<fc.food*2,water:G.res.water<fc.water*2,med:G.res.med<2,ammo:G.res.ammo<2};
   $('#supply').innerHTML=Object.keys(RES).map(k=>`<div class="sp ${low[k]?'low':''}" title="${RES[k].n}"><i style="background:${RES[k].c}">${RES[k].s}</i>${RES[k].n}<b>${G.res[k]}</b></div>`).join('');
@@ -969,7 +1088,7 @@ function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,men
 /* ---------- 據點 ---------- */
 function rBase(){
   const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act);
-  const avail=LOCS.filter(l=>l.ch<=G.ch);
+  const avail=LOCS.filter(l=>l.ch<=G.ch&&l.id!==G.base);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
   const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
   const done=!!G.obj[c.n];
   $('#main').innerHTML=`
@@ -980,6 +1099,7 @@ function rBase(){
     <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>目標：${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
     ${G.over?`<div class="row" style="margin-top:12px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
   </section>
+  ${planHTML()}
   <div class="grid2" style="margin-top:16px">
     <section class="stack">
       <div class="row" style="justify-content:space-between">
@@ -1001,8 +1121,8 @@ function rBase(){
       </div>
       <div class="panel stack">
         <div class="field"><label class="lbl" for="loc">搜括地點</label>
-          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.n} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%</option>`).join('')}</select>
-          <span class="muted" style="font-size:12px">${(()=>{const l=LOCS.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、'):''})()}</span>
+          <select class="sel" id="loc">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.n} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]?` · ${(G.clear[l.id]||0)>=100?'已清場':'清場 '+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select>
+          <span class="muted" style="font-size:12px">${(()=>{const l=LOCS.find(x=>x.id===G.loc);return l?'主要：'+Object.keys(l.loot).sort((a,b)=>l.loot[b]-l.loot[a]).map(k=>RES[k].n).join('、')+(BASES[l.id]?`。清場後可以搬去做據點（${BASES[l.id].beds} 床）`:''):''})()}</span>
         </div>
         <div class="field"><label class="lbl" for="proj">維修項目</label>
           <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select>
@@ -1025,6 +1145,7 @@ function rBase(){
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   document.querySelectorAll('.jb').forEach(b=>b.onclick=()=>{const u=uOf(b.dataset.u);u.job=b.dataset.j;save();render()});
   document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openUnit(b.dataset.open));
+  bindPlan();
   const ng=$('#newgame');if(ng)ng.onclick=()=>{fresh();save();go('base');showQueue()};
 }
 function uRow(u){
@@ -1035,7 +1156,7 @@ function uRow(u){
       <div class="who"><b>${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.o)} · ${esc(c.job)}</span><div class="chips">${statusChips(u)}</div></div>
       <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
     </div>
-    <div class="jobs">${JK.map(j=>{const a=apt(u,j),ok=canWork(u,j);const g=j==='rest'?'':grade(a*(fxOf(u).job[j]||1));return `<button class="jb" data-u="${u.id}" data-j="${j}" aria-pressed="${u.job===j}" ${ok?'':'disabled'} title="${esc(JOBS[j].d)}">${JOBS[j].n}<em class="g${g}">${j==='rest'?'—':g}</em></button>`}).join('')}</div>
+    <div class="jobs">${JK.map(j=>{const a=apt(u,j),ok=canWork(u,j);const g=j==='rest'?'':grade(a*(fxOf(u).job[j]||1));return `<button class="jb" data-u="${u.id}" data-j="${j}" aria-pressed="${u.job===j}" ${ok?'':'disabled'} title="${esc(JOBS[j].d)}${g==='S'?' · S 級能力【'+SPERK[j].n+'】'+SPERK[j].d:''}">${JOBS[j].n}<em class="g${g}">${j==='rest'?'—':g==='S'?'S★':g}</em></button>`}).join('')}</div>
   </div>`;
 }
 function go(v){VIEW=v;render();window.scrollTo(0,0)}
@@ -1109,7 +1230,8 @@ function openUnit(id){
     <div class="statgrid">${ST.map(k=>`<span class="muted">${STN[k]}</span><s><i style="width:${stat(u,k)/25*100}%"></i></s><span class="type">${stat(u,k)}</span>`).join('')}</div>
     <div class="aptg">${JK.filter(j=>j!=='rest').map(j=>{const g=canWork({...u,crit:0,iso:0},j)?grade(apt(u,j)*(fxOf(u).job[j]||1)):'—';return `<div>${JOBS[j].n}<b class="g${g}">${g}</b></div>`}).join('')}</div>
     <div class="panel" style="background:var(--slab2)"><b style="color:var(--sodium2)">專長 · ${esc(c.sk.n)}</b><div style="font-size:13px">${esc(c.sk.d)}</div>
-      ${c.tr.map(t=>`<div style="font-size:13px;margin-top:4px"><span class="chip">${TR[t].n}</span> <span class="muted">${esc(TR[t].d)}</span></div>`).join('')}</div>
+      ${c.tr.map(t=>`<div style="font-size:13px;margin-top:4px"><span class="chip">${TR[t].n}</span> <span class="muted">${esc(TR[t].d)}</span></div>`).join('')}
+      ${JK.filter(j=>isS(u,j)).map(j=>`<div style="font-size:13px;margin-top:6px"><span class="rk UR">S</span> <b>${JOBS[j].n}【${SPERK[j].n}】</b> <span class="muted">${esc(SPERK[j].d)}</span></div>`).join('')}</div>
     <div class="row">
       ${u.act?`<button class="btn sm" id="mv">移去後備</button>`:`<button class="btn sm" id="mv" ${act(G).length>=bedCap(G)?'disabled':''}>加入據點${act(G).length>=bedCap(G)?'（冇床位）':''}</button>`}
       <button class="btn sm" id="up" ${u.star>=5||G.res.core<coreCost?'disabled':''}>用 ${coreCost} 晶核強化${u.star>=5?'（滿星）':''}</button>
@@ -1202,9 +1324,70 @@ function rMenu(){
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
-if(G){Object.assign(G.flags,{overShown:G.flags.overShown});}else{fresh();save()}
+if(G){if(!G.base)G.base='mall';if(!G.clear)G.clear={};}else{fresh();save()}
 render();
 if(G.queue.length)showQueue();
+
+/* ---------- 平面圖 ---------- */
+function planHTML(){
+  const b=BS(G),A=act(G),loc=LOCS.find(l=>l.id===G.loc);
+  const sel=SEL&&uOf(SEL);
+  const fr=G.fort/fortMax(G);
+  const mv=canMove(G);
+  const zones=JK.map(k=>{
+    const z=b.z[k];const us=A.filter(u=>(canWork(u,u.job)?u.job:'rest')===k);
+    const cls=sel?(canWork(sel,k)?'drop':'no'):'';
+    return `<div class="zone z-${k} ${cls}" style="grid-area:${k}" data-z="${k}" role="button" tabindex="0" aria-label="${esc(z[0])}（${z[1]}）">
+      <div class="zh"><b>${esc(z[0])}</b><span>${z[1]}${k==='scav'&&loc?' → '+esc(loc.n):''}</span></div>
+      ${z[2]?`<div class="zp">${esc(z[2])}</div>`:''}
+      <div class="toks">${us.map(tok).join('')||(k==='scav'||k==='patrol'?'':'<span class="zp">（冇人）</span>')}</div>
+    </div>`}).join('');
+  return `<section class="panel planwrap" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:12px">${esc(b.pd)}</div></div>
+      <button class="btn sm" id="move">${mv.length?`搬據點（${mv.length} 個已清場）`:'搬據點'}</button>
+    </div>
+    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>，撳一個區域派佢去。`:'撳一個人，再撳區域就可以調工。'}</p>
+    <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
+  </section>`;
+}
+function tok(u){
+  const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
+  const ring=u.inf?'var(--bile)':u.crit||u.inj?'var(--blood)':u.sta<30?'var(--sodium)':'transparent';
+  return `<button class="tok r-${c.g} ${SEL===u.id?'sel':''}" data-tok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}"><span class="d" style="--ring:${ring}">${esc(c.av)}${isS(u,j)?'<i>S</i>':''}</span><small>${esc(c.n.split(' ')[0])}</small></button>`;
+}
+function bindPlan(){
+  document.querySelectorAll('[data-tok]').forEach(b=>b.onclick=e=>{e.stopPropagation();SEL=SEL===b.dataset.tok?null:b.dataset.tok;render()});
+  document.querySelectorAll('.zone').forEach(z=>{
+    const go=()=>{if(!SEL)return;const u=uOf(SEL),k=z.dataset.z;if(!u){SEL=null;return render()}
+      if(!canWork(u,k)){toast(u.crit?`${nm(u)} 重傷，只可以休息`:u.iso?`${nm(u)} 隔離緊`:`${nm(u)} 做唔到${JOBS[k].n}`);return}
+      u.job=k;SEL=null;save();render()};
+    z.onclick=go;z.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+  });
+  $('#move').onclick=openMove;
+}
+function openMove(){
+  const mv=canMove(G);let armed=null;
+  const all=Object.keys(BASES).filter(k=>!BASES[k].start&&k!==G.base);
+  modal(`<div class="modal">
+    <div class="eyebrow">搬據點</div><h2>而家：${esc(BS(G).n)}</h2>
+    <p class="muted" style="margin:0">床位 ${bedCap(G)}、圍牆上限 ${fortMax(G)}。搬走會留低約四分一食物、水同零件，所有設施各跌 1 級。去搜括一個地點就會累積清場進度。</p>
+    <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=l.ch>G.ch;
+      return `<div class="panel row" style="background:var(--slab2);justify-content:space-between">
+        <div style="min-width:0;flex:1"><b>${lock?'？？？':esc(b.n)}</b> <span class="muted" style="font-size:12px">${lock?`第${'一二三四五六七'[l.ch-1]}章解鎖`:`${b.beds} 床 · 圍牆 ${b.wall}`}</span>
+        ${lock?'':`<div class="muted" style="font-size:12px">${esc(b.d)} ${esc(b.pd)}</div>`}</div>
+        ${ok?`<button class="btn pri sm" data-mv="${k}">搬過去</button>`:lock?'':`<span class="type muted" style="font-size:12px">清場 ${cp}%</span>`}
+      </div>`}).join('')}</div>
+    <button class="btn" id="cx">關閉</button>
+  </div>`,()=>{
+    $('#cx').onclick=closeOv;
+    document.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{
+      if(armed!==b.dataset.mv){armed=b.dataset.mv;b.textContent='再撳一次確認';b.classList.add('danger');return}
+      const out=relocate(b.dataset.mv);save();
+      modal(`<div class="modal paper"><div class="eyebrow">搬遷</div><div class="result">${esc(out)}</div><button class="btn pri" id="nx">繼續</button></div>`,()=>{$('#nx').onclick=closeOv});
+    });
+  });
+}
 </script>
 </body>
 </html>
