@@ -66,12 +66,21 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:16px;margin:0}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
 /* chapter */
-.chap{position:relative;padding:16px;border-radius:8px;background:linear-gradient(120deg,#2b2016,#1b1712 70%);border:1px solid var(--line2);overflow:hidden}
-.chap .no{font-family:var(--f-type);color:var(--sodium);font-size:12px;letter-spacing:.2em}
-.chap h2{font-size:24px;margin-top:2px}
-.chap p{margin:6px 0 0;color:var(--dust);max-width:62ch}
-.goal{margin-top:10px;display:flex;gap:8px;align-items:center;font-size:13px}
-.goal .chk{width:16px;height:16px;border:1.5px solid var(--sodium);border-radius:3px;display:grid;place-items:center;font-size:11px;color:#1c1206}
+.chap{position:relative;padding:10px 14px;border-radius:8px;background:linear-gradient(120deg,#2b2016,#1b1712 70%);border:1px solid var(--line2)}
+.chl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+.chap .no{font-family:var(--f-type);color:var(--sodium);font-size:13px;letter-spacing:.1em}
+.chap h2{font-size:18px}
+.chap .src{font-size:11px;color:var(--dust);border:1px solid var(--line2);border-radius:3px;padding:0 5px}
+.chd{flex-basis:100%;font-size:12px;color:var(--dust)}
+.chd summary{cursor:pointer;width:max-content}
+.chd p{margin:4px 0 0;max-width:62ch}
+.goal{display:flex;gap:6px;align-items:center;font-size:13px}
+.goal .chk{width:15px;height:15px;border:1.5px solid var(--sodium);border-radius:3px;display:grid;place-items:center;font-size:10px;color:#1c1206;flex:none}
+.peek{display:flex;flex-direction:column;gap:8px;background:var(--slab2);border:1px solid var(--sodium);border-radius:6px;padding:10px;margin:8px 0 10px}
+.pkst{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.pkst div{background:var(--slab);border-radius:4px;padding:3px 0;text-align:center;font-size:10px;color:var(--dust);line-height:1.2}
+.pkst b{display:block;font-family:var(--f-type);font-weight:400;font-size:14px;color:var(--bone)}
+@media (max-width:420px){.pkst{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .goal.done .chk{background:var(--sodium)}
 
 /* forecast */
@@ -1093,11 +1102,11 @@ function rBase(){
   const done=!!G.obj[c.n];
   $('#main').innerHTML=`
   <section class="chap">
-    <div class="no">CHAPTER ${c.n} · ${esc(c.src)}</div>
-    <h2>${esc(c.t)}</h2>
-    <p>${esc(c.p)}</p>
-    <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>目標：${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
-    ${G.over?`<div class="row" style="margin-top:12px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
+    <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
+      <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
+      <details class="chd"><summary>劇情</summary><p>${esc(c.p)}</p></details>
+    </div>
+    ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
   </section>
   ${planHTML()}
   <div class="grid2" style="margin-top:16px">
@@ -1347,7 +1356,7 @@ function planHTML(){
       <div style="min-width:0"><h2>${esc(b.n)}</h2><div class="muted" style="font-size:12px">${esc(b.pd)}</div></div>
       <button class="btn sm" id="move">${mv.length?`搬據點（${mv.length} 個已清場）`:'搬據點'}</button>
     </div>
-    <p class="muted" style="margin:6px 0 10px;font-size:12px">${sel?`揀咗 <b style="color:var(--sodium2)">${esc(nm(sel))}</b>，撳一個區域派佢去。`:'撳一個人，再撳區域就可以調工。'}</p>
+    ${sel?peek(sel):'<p class="muted" style="margin:6px 0 10px;font-size:12px">撳一個人睇佢嘅狀態；再撳一個區域就可以派佢去做嗰份工。</p>'}
     <div class="plan" style="grid-template-areas:${b.areas.map(r=>`'${r}'`).join(' ')};border-color:${fr<.3?'var(--blood)':fr<.6?'#8a6a3c':'#5b4c3c'}">${zones}</div>
   </section>`;
 }
@@ -1365,6 +1374,7 @@ function bindPlan(){
     z.onclick=go;z.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
   });
   $('#move').onclick=openMove;
+  const pm=$('#pkmore');if(pm)pm.onclick=()=>{const id=SEL;SEL=null;openUnit(id)};
 }
 function openMove(){
   const mv=canMove(G);let armed=null;
@@ -1387,6 +1397,24 @@ function openMove(){
       modal(`<div class="modal paper"><div class="eyebrow">搬遷</div><div class="result">${esc(out)}</div><button class="btn pri" id="nx">繼續</button></div>`,()=>{$('#nx').onclick=closeOv});
     });
   });
+}
+
+function peek(u){
+  const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
+  return `<div class="peek">
+    <div class="row" style="gap:10px;align-items:flex-start;flex-wrap:nowrap">
+      ${av(u.id)}
+      <div style="min-width:0;flex:1">
+        <div class="who row" style="gap:6px"><b>${esc(c.n)}</b>${stars(u.star)}<span class="muted" style="font-size:12px">${esc(c.job)} · 而家：${JOBS[j].n}${isS(u,j)?`【${SPERK[j].n}】`:''}</span></div>
+        <div class="chips" style="margin:3px 0">${statusChips(u)||'<span class="chip good">狀態正常</span>'}</div>
+        <div class="bars">${bar('HP',u.hp,maxHp(u),u.hp<maxHp(u)*.35?'var(--blood)':'var(--calm)')}${bar('體力',u.sta,100,'var(--sodium)')}${bar('意志',u.san,100,'var(--steel)')}</div>
+      </div>
+      <button class="btn sm" id="pkmore">詳細</button>
+    </div>
+    <div class="pkst">${ST.map(k=>`<div><span>${STN[k]}</span><b>${stat(u,k)}</b></div>`).join('')}</div>
+    <div class="pkst">${JK.filter(x=>x!=='rest').map(x=>{const g=canWork({...u,crit:0,iso:0},x)?grade(apt(u,x)*(fxOf(u).job[x]||1)):'—';return `<div><span>${JOBS[x].n}</span><b class="g${g}">${g}</b></div>`}).join('')}</div>
+    <div class="muted" style="font-size:12px">專長【${esc(c.sk.n)}】${esc(c.sk.d)} · 撳區域派佢去，或者再撳頭像取消。</div>
+  </div>`;
 }
 </script>
 </body>
