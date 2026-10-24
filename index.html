@@ -491,6 +491,7 @@ button.cell:hover{border-color:var(--sodium)}
 @keyframes rvDust{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-90vh);opacity:0}}
 @media (max-height:640px){.rv-stage{height:38vh}.rv-txt{display:none}}
 @media (prefers-reduced-motion:reduce){.rv-rays,.rv-dust i,.rv-floor{animation:none}.rv-pop,.rv-info{animation-duration:.01s}}
+.dexh{display:flex;align-items:center;gap:8px;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line2)}
 </style>
 </head>
 <body>
@@ -2527,7 +2528,8 @@ function rRadio(){
       </div>
     </div>
     <div class="secth"><h2>倖存者圖鑑</h2><span class="muted type">${got}/${total}</span></div>
-    <div class="cards">${CH_RAW.map(r=>{const id=r[0],c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b class="rn ${c.g}">${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}</div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}" style="font-size:20px">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`;
+    ${RANK.map(g=>{const ids=CH_RAW.filter(r=>r[2]===g).map(r=>r[0]);if(!ids.length)return '';return `<div class="dexh">${rk(g)}<span class="muted type">${ids.filter(i=>G.dex[i]).length}/${ids.length}</span></div>
+    <div class="cards">${ids.map(id=>{const c=CH[id],k=G.dex[id];return k?`<div class="tag" style="cursor:default"><div class="tt">${av(id,G.gone[id]&&G.gone[id].dead?'dead':'')}<div><b class="rn ${c.g}">${esc(c.n)}</b><small>${esc(c.o)} · ${esc(c.job)}</small></div></div><div class="chips">${c.fa.map(f=>`<span class="chip">${FA[f]}</span>`).join('')}</div><small>${esc(c.sk.n)}：${esc(c.sk.d)}</small></div>`:`<div class="tag res" style="cursor:default"><div class="tt"><div class="av r-${c.g}" style="font-size:20px">？<span>${c.g}</span></div><div><b>？？？</b><small>未遇見</small></div></div></div>`}).join('')}</div>`}).join('')}`;
     $('#p1').onclick=()=>{spin();setTimeout(()=>pull(1),500)};
     $('#p10').onclick=()=>{spin();setTimeout(()=>pull(10),500)};
   }else{
@@ -3386,11 +3388,11 @@ function reveal(list,done){
     $('#rvNext').onclick=()=>{if(last)finish();else{i++;show()}};
     const sk=$('#rvSkip');if(sk)sk.onclick=finish;
     $('#rvNext').focus({preventScroll:true});
-    spin($('#rvSpin'),$('.rv-stage'));
+    rvTurn($("#rvSpin"),$(".rv-stage"));
   };
   show();
 }
-function spin(el,stage){
+function rvTurn(el,stage){
   const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
   let a=-25,v=still?0:60,auto=still?0:60,drag=null,lastT=performance.now();
   const tick=t=>{
