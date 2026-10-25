@@ -2,10 +2,10 @@
 /* 天崩開局專屬角色（致敬經典末日電影，原創名字）：唔入抽卡池，亦唔計圖鑑 */
 const LONE='q_lone',LONEDOG='q_dog';
 CH[LONE]={id:LONE,n:'韋恩中校',g:'UR',o:'紐約',job:'軍方病毒學家 · 孤城最後一人',s:[18,15,16,14,22,9,22],tr:['legend','loner'],
-  sk:{n:'孤城研究',d:'醫療 ×1.6、保安 +30%，解藥研究 ×2，幾乎唔會被咬'},fx:{job:{medic:1.6,guard:1.3},research:2,bite:.2},
+  sk:{n:'孤城研究',d:'醫療 ×1.6、保安 +30%，解藥研究 ×2，幾乎唔會被咬，夜間防禦 +10，意志跌得慢一半'},fx:{job:{medic:1.6,guard:1.3},research:2,bite:.2,def:10,sanDecay:.5},
   bio:'全城感染之後，佢係唯一一個免疫嘅人。每日中午佢喺碼頭用收音機廣播：「我仲喺度，如果有人聽到……」三年嚟，回應佢嘅只有佢隻狗。',av:'韋',fa:['西','軍','醫']};
 CH[LONEDOG]={id:LONEDOG,n:'阿灰',g:'SR',o:'紐約',job:'德國牧羊犬',s:[14,16,18,0,0,0,14],tr:['animal'],
-  sk:{n:'忠犬',d:'巡邏 +50%，夜間防禦 +6'},fx:{job:{patrol:1.5},def:6},
+  sk:{n:'忠犬',d:'巡邏 +50%，夜間防禦 +6，全隊每日意志 +3，好少被咬'},fx:{job:{patrol:1.5},def:6,teamSan:3,bite:.4},
   bio:'韋恩中校嘅狗，陪佢喺空城行咗三年。佢比任何人都早知道黑暗入面有咩。',av:'灰',fa:['寵']};
 LOOK[LONE]='crop,#3a2a1a,#4a5a3a,T,vest';
 PETC[LONEDOG]=['#5a4030','#c89a5a',1];
@@ -74,7 +74,7 @@ function openNewGame(){
     modal(`<div class="modal dismiss ngmodal" style="width:min(780px,100%)"><div class="eyebrow">開新一局</div>
       <p class="muted" style="margin:0;font-size:12px">${m.wins?`已經通關 ${m.wins} 次。`:won?'已用兌換碼解鎖全部開局玩法。':'撐過第十三章「末日堡壘」嘅屍潮之夜就算贏一局，會解鎖特別開局同亂數劇本。'}獎章永久保留（已攞過 ${nAch}/${ACH.length} 個），新一局達成都會再攞獎勵。${G&&!G.over&&G.day>1?'<br><b style="color:var(--blood)">會清走而家第 '+G.day+' 日嘅進度。</b>':''}</p>
       <div class="ngmodes" role="radiogroup" aria-label="開局方式">${MODES.map(([k,t,d])=>`<button class="ngmode ${st===k?'on':''}" role="radio" aria-checked="${st===k}" data-st="${k}"><b>${t}</b><small>${d}${k!=='normal'&&!won?' · 未解鎖':''}</small></button>`).join('')}</div>
-      <div class="ngcrew"><div class="nghd">開局成員（${C.length} 個）${st==='lone'?'<small>阿灰開局受咗傷 · 最後一章之前唔會有任何人或者動物加入（抽卡都冇）· 一人一狗唔會自己走</small>':''}</div><div class="ngpool">${C.map(id=>avB(id,false)).join('')}</div>${pickH}
+      <div class="ngcrew"><div class="nghd">開局成員（${C.length} 個）${st==='lone'?'<small>阿灰開局受咗傷 · 最後一章之前唔會有任何人或者動物加入（抽卡都冇）· 一人一狗唔會自己走 · 屍潮按人數調低，韋恩每日自己加固圍牆</small>':''}</div><div class="ngpool">${C.map(id=>avB(id,false)).join('')}</div>${pickH}
         <div class="nginfo" id="nginfo">${info(C[C.length-1])}</div></div>
       <div class="ngmods ${won?'':'off'}"><span class="lbl">難度</span>${Object.keys(DIFF).map(k=>`<button class="chip ${diff===k?'pk':''}" data-diff="${k}" ${won||k==='normal'?'':'disabled'}>${DIFF[k].n}${DIFF[k].d?` <small>${DIFF[k].d}</small>`:''}</button>`).join('')}
         <span class="lbl" style="margin-left:10px">開局物資</span><button class="chip ${rich?'':'pk'}" data-rich="0">正常</button><button class="chip ${rich?'pk':''}" data-rich="1" ${won?'':'disabled'}>富足 <small>物資 ×2–3、電池 +3000</small></button></div>
@@ -132,4 +132,15 @@ EV.s_lone_end={story:1,t:'最後一章 · 有人',txt:()=>`收音機嘅回應一
   opts:[{l:'開門',fx:()=>{const t=[];for(let i=0;i<4;i++){const id=randomRecruit(i?['C','R','SR']:['SR','SSR']);if(id)t.push(recruitText(id))}return t.join('\n')+'\n\n由今日起，可以抽卡同招募倖存者。'}}]};
 {const _e=endDay;endDay=function(){const r=_e.apply(this,arguments);
   if(G.mode==='lone'&&!G.flags.loneOpen&&G.ch>=CHAPS.length){G.flags.loneOpen=1;G.queue.push({id:'s_lone_end'});save()}
+  // 未有人加入嗰段：韋恩中校每日自己加固住所
+  if(loneLock(G)&&!G.over){G.fort=Math.min(fortMax(G),G.fort+LONE_K[2]);save()}
   return r}}
+/* 天崩開局按人數調低屍潮：人越少屍潮越細（動物計半個），人多返就慢慢回復正常 */
+// [最低屍潮倍數, 幾多人回復正常, 每日自己加固圍牆]：模擬自動分配大約 38% 捱到最後一章（0.16 就跌到差唔多 0%，好敏感）
+let LONE_K=[.155,10,8];
+function loneMul(g){
+  if(!g||g.mode!=='lone')return 1;
+  const n=g.units.reduce((s,u)=>s+(isAnimal(u)?.5:1),0);
+  return Math.min(1,Math.max(LONE_K[0],n/LONE_K[1]));
+}
+{const _rt=raidTonight;raidTonight=function(g){const r=_rt.apply(this,arguments);if(r&&!r.final&&g.mode==='lone')r.add=Math.round(r.add*loneMul(g));return r}}

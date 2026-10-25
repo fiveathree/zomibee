@@ -65,7 +65,7 @@ function teamFx(g,k,mode){ // mode: 'sum' | 'mul' | 'max' | 'any'
 }
 function hordeBase(g){
   const d=g.day;
-  return (5+d*1.3+Math.max(0,d-25)*.55-Math.max(0,d-45)*.95)*CHAPS.filter(c=>c.day<=d).pop().hm*(BS(g).horde||1)*teamMul('horde')*g.warn*(g.hmul||1);  // hmul：開局揀嘅難度
+  return (5+d*1.3+Math.max(0,d-25)*.55-Math.max(0,d-45)*.95)*CHAPS.filter(c=>c.day<=d).pop().hm*(BS(g).horde||1)*teamMul('horde')*g.warn*(g.hmul||1)*loneMul(g);  // hmul：開局揀嘅難度；loneMul：天崩開局按人數
 }
 function raidTonight(g){
   const f=g.flags;
