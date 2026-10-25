@@ -4227,8 +4227,8 @@ CH[LONEDOG]={id:LONEDOG,n:'阿灰',g:'SR',o:'紐約',job:'德國牧羊犬',s:[14
   bio:'韋恩中校嘅狗，陪佢喺空城行咗三年。佢比任何人都早知道黑暗入面有咩。',av:'灰',fa:['寵']};
 LOOK[LONE]='crop,#3a2a1a,#4a5a3a,T,vest';
 PETC[LONEDOG]=['#5a4030','#c89a5a',1];
-EV.s_lone={story:1,t:'第一章 · 孤城',txt:()=>`港灣市淪陷第三年。\n\n全城得返你一個人，同埋阿灰。佢上個禮拜為咗保護你，同一隻夜行屍咬咗一場，條腳到而家仲跛。\n\n今朝收音機第一次有人回應：「我哋喺南邊……仲有人……」\n\n天黑之前，你要決定繼續一個人守，定係開門。`,
-  opts:[{l:'開門，搵其他人',fx:()=>`你將捲閘拉起一半。\n${addRes({bat:300})}`},{l:'鎖好門，自己守',fx:()=>{G.fort+=15;return '你加多兩條鐵鏈，圍牆 +15'}}]};
+EV.s_lone={story:1,t:'第一章 · 孤城',txt:()=>`港灣市淪陷第三年。\n\n全城得返你一個人，同埋阿灰。佢上個禮拜為咗保護你，同一隻夜行屍咬咗一場，條腳到而家仲跛。\n\n你每日中午照樣喺碼頭廣播，收音機另一邊只有雜音。\n\n喺有人回應之前，呢個城得返你哋兩個。`,
+  opts:[{l:'繼續廣播',fx:()=>`你調好頻道，對住咪講：「我仲喺度。」\n${addRes({bat:300})}`},{l:'鎖好門，自己守',fx:()=>{G.fort+=15;return '你加多兩條鐵鏈，圍牆 +15'}}]};
 
 /* ---------- 永久記錄（同存檔分開，開新一局都唔會清） ---------- */
 const MKEY='zomibee_meta';
@@ -4292,7 +4292,7 @@ function openNewGame(){
     modal(`<div class="modal dismiss ngmodal" style="width:min(780px,100%)"><div class="eyebrow">開新一局</div>
       <p class="muted" style="margin:0;font-size:12px">${m.wins?`已經通關 ${m.wins} 次。`:won?'已用兌換碼解鎖全部開局玩法。':'撐過第十三章「末日堡壘」嘅屍潮之夜就算贏一局，會解鎖特別開局同亂數劇本。'}獎章永久保留（已攞過 ${nAch}/${ACH.length} 個），新一局達成都會再攞獎勵。${G&&!G.over&&G.day>1?'<br><b style="color:var(--blood)">會清走而家第 '+G.day+' 日嘅進度。</b>':''}</p>
       <div class="ngmodes" role="radiogroup" aria-label="開局方式">${MODES.map(([k,t,d])=>`<button class="ngmode ${st===k?'on':''}" role="radio" aria-checked="${st===k}" data-st="${k}"><b>${t}</b><small>${d}${k!=='normal'&&!won?' · 未解鎖':''}</small></button>`).join('')}</div>
-      <div class="ngcrew"><div class="nghd">開局成員（${C.length} 個）${st==='lone'?'<small>阿灰開局受咗傷</small>':''}</div><div class="ngpool">${C.map(id=>avB(id,false)).join('')}</div>${pickH}
+      <div class="ngcrew"><div class="nghd">開局成員（${C.length} 個）${st==='lone'?'<small>阿灰開局受咗傷 · 最後一章之前唔會有任何人或者動物加入（抽卡都冇）· 一人一狗唔會自己走</small>':''}</div><div class="ngpool">${C.map(id=>avB(id,false)).join('')}</div>${pickH}
         <div class="nginfo" id="nginfo">${info(C[C.length-1])}</div></div>
       <div class="ngmods ${won?'':'off'}"><span class="lbl">難度</span>${Object.keys(DIFF).map(k=>`<button class="chip ${diff===k?'pk':''}" data-diff="${k}" ${won||k==='normal'?'':'disabled'}>${DIFF[k].n}${DIFF[k].d?` <small>${DIFF[k].d}</small>`:''}</button>`).join('')}
         <span class="lbl" style="margin-left:10px">開局物資</span><button class="chip ${rich?'':'pk'}" data-rich="0">正常</button><button class="chip ${rich?'pk':''}" data-rich="1" ${won?'':'disabled'}>富足 <small>物資 ×2–3、電池 +3000</small></button></div>
@@ -4332,6 +4332,25 @@ function chapCard(c,next){
   if(!G.queue.length&&G.flags.finalWon&&!G.flags.winShown&&!$('#ovroot').innerHTML){G.flags.winShown=1;save();
     modal(`<div class="modal paper"><div class="eyebrow">通關</div><h2>你贏咗呢一局</h2><div class="story">已經通關 ${meta().wins||1} 次。\n\n解鎖咗：特別開局（傳奇助陣、同陣形開局、天崩開局）同章節、致敬劇本亂數。獎章會永久保留。</div><div class="row"><button class="btn sm" id="cx">繼續睇吓</button><button class="btn pri" id="ngw" style="margin-left:auto">開新一局</button></div></div>`,()=>{$('#cx').onclick=closeOv;$('#ngw').onclick=openNewGame})}
 }}
+
+/* ---------- 天崩開局規則：最後一章之前冇人、冇動物加入（抽卡、事件、劇情都唔得）；韋恩中校同阿灰唔會自己走 ---------- */
+const loneLock=g=>!!g&&g.mode==='lone'&&!(g.flags&&g.flags.loneOpen);
+const loneKeep=u=>!!G&&G.mode==='lone'&&(u.id===LONE||u.id===LONEDOG);
+{const _a=addUnit;addUnit=function(g,id){if(loneLock(g)&&id!==LONE&&id!==LONEDOG)return{type:'none'};return _a.apply(this,arguments)}}
+{const _r=randomRecruit;randomRecruit=function(){return loneLock(G)?null:_r.apply(this,arguments)}}
+{const _t=recruitText;recruitText=function(){return loneLock(G)?'……冇人出現。全城好似真係得返你同阿灰。':_t.apply(this,arguments)}}
+{const _p=pull;pull=function(){if(loneLock(G)){toast('收音機另一邊冇人回應。天崩開局要去到最後一章先會有倖存者');return}return _p.apply(this,arguments)}}
+let LONEBLK=null;
+{const _l=leaveUnit;leaveUnit=function(u,why){
+  if(loneKeep(u)&&!/遣散|趕走/.test(why||'')){LONEBLK=nm(u);u.op=null;addLog(`${nm(u)} 行到門口，最後都冇走。`);return}
+  return _l.apply(this,arguments)}}
+// 事件選項入面如果有人「走咗」但係被擋住，結果文字改返做冇走
+Object.values(EV).forEach(e=>(e.opts||[]).forEach(o=>{const f=o.fx;if(typeof f!=='function')return;o.fx=function(){LONEBLK=null;const r=f.apply(this,arguments);if(LONEBLK){const n=LONEBLK;LONEBLK=null;return `${n} 行到門口，停咗好耐……最後都冇走。`}return r}}));
+EV.s_lone_end={story:1,t:'最後一章 · 有人',txt:()=>`收音機嘅回應一日比一日多。\n\n今朝，一隊倖存者沿住你廣播嘅位置搵到嚟。帶頭嗰個望住你同阿灰，好似唔信呢個城仲有人。\n\n「我哋聽咗你嘅廣播三年。」`,
+  opts:[{l:'開門',fx:()=>{const t=[];for(let i=0;i<4;i++){const id=randomRecruit(i?['C','R','SR']:['SR','SSR']);if(id)t.push(recruitText(id))}return t.join('\n')+'\n\n由今日起，可以抽卡同招募倖存者。'}}]};
+{const _e=endDay;endDay=function(){const r=_e.apply(this,arguments);
+  if(G.mode==='lone'&&!G.flags.loneOpen&&G.ch>=CHAPS.length){G.flags.loneOpen=1;G.queue.push({id:'s_lone_end'});save()}
+  return r}}
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
