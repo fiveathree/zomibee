@@ -183,5 +183,5 @@ function av(id,extra=''){
 }
 function tok(u){
   const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';
-  return `<button class="tok ${SEL===u.id?'sel':''}" data-tok="${u.id}" aria-label="${esc(c.n)}">${fig(u,j)}${isS(u,j)?'<i>S</i>':''}<small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
+  return `<button class="tok ${SEL===u.id?'sel':''}" data-tok="${u.id}" aria-label="${esc(c.n)}"><span class="th r-${c.g}" style="--ring:${tokRing(u)}">${fig(u,j,true)}</span>${isS(u,j)?'<i>S</i>':''}<small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }

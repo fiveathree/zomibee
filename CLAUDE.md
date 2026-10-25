@@ -35,7 +35,7 @@ README.md       ← 玩家介紹
 | `6b_cast.js` | 第二批 47 個角色 `CAST2`（每行最後一欄係陣營字）、佢哋嘅 `LOOK`、寵物顏色 `PETC` |
 | `7_gear.js` `7b_more.js` | 裝備 `ITEMS`、稀有度、專屬套裝 `SETS`、裝備抽獎 `pullGear`、廣播頁 `rRadio`、`autoEquip`、`go` |
 | `8_ach.js` | 獎章 `ACH`、致敬劇本 `SCRIPTS`、`render` 覆寫（加入 ach 頁） |
-| `8b_layout.js` | 據點頁 `rBase`（平面圖、拖人調工 `startDrag`）、`fitPlan`（令桌面版一版睇晒唔使捲）。桌面版右邊狀態欄 `sideBase`：撳人（`INFO`）顯示狀態，冇揀人就列出據點成員；`showPop` 喺度覆寫，手機版先用浮窗 |
+| `8b_layout.js` | 據點頁 `rBase`：第一行係 章節｜搜括地點同維修項目｜今晚；平面圖（拖人調工 `startDrag`）。`fitPlan` 喺桌面版（>900px）將平面圖高度定死喺視窗剩低嘅位（`.plan.fit`），人多就喺區域入面捲，成頁永遠唔使捲。桌面版右邊狀態欄 `sideBase`：撳人（`INFO`）顯示狀態，冇揀人就列出據點成員；`showPop` 喺度覆寫，手機版先用浮窗 |
 | `8c_outpost.js` | 分部基本：`opMembers`、`reserveFree`、`opRoles`，同 `op_trade`/`op_help`/`op_raid`/`op_rebel` 事件 |
 | `9a_char.js` | Diablo 式角色面板 `openUnit`、槍械精通 `GUNNERS`、綁定裝備 `BOUND`、個人背包 `BITEMS`、修仙 |
 | `9b_crew.js` | 倖存者頁 `rCrew`：三國志式大地圖，只有地點標記（`.mnode.mk`，`mkHTML`，種類由 `locKind` 判斷：main／op／sq／cand／uncl／site／fog）。撳標記揀地點（`SELLOC`），右邊 `locSide` 顯示詳情同駐守嘅人；後備名單喺地圖下面。拖人 `crewDrag`/`crewMove`、標記排位 `fitNodes`（行兩次）、拖標記 `nodeDrag`、成頁高度 `fitCrew`、右邊闊度 `SIDEW`（`resDrag`）。裝備背包同離開咗嘅人用 `openInv`／`openGone` 彈窗 |
@@ -146,6 +146,7 @@ sh build.sh && python3 tests/smoke.py
 - 四種一鍵分配
 - 地圖方塊冇重疊
 - 模擬 60 日
+- 滿床時據點頁同倖存者頁一版睇晒（電腦版）
 - 逐頁切換，冇 JS 錯誤
 
 改 UI 之後最好用 Playwright 截圖睇吓，特別係：
@@ -157,7 +158,7 @@ sh build.sh && python3 tests/smoke.py
 ## 設計原則（用家要求過）
 
 - **全部人都有用**：唔可以靠全 UR 隊無敵。冇人煮飯、巡邏、維修都會出事。
-- **一版睇晒**：據點頁、倖存者頁、角色面板、報告都唔使捲，地圖標記唔好遮住。
+- **一版睇晒**：據點頁、倖存者頁、角色面板、報告都唔使捲，地圖標記唔好遮住。用家講過好多次，**最重要**。`tests/smoke.py` 會用滿床據點檢查電腦版據點頁同倖存者頁唔會捲。平面圖上嘅人用頭像（`tok()` 用 `fig(u,j,true)`），唔用全身。
 - **名字顏色**：跟稀有度，用 `.rn.UR/SSR/SR/R/C`。
 - **寵物**：貓狗唔識講嘢，唔佔床位，唔做煮飯、維修、醫療。
 - **人工**：唔好用真實在世人物，亦唔好用有版權嘅角色名。歷史人物同神話人物可以用。

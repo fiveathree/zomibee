@@ -55,6 +55,13 @@ with sync_playwright() as p:
         check(f'[{vw}] 模擬 60 日', pg.evaluate('G.day') > 30, pg.evaluate('G.day'))
         for v in ['base', 'crew', 'radio', 'ach', 'log', 'menu']:
             pg.evaluate(f"go('{v}')"); pg.wait_for_timeout(80)
+        if vw > 900:
+            # 一版睇晒：據點頁同倖存者頁唔可以捲（用家講過好多次）
+            pg.evaluate("""()=>{const cap=bedCap(G);let n=act(G).filter(u=>!isAnimal(u)).length;G.units.forEach(u=>{if(!u.act&&!isAnimal(u)&&n<cap){u.act=true;u.op=null;u.job=bestJob(u);n++}});autoAssign()}""")
+            for v in ['base', 'crew']:
+                pg.evaluate(f"go('{v}')"); pg.wait_for_timeout(150)
+                h = pg.evaluate("document.documentElement.scrollHeight")
+                check(f'[{vw}] {v} 一版睇晒（滿床）', h <= vh, h)
         check(f'[{vw}] 冇 JS 錯誤', not errs, errs[:3])
         pg.close()
     b.close()

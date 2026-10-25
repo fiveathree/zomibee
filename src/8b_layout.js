@@ -18,18 +18,18 @@ function rBase(){
       </div>
       ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
     </section>
+    <div class="opsbar">
+    <div class="op"><label class="lbl" for="loc">搜括地點</label>
+      <select class="sel" id="loc" title="${esc(locHint)}">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.script?'【劇本】':l.dun?'【副本】':''}${l.n.replace(/^(劇本|.+本) · /,'')} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]||l.dun||l.id==='dungeon'?` · ${(G.clear[l.id]||0)>=100?'已完成':(l.dun?'進度 ':'清場 ')+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select></div>
+    <div class="op"><label class="lbl" for="proj">維修項目</label>
+      <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select></div>
+    </div>
     <section class="fcmini" title="防禦 = 圍牆 ×0.4 + 保安 + 全員自衛。保安每人用 1 發彈藥火力 ×1.5。巡邏減少屍潮，冇人巡邏屍潮 +10%。">
       <span class="lbl fcl">今晚</span>
       <div class="${danger}"><b>${fc.lo}–${fc.hi}</b><span>屍潮${raidTonight(G)?'＋'+raidTonight(G).n:''}${G.warn>1?' ⚠':''}</span></div>
       <div class="${danger}"><b>${fc.def}</b><span>防禦</span></div>
       <div class="${G.res.food<fc.food||G.res.water<fc.water?'bad':''}"><b>${fc.food}/${fc.water}</b><span>食物/水</span></div>
     </section>
-  </div>
-  <div class="opsbar">
-    <div class="op"><label class="lbl" for="loc">搜括地點</label>
-      <select class="sel" id="loc" title="${esc(locHint)}">${avail.map(l=>`<option value="${l.id}" ${l.id===G.loc?'selected':''}>${l.script?'【劇本】':l.dun?'【副本】':''}${l.n.replace(/^(劇本|.+本) · /,'')} · 危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[l.id]??1)*100)}%${BASES[l.id]||l.dun||l.id==='dungeon'?` · ${(G.clear[l.id]||0)>=100?'已完成':(l.dun?'進度 ':'清場 ')+Math.round(G.clear[l.id]||0)+'%'}`:''}</option>`).join('')}</select></div>
-    <div class="op"><label class="lbl" for="proj">維修項目</label>
-      <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select></div>
   </div>
   <div class="planrow">${planHTML(A,res)}<aside class="panel sidep"><div class="sidein" id="sidep"></div></aside></div>
   <div class="synbar"><b>陣營加成</b>${syn.length?syn.map(x=>`<span><em>${FA[x.f]}</em> ${x.n}人 +${x.b}%（${x.m.map(u=>`<span class="rn ${CH[u.id].g}">${esc(nm(u))}</span>`).join('、')}）</span>`).join(''):'<span>同陣營兩個或以上喺據點就有加成</span>'}<span class="muted">同陣營同做一份工，每個拍檔再 +8%</span></div>`;
@@ -152,10 +152,12 @@ function showPop(){
   $('#popmore').onclick=e=>{e.stopPropagation();const id=SEL;SEL=null;render();openUnit(id)};
 }
 function fitPlan(){
-  const p=document.querySelector('.planwrap .plan');if(!p||innerWidth<=900||VIEW!=='base')return;
-  p.style.minHeight='';
-  const over=document.documentElement.scrollHeight-innerHeight;
-  if(over>0)p.style.minHeight=Math.max(180,p.offsetHeight-over-1)+'px';
+  const p=document.querySelector('.planwrap .plan');if(!p||VIEW!=='base')return;
+  p.style.height='';p.style.minHeight='';p.classList.remove('fit');
+  if(innerWidth<=900)return;
+  p.classList.add('fit');p.style.height='120px';
+  const last=$('#main').lastElementChild,free=innerHeight-(last.getBoundingClientRect().bottom+scrollY)-10;
+  p.style.height=Math.max(160,120+free)+'px';
 }
 {const _r=render;render=function(){_r();fitPlan()}}
 addEventListener('resize',()=>{if(VIEW==='base')fitPlan()});
