@@ -31,7 +31,7 @@ function rBase(){
     <div class="op"><label class="lbl" for="proj">維修項目</label>
       <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select></div>
   </div>
-  ${planHTML(A,res)}
+  <div class="planrow">${planHTML(A,res)}<aside class="panel sidep"><div class="sidein" id="sidep"></div></aside></div>
   <div class="synbar"><b>陣營加成</b>${syn.length?syn.map(x=>`<span><em>${FA[x.f]}</em> ${x.n}人 +${x.b}%（${x.m.map(u=>`<span class="rn ${CH[u.id].g}">${esc(nm(u))}</span>`).join('、')}）</span>`).join(''):'<span>同陣營兩個或以上喺據點就有加成</span>'}<span class="muted">同陣營同做一份工，每個拍檔再 +8%</span></div>`;
   $('#end').onclick=doEnd;
   $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
@@ -83,7 +83,7 @@ function assignTo(u,k){
 }
 function bindPlan(){
   document.querySelectorAll('[data-tok]').forEach(b=>{
-    b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}SEL=SEL===b.dataset.tok?null:b.dataset.tok;render()};
+    b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}SEL=SEL===b.dataset.tok?null:b.dataset.tok;INFO=b.dataset.tok;render()};
     b.onpointerdown=e=>startDrag(e,b);
   });
   document.querySelectorAll('.zone').forEach(z=>{
@@ -121,6 +121,36 @@ function startDrag(e,b){
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
 
+/* 右邊狀態欄（桌面版）：撳人睇狀態，取代浮窗；冇揀人就列出據點成員。手機版照用浮窗 */
+let INFO=null;
+function sideBase(){
+  const s=$('#sidep');if(!s)return;
+  const u=INFO&&uOf(INFO);
+  if(u&&u.act){
+    const c=CH[u.id];
+    s.innerHTML=`<div class="pop sidepop">${popHTML(u)}</div>
+      <div class="skillbox"><b>專長 · ${esc(c.sk.n)}</b> ${esc(c.sk.d)}<div class="chips" style="margin-top:4px">${c.tr.map(t=>`<span class="chip" title="${esc(TR[t].d)}">${TR[t].n}</span>`).join('')}</div></div>
+      <button class="btn sm" id="sideback">← 返回成員名單</button>`;
+    $('#popx').onclick=$('#sideback').onclick=e=>{e.stopPropagation();INFO=null;SEL=null;render()};
+    $('#popmore').onclick=e=>{e.stopPropagation();SEL=null;render();openUnit(u.id)};
+    return;
+  }
+  INFO=null;const A=act(G);
+  s.innerHTML=`<div class="row" style="justify-content:space-between"><h3>據點成員</h3><span class="muted type">${A.length} 人</span></div>
+    <p class="muted" style="margin:0;font-size:11px">撳人睇狀態同裝備；拖平面圖上面嘅人去其他區域調工</p>
+    <div class="roster">${A.map(u=>{const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';return `<button class="rost" data-info="${u.id}"><span class="chead r-${c.g}" style="--ring:${tokRing(u)}">${fig(u,null,true)}</span><span class="rost-t"><b class="rn ${c.g}">${esc(nm(u))}</b><small class="muted">${JOBS[j].n}</small></span><span class="rost-b"><s><i style="width:${Math.round(u.hp/maxHp(u)*100)}%"></i></s>${statusChips(u)}</span></button>`}).join('')}</div>`;
+  s.querySelectorAll('[data-info]').forEach(b=>b.onclick=e=>{e.stopPropagation();INFO=SEL=b.dataset.info;render()});
+}
+// 覆寫 7_gear.js 嘅 showPop：桌面版據點頁改為填右邊狀態欄
+function showPop(){
+  const p=$('#pop');if(!p)return;
+  if(VIEW==='base'&&innerWidth>900){p.hidden=true;if(SEL)INFO=SEL;sideBase();return}
+  const u=SEL&&uOf(SEL),a=u&&document.querySelector(`[data-tok="${SEL}"]`);
+  if(!u||!a||VIEW!=='base'){p.hidden=true;return}
+  p.innerHTML=popHTML(u);p.hidden=false;placePop();
+  $('#popx').onclick=e=>{e.stopPropagation();SEL=null;render()};
+  $('#popmore').onclick=e=>{e.stopPropagation();const id=SEL;SEL=null;render();openUnit(id)};
+}
 function fitPlan(){
   const p=document.querySelector('.planwrap .plan');if(!p||innerWidth<=900||VIEW!=='base')return;
   p.style.minHeight='';

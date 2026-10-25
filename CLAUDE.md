@@ -35,10 +35,10 @@ README.md       ← 玩家介紹
 | `6b_cast.js` | 第二批 47 個角色 `CAST2`（每行最後一欄係陣營字）、佢哋嘅 `LOOK`、寵物顏色 `PETC` |
 | `7_gear.js` `7b_more.js` | 裝備 `ITEMS`、稀有度、專屬套裝 `SETS`、裝備抽獎 `pullGear`、廣播頁 `rRadio`、`autoEquip`、`go` |
 | `8_ach.js` | 獎章 `ACH`、致敬劇本 `SCRIPTS`、`render` 覆寫（加入 ach 頁） |
-| `8b_layout.js` | 據點頁 `rBase`（平面圖、拖人調工 `startDrag`）、`fitPlan`（令桌面版一版睇晒唔使捲） |
+| `8b_layout.js` | 據點頁 `rBase`（平面圖、拖人調工 `startDrag`）、`fitPlan`（令桌面版一版睇晒唔使捲）。桌面版右邊狀態欄 `sideBase`：撳人（`INFO`）顯示狀態，冇揀人就列出據點成員；`showPop` 喺度覆寫，手機版先用浮窗 |
 | `8c_outpost.js` | 分部基本：`opMembers`、`reserveFree`、`opRoles`，同 `op_trade`/`op_help`/`op_raid`/`op_rebel` 事件 |
 | `9a_char.js` | Diablo 式角色面板 `openUnit`、槍械精通 `GUNNERS`、綁定裝備 `BOUND`、個人背包 `BITEMS`、修仙 |
-| `9b_crew.js` | 倖存者大地圖 `rCrew`：據點方塊（`mnode`）、拖人 `crewDrag`/`crewMove`、方塊排位 `fitNodes`、拖方塊 `nodeDrag`。分部預設收起（重疊頭像 `opStack` + N），撳開用 `toggleOp`，一次只開一個（`OPEN_OP`）；候選地點係一行；手機版次序係主據點 → 游擊隊 → 分部 → 摺埋嘅「可設立分部」（`CAND_OPEN`） |
+| `9b_crew.js` | 倖存者頁 `rCrew`：三國志式大地圖，只有地點標記（`.mnode.mk`，`mkHTML`，種類由 `locKind` 判斷：main／op／sq／cand／uncl／site／fog）。撳標記揀地點（`SELLOC`），右邊 `locSide` 顯示詳情同駐守嘅人；後備名單喺地圖下面。拖人 `crewDrag`/`crewMove`、標記排位 `fitNodes`（行兩次）、拖標記 `nodeDrag`、成頁高度 `fitCrew`、右邊闊度 `SIDEW`（`resDrag`）。裝備背包同離開咗嘅人用 `openInv`／`openGone` 彈窗 |
 | `9c_reveal.js` | 抽到新角色或新裝備時嘅 3D 旋轉登場 `reveal()` |
 | `9d_net.js` | 據點網絡，見下面「據點網絡」 |
 | `9_boot.js` | 啟動同舊存檔 migrate（**一定要最後**） |
@@ -113,7 +113,7 @@ README.md       ← 玩家介紹
   - 令分部唔容易叛變
 - **人手**：`opNeed`（大約床位 / 4）。人手唔夠會令屍群壓力增加；屍群大過防守 1.5 倍時，有 45% 機會淪陷（`opFall`）。
 - **一鍵分配**：`autoDistribute(mode)`，四個 mode：`bal`、`main`、`def`、`fa`。
-- **調整位置**：`arrangeMap()`。
+- **還原位置**：`arrangeMap()` 清空 `G.mapPos`，全部地點返去 `MAPPOS` 原位。
 - **其他**：
   - 水車商人事件 `EV.water_trade`
   - 有人駐守嘅分部每日 +2 水
@@ -157,7 +157,7 @@ sh build.sh && python3 tests/smoke.py
 ## 設計原則（用家要求過）
 
 - **全部人都有用**：唔可以靠全 UR 隊無敵。冇人煮飯、巡邏、維修都會出事。
-- **一版睇晒**：據點頁、角色面板、報告都唔使捲，地圖方塊唔好遮住。
+- **一版睇晒**：據點頁、倖存者頁、角色面板、報告都唔使捲，地圖標記唔好遮住。
 - **名字顏色**：跟稀有度，用 `.rn.UR/SSR/SR/R/C`。
 - **寵物**：貓狗唔識講嘢，唔佔床位，唔做煮飯、維修、醫療。
 - **人工**：唔好用真實在世人物，亦唔好用有版權嘅角色名。歷史人物同神話人物可以用。
@@ -166,4 +166,4 @@ sh build.sh && python3 tests/smoke.py
 
 - 裝備圖鑑都按等級分組（倖存者圖鑑已經分咗）
 - 水同食物仍然要留意平衡，`tests` 入面可以加資源流量模擬
-- 手機版地圖係列表形式，睇唔到補給線，只會顯示「補給線：…」文字
+- 手機版地圖標記好密，加新地點時要留意會唔會重疊（`fitNodes` 搵唔到空位就會撞埋）

@@ -238,18 +238,9 @@ function nodeChips(k){
   const isOp=k!=='base'&&G.outposts[k],need=isOp?opNeed(k):0,have=isOp?M.filter(u=>!isAnimal(u)).length:0,idle=(G.idle||{})[k];
   return `<div class="mn-c">${isOp?`<span class="chip ${have<need?'bad':''}" title="${have<need?'人手唔夠：今晚屍群壓力大增，有機會淪陷':'人手足夠'}">人手 ${have}/${need}</span>`:''}${idle?`<span class="chip bad" title="冇人駐守，${IDLE_LOST} 日會被喪屍重新佔據">無人 ${idle}/${IDLE_LOST} 日</span>`:''}${s.length?`<span class="chip" title="呢類陣形嘅人喺度工作效率 +15%、意志每日 +1">宜：${s.map(f=>FA[f]).join('、')}${fit?` · ${fit}人`:''}</span>`:''}${co.pairs?`<span class="chip good" title="同陣形嘅人一齊：少啲嗌交、意志每日 +1；分部更忠誠、難叛變">友好 ${co.pairs} 對</span>`:''}</div>`;
 }
-function sqNode(){
-  const M=opMembers(G,'squad'),pos=G.mapPos.squad||MAPPOS.squad,ops=Object.keys(G.outposts);
-  return `<div class="mnode sq" data-dz="squad" data-key="squad" data-loc="squad" data-fixed="${(G.mapFix||{}).squad?'1':''}" style="left:${pos[0]}%;top:${pos[1]}%">
-    <div class="mn-h grip"><span class="gr">⠿</span><b>游擊隊</b><span class="muted type">${M.length}/${SQMAX}</span>${capBtn('squad')}</div>
-    <select class="sqsel" id="sqsel" title="游擊隊今晚去邊度協防"><option value="auto" ${G.sqT==='auto'?'selected':''}>自動：去最危險嘅據點</option><option value="base" ${G.sqT==='base'?'selected':''}>守 ${esc(BS(G).n)}</option>${ops.map(id=>`<option value="${id}" ${G.sqT===id?'selected':''}>守 ${esc(BASES[id].n)}</option>`).join('')}</select>
-    <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟組成游擊隊，每晚出去協防</span>'}</div>
-    ${G.sqLast&&M.length?`<div class="mn-l" title="${esc(G.sqLast)}">昨晚：${esc(G.sqLast)}</div>`:''}</div>`;
-}
-function nodeCenter(city,k){const n=city.querySelector(`.mnode[data-key="${k}"]`);if(!n)return null;const r=n.getBoundingClientRect(),c=city.getBoundingClientRect();return [r.left+r.width/2-c.left,r.top+r.height/2-c.top]}
+function nodeCenter(city,k){const m=city.querySelector(`.mnode[data-key="${k}"]`);if(!m)return null;const n=m.querySelector('.mk-i')||m,r=n.getBoundingClientRect(),c=city.getBoundingClientRect();return [r.left+r.width/2-c.left,r.top+r.height/2-c.top]}
 function drawNet(){
   const city=document.querySelector('.city');if(!city)return;const svg=city.querySelector('.netsvg'),xl=city.querySelector('.netx');if(!svg)return;
-  if(innerWidth<=760){svg.innerHTML='';xl.innerHTML='';return}
   const W=city.clientWidth,H=city.clientHeight;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   let h='',x='';
   (G.lines||[]).forEach(l=>{const [a,b]=l.split('|'),p=nodeCenter(city,a),q=nodeCenter(city,b);if(!p||!q)return;
@@ -274,7 +265,7 @@ function bindNet(){
     const from=LINKFROM;LINKFROM=null;
     if(n&&n.dataset.key!==from)toggleLine(from,n.dataset.key);else render();
   },true);
-  city.querySelectorAll('[data-link]').forEach(b=>b.onpointerdown=e=>{
+  document.querySelectorAll('[data-link]').forEach(b=>b.onpointerdown=e=>{
     if(e.button>0)return;e.stopPropagation();e.preventDefault();
     const from=b.dataset.link;if(LINKFROM){LINKFROM=null;render();return}
     const p=nodeCenter(city,from),cr=city.getBoundingClientRect(),tl=city.querySelector('#lntmp');let moved=false,hov=null;
@@ -289,7 +280,7 @@ function bindNet(){
       LINKFROM=from;render();toast('撳另一個據點連接（或者拆走）補給線；再撳 ⛓ 取消')};
     addEventListener('pointermove',mv,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
   });
-  city.querySelectorAll('[data-cap]').forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;openCap(b.dataset.cap)}});
+  document.querySelectorAll('[data-cap]').forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;openCap(b.dataset.cap)}});
   const ss=$('#sqsel');if(ss){ss.onpointerdown=e=>e.stopPropagation();ss.onchange=()=>{G.sqT=ss.value;save();toast(ss.value==='auto'?'游擊隊每晚自動去最危險嘅據點':`游擊隊今晚起駐守 ${nodeName(ss.value)}`)}}
   const ra=$('#allres');if(ra){let armed=false;ra.onclick=()=>{if(!armed){armed=true;ra.textContent='再撳一次確認';ra.classList.add('danger');return}releaseAll()}}
   const ja=$('#bulkjoin');if(ja)ja.onclick=()=>openBulk();
@@ -374,13 +365,9 @@ function siteDecay(g,L){
 function opCands(g){return Object.keys(BASES).filter(k=>k!==g.base&&!(g.outposts||{})[k]&&(g.clear[k]||0)>=100)}
 {const _rel=relocate;relocate=function(id){const prev=G.base;const r=_rel(id);G.clear[prev]=Math.max(G.clear[prev]||0,100);return r}}
 
-/* ================= 調整位置：主據點中間，其他排四邊 ================= */
+/* ================= 還原位置：全部地點放返地圖原本位置 ================= */
 function arrangeMap(){
-  netInit(G);
-  const slots=[[16,16],[84,16],[16,84],[84,84],[50,10],[50,90],[10,50],[90,50],[33,10],[67,10],[33,90],[67,90],[10,30],[90,30],[10,70],[90,70]];
-  const keys=[...Object.keys(G.outposts),'squad',...opCands(G)];
-  G.mapPos={[G.base]:[50,50]};G.mapFix={};
-  keys.forEach((k,i)=>{G.mapPos[k]=slots[i%slots.length]});
+  netInit(G);G.mapPos={};G.mapFix={};
 }
 /* ================= 一鍵分配全部人 ================= */
 const DIST={

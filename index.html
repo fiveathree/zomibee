@@ -346,21 +346,11 @@ main{padding-block:12px 40px}
 @media (min-width:901px){main{padding-bottom:6px}}
 @media (min-width:901px) and (max-height:780px){.planwrap .tok{width:34px}.planwrap .tok svg{width:26px;height:36px}.planwrap .tok small{font-size:8px}.planhead h2{font-size:15px}.planhead .muted{display:none}.planhead .btn{padding:4px 10px;font-size:12px}.basestats .hint{display:none}.chd{display:none}.opsbar .sel{padding:2px 6px}.fcmini b{font-size:13px}.planwrap .plan{grid-auto-rows:minmax(min-content,1fr)}.zh b{font-size:12px}.zh span{font-size:10px}}
 /* crew city map */
-.crewgrid{display:grid;grid-template-columns:minmax(0,1fr) 10px var(--resw,200px);gap:3px;align-items:stretch}
 .reszr{cursor:col-resize;touch-action:none;border-radius:4px;position:relative}.reszr::after{content:'';position:absolute;left:4px;top:50%;width:2px;height:48px;margin-top:-24px;border-radius:2px;background:var(--line2)}
 .reszr:hover::after,.crewgrid.resizing .reszr::after{background:var(--sodium);height:100%;top:0;margin-top:0}.crewgrid.resizing{user-select:none;cursor:col-resize}
 .citywrap{display:flex;flex-direction:column;gap:8px;padding:10px 12px}
 .city{position:relative;height:clamp(440px,calc(100vh - 230px),780px);border-radius:8px;overflow:hidden;border:1px solid var(--line2);
   background:linear-gradient(105deg,transparent 0 58%,rgba(70,110,150,.18) 58% 63%,transparent 63%),repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 2px,transparent 2px 64px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 2px,transparent 2px 64px),radial-gradient(circle at 50% 50%,#231d16,#14110d)}
-.mdot{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dust);opacity:.7;white-space:nowrap;pointer-events:none}
-.mdot i{width:7px;height:7px;border-radius:50%;background:var(--dust)}
-.mnode{position:absolute;transform:translate(-50%,-50%);background:rgba(28,23,18,.96);border:1px solid var(--line2);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:4px;min-width:150px;max-width:250px;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.5)}
-.mnode.main{width:min(470px,56%);max-width:none;min-width:220px;border:2px solid var(--sodium);z-index:3}
-.mnode.cand{border-style:dashed;align-items:center;min-width:130px;opacity:.9}
-.mn-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.mn-h b{font-family:var(--f-disp);font-size:14px}
-.mn-x{margin-left:auto;font-size:11px;color:var(--dust);padding:0 4px;border-radius:3px}
-.mn-x.armed{background:var(--blood);color:#fff}
 .mn-t{display:flex;flex-wrap:wrap;gap:2px 4px}
 .mn-l{font-size:10px;color:var(--dust);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ctok{width:42px;display:flex;flex-direction:column;align-items:center;gap:1px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
@@ -370,11 +360,9 @@ main{padding-block:12px 40px}
 .ctok.dragging{opacity:.25}
 .ctok.swaptarget .chead{box-shadow:0 0 0 2px #ff6a3a,0 0 10px #ff6a3a}
 .ctok.swaptarget svg{filter:drop-shadow(0 0 6px #ff6a3a) drop-shadow(0 0 2px #ff6a3a)}
-.reservep{display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 150px);overflow:auto}
 [data-dz].drop{outline:1px dashed rgba(255,162,58,.55);outline-offset:2px}
 [data-dz].hover{outline:2px solid var(--sodium)!important;background-color:rgba(60,42,20,.97)}
 details.panel summary{cursor:pointer}
-@media (max-width:760px){.crewgrid{grid-template-columns:minmax(0,1fr);gap:12px}.reszr{display:none}.city{height:auto;display:flex;flex-direction:column;gap:8px;padding:8px;background:var(--slab2)}.mnode{position:static;transform:none;max-width:none!important;min-width:0}.mdot{display:none}.reservep{max-height:none}}
 /* rarity name colours */
 .rn.UR{background:linear-gradient(90deg,#ffb3ef,#a8e4ff,#fff0a8);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rn.SSR{color:#f2c552}.rn.SR{color:#c4a2ff}.rn.R{color:#8cb8ff}.rn.C{color:#d8d0c2}
@@ -383,7 +371,6 @@ details.panel summary{cursor:pointer}
 .tag.gone .rn{color:#ccc!important;background:none}
 .grip{cursor:move;touch-action:none;user-select:none;-webkit-user-select:none}
 .gr{color:var(--dust);font-size:13px;margin-right:2px;letter-spacing:-1px}
-.mnode.moving{z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.7),0 0 0 2px var(--sodium2)}
 @media (max-width:760px){.gr{display:none}.grip{cursor:default}}
 /* daily report */
 .modal.report{width:min(1400px,100%);max-height:calc(100vh - 32px);padding:14px 16px;gap:10px}
@@ -516,8 +503,6 @@ button.cell:hover{border-color:var(--sodium)}
 .mn-links{display:none;font-size:11px}
 .city.linking .mnode[data-key]{cursor:crosshair;outline:2px dashed var(--sodium2);outline-offset:2px}
 .mnode.linksrc{outline:2px solid var(--sodium)!important}
-.mnode.hover{box-shadow:0 0 0 2px var(--sodium2),0 6px 18px rgba(0,0,0,.5)}
-.mnode.sq{border:2px solid #b8402f;min-width:170px}
 .sqsel{font-size:11px;padding:2px 4px;background:#1d1813;color:var(--bone);border:1px solid var(--line2);border-radius:4px;max-width:220px}
 .ctok{position:relative}
 .ctok .crown{position:absolute;top:-7px;left:50%;transform:translateX(-50%);color:#f2c552;font-size:12px;font-style:normal;text-shadow:0 0 3px #000,0 0 3px #000;z-index:1}
@@ -525,7 +510,6 @@ button.cell:hover{border-color:var(--sodium)}
 .chip.fit{border-color:var(--calm)}
 .bpick{background:none;border:0;padding:0;cursor:pointer}.bpick.off{opacity:.3}
 @media (max-width:760px){.mn-links{display:block}.lnkb{cursor:pointer}}
-@media (max-width:760px){.mnode.main{width:auto}}
 .chip.pk{background:var(--sodium);color:#1b1612;border-color:var(--sodium)}
 .bulkbar{display:grid;grid-template-columns:2fr 2fr 1fr;gap:1px;background:var(--line2);border:1px solid var(--sodium);border-radius:8px;overflow:hidden}
 .bulkbar>div{background:#1d1813;padding:8px 12px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
@@ -537,15 +521,44 @@ button.cell:hover{border-color:var(--sodium)}
 .distb:hover{border-color:var(--sodium);background:#2a2219}
 .idlew{font-size:10px;color:#ff9a8a}
 @media (max-width:560px){.distg{grid-template-columns:1fr}}
-.mnode:not(.main){width:max-content;max-width:260px}
-@media (max-width:760px){.mnode:not(.main){width:auto}}
-.mnode.cand{flex-direction:row;align-items:center;gap:6px;padding:3px 8px;min-width:0;white-space:nowrap}.mnode.cand b{font-size:12px}.mnode.cand .type{font-size:10px}
-.mnode.op .mn-full{display:none}.mnode.op.open .mn-full{display:flex;flex-direction:column;gap:4px}.mnode.op.open .mn-sum{display:none}
-.mnode.op.open{z-index:6;box-shadow:0 0 0 2px var(--sodium2),0 10px 30px rgba(0,0,0,.7)}
-.mn-sum{display:flex;align-items:center;gap:6px;cursor:pointer}
-.stk{display:inline-flex;align-items:center;padding-left:2px}.stk .chead{width:24px;height:24px;margin-left:-6px;border:2px solid #1c1712;box-sizing:content-box}.stk .chead:first-child{margin-left:0}.stk em{font-style:normal;font-size:11px;color:var(--dust);margin-left:5px}
-.mn-tg{background:none;border:0;color:var(--dust);cursor:pointer;font-size:15px;padding:0 4px;margin-left:auto}.mnode.op.open .mn-tg{transform:rotate(180deg)}
-.candgrp summary{cursor:pointer;padding:6px 4px;color:var(--dust);font-size:13px}.candl{display:flex;flex-direction:column;gap:6px}
+.planrow{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:8px;margin-top:8px;align-items:stretch}.planrow>.planwrap{margin-top:0;min-width:0}
+.sidep{position:relative;padding:0;min-height:0}.sidein{position:absolute;inset:0;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}.sidein h3{margin:0}
+.pop.sidepop{position:static;width:auto;border:0;box-shadow:none;padding:0;background:none}
+.roster{display:flex;flex-direction:column;gap:3px}
+.rost{display:grid;grid-template-columns:30px minmax(0,1fr) 84px;gap:6px;align-items:center;text-align:left;padding:3px 6px;border-radius:6px;border:1px solid transparent;background:#1d1813;color:var(--bone);cursor:pointer}.rost:hover{border-color:var(--sodium)}
+.rost-t{display:flex;flex-direction:column;min-width:0}.rost-t b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rost-t small{font-size:10px}
+.rost-b{display:flex;flex-wrap:wrap;gap:2px;justify-content:flex-end}.rost-b s{display:block;width:100%;height:4px;background:#000;border-radius:2px;overflow:hidden;text-decoration:none}.rost-b i{display:block;height:100%;background:var(--calm)}.rost-b .chip{font-size:9px;padding:0 4px}
+@media (max-width:900px){.planrow{grid-template-columns:minmax(0,1fr)}.sidep{display:none}}
+/* 倖存者頁：三國志式地圖 */
+.crewgrid{display:grid;grid-template-columns:minmax(0,1fr) 10px var(--sidew,300px);grid-template-rows:minmax(0,1fr) auto;gap:6px 3px;min-height:0}
+.crewgrid>.citywrap{grid-column:1;grid-row:1;min-height:0}.crewgrid>.reszr{grid-column:2;grid-row:1/3}.crewgrid>.crewside{grid-column:3;grid-row:1/3}.crewgrid>.reservep{grid-column:1;grid-row:2}
+.citywrap{gap:6px;padding:8px 10px}.citywrap .city{flex:1;height:auto;min-height:260px}
+.cw-h{justify-content:space-between;gap:6px 10px}.cw-h h2{margin:0}.cw-tip{font-size:11px;flex:1;min-width:200px}
+.crewside{position:relative;padding:0;min-height:0}
+.reservep{display:flex;flex-direction:column;gap:4px;max-height:150px;overflow:auto;padding:8px 10px}.reservep h3{margin:0}
+.ls-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.ls-h h3{margin:0;font-family:var(--f-disp);font-size:18px}
+.ls .mn-links{display:block}.ls .mn-t{gap:4px 6px}
+.ls-drop{border:2px dashed var(--sodium2);border-radius:8px;padding:18px 10px;text-align:center;color:var(--sodium2);display:flex;flex-direction:column;gap:2px}.ls-drop small{color:var(--dust);font-size:11px}
+.crewside .ls.drop{outline:2px dashed var(--sodium2);outline-offset:-4px}.crewside .ls.hover{background:rgba(242,197,82,.06)}
+.mnode{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;z-index:2;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+.mk-i{position:relative;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:#2a231b;border:2px solid var(--line2);color:var(--bone);box-shadow:0 3px 10px rgba(0,0,0,.6);font-family:var(--f-disp)}
+.mk-n{font-size:11px;white-space:nowrap;background:rgba(14,11,8,.85);padding:0 5px;border-radius:4px;color:var(--bone);line-height:1.5}
+.mk-b{position:absolute;right:-9px;top:-7px;min-width:17px;height:17px;border-radius:9px;background:var(--sodium);color:#1b1612;font:700 10px/17px var(--f-body,sans-serif);text-align:center;padding:0 3px;font-style:normal}
+.mk-w{position:absolute;left:-7px;top:-7px;width:15px;height:15px;border-radius:50%;background:var(--blood);color:#fff;font:700 10px/15px sans-serif;text-align:center;font-style:normal}
+.mnode.main{z-index:3}.mnode.main .mk-i{width:42px;height:42px;font-size:20px;border-color:var(--sodium);background:#3a2a12;color:var(--sodium2)}.mnode.main .mk-n{font-size:13px;color:var(--sodium2);font-weight:700}
+.mnode.op .mk-i{width:34px;height:34px;font-size:16px;border-color:var(--lc,var(--calm));color:var(--lc,var(--calm));background:#1f2418}.mnode.op .mk-n{font-weight:700}
+.mnode.sq .mk-i{width:34px;height:34px;font-size:16px;border-color:#b8402f;color:#ff7a5a;background:#2a1612}
+.mnode.cand .mk-i{border-style:dashed;border-color:var(--sodium2);color:var(--sodium2)}
+.mnode.uncl .mk-i{font-size:10px;color:var(--dust);background:#1c1915}.mnode.uncl .mk-n,.mnode.site .mk-n{color:var(--dust)}
+.mnode.site .mk-i{width:22px;height:22px;font-size:10px;color:var(--dust);background:#1c1915}
+.mnode.fog{opacity:.45}.mnode.fog .mk-i{width:24px;height:24px;font-size:11px;background:#0e0c0a;border-style:dotted;color:var(--dust)}.mnode.fog .mk-n{display:none}
+.mnode.on .mk-i{box-shadow:0 0 0 3px var(--sodium2),0 0 16px var(--sodium)}.mnode.on .mk-n{background:var(--sodium);color:#1b1612}
+.mnode:hover .mk-i{filter:brightness(1.25)}
+.mnode.drop .mk-i{outline:2px dashed var(--sodium2);outline-offset:3px}.mnode.hover .mk-i{box-shadow:0 0 0 3px var(--sodium),0 0 18px var(--sodium)}
+.mklegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--dust)}.mklegend span{display:inline-flex;align-items:center;gap:4px}
+.lg{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font-style:normal;font-size:9px;border:1px solid var(--line2);background:#2a231b}.lg.main{color:var(--sodium2);border-color:var(--sodium)}.lg.op{color:var(--calm);border-color:var(--calm)}.lg.sq{color:#ff7a5a;border-color:#b8402f}.lg.cand{color:var(--sodium2);border-style:dashed;border-color:var(--sodium2)}.lg.fog{opacity:.6;border-style:dotted}
+.mnode.moving{z-index:10}
+@media (max-width:760px){.crewgrid{grid-template-columns:minmax(0,1fr);grid-template-rows:none;gap:10px}.crewgrid>*{grid-column:1!important;grid-row:auto!important}.reszr{display:none}.citywrap .city{height:420px;flex:none}.mk-n{font-size:9px;padding:0 3px}.mk-i{width:24px;height:24px;font-size:11px}.mnode.main .mk-i{width:32px;height:32px;font-size:15px}.mnode.op .mk-i,.mnode.sq .mk-i{width:28px;height:28px;font-size:13px}.mnode.main .mk-n{font-size:11px}.crewside .sidein{position:static}.reservep{max-height:none}.cw-tip{display:none}}
 </style>
 </head>
 <body>
@@ -2882,7 +2895,7 @@ function rBase(){
     <div class="op"><label class="lbl" for="proj">維修項目</label>
       <select class="sel" id="proj"><option value="fort">修補圍牆（${G.fort}/${fortMax(G)}）</option>${FK.filter(k=>G.fac[k]<FAC[k].max).map(k=>`<option value="${k}" ${G.proj===k?'selected':''}>升級${FAC[k].n} → ${G.fac[k]+1} 級（${Math.round(G.prog[k]||0)}/${FAC[k].work(G.fac[k])} 工，${FAC[k].cost(G.fac[k])} 零件）</option>`).join('')}</select></div>
   </div>
-  ${planHTML(A,res)}
+  <div class="planrow">${planHTML(A,res)}<aside class="panel sidep"><div class="sidein" id="sidep"></div></aside></div>
   <div class="synbar"><b>陣營加成</b>${syn.length?syn.map(x=>`<span><em>${FA[x.f]}</em> ${x.n}人 +${x.b}%（${x.m.map(u=>`<span class="rn ${CH[u.id].g}">${esc(nm(u))}</span>`).join('、')}）</span>`).join(''):'<span>同陣營兩個或以上喺據點就有加成</span>'}<span class="muted">同陣營同做一份工，每個拍檔再 +8%</span></div>`;
   $('#end').onclick=doEnd;
   $('#auto').onclick=()=>{autoAssign();save();render();toast('已按各人數值自動分配')};
@@ -2934,7 +2947,7 @@ function assignTo(u,k){
 }
 function bindPlan(){
   document.querySelectorAll('[data-tok]').forEach(b=>{
-    b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}SEL=SEL===b.dataset.tok?null:b.dataset.tok;render()};
+    b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}SEL=SEL===b.dataset.tok?null:b.dataset.tok;INFO=b.dataset.tok;render()};
     b.onpointerdown=e=>startDrag(e,b);
   });
   document.querySelectorAll('.zone').forEach(z=>{
@@ -2972,6 +2985,36 @@ function startDrag(e,b){
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
 
+/* 右邊狀態欄（桌面版）：撳人睇狀態，取代浮窗；冇揀人就列出據點成員。手機版照用浮窗 */
+let INFO=null;
+function sideBase(){
+  const s=$('#sidep');if(!s)return;
+  const u=INFO&&uOf(INFO);
+  if(u&&u.act){
+    const c=CH[u.id];
+    s.innerHTML=`<div class="pop sidepop">${popHTML(u)}</div>
+      <div class="skillbox"><b>專長 · ${esc(c.sk.n)}</b> ${esc(c.sk.d)}<div class="chips" style="margin-top:4px">${c.tr.map(t=>`<span class="chip" title="${esc(TR[t].d)}">${TR[t].n}</span>`).join('')}</div></div>
+      <button class="btn sm" id="sideback">← 返回成員名單</button>`;
+    $('#popx').onclick=$('#sideback').onclick=e=>{e.stopPropagation();INFO=null;SEL=null;render()};
+    $('#popmore').onclick=e=>{e.stopPropagation();SEL=null;render();openUnit(u.id)};
+    return;
+  }
+  INFO=null;const A=act(G);
+  s.innerHTML=`<div class="row" style="justify-content:space-between"><h3>據點成員</h3><span class="muted type">${A.length} 人</span></div>
+    <p class="muted" style="margin:0;font-size:11px">撳人睇狀態同裝備；拖平面圖上面嘅人去其他區域調工</p>
+    <div class="roster">${A.map(u=>{const c=CH[u.id],j=canWork(u,u.job)?u.job:'rest';return `<button class="rost" data-info="${u.id}"><span class="chead r-${c.g}" style="--ring:${tokRing(u)}">${fig(u,null,true)}</span><span class="rost-t"><b class="rn ${c.g}">${esc(nm(u))}</b><small class="muted">${JOBS[j].n}</small></span><span class="rost-b"><s><i style="width:${Math.round(u.hp/maxHp(u)*100)}%"></i></s>${statusChips(u)}</span></button>`}).join('')}</div>`;
+  s.querySelectorAll('[data-info]').forEach(b=>b.onclick=e=>{e.stopPropagation();INFO=SEL=b.dataset.info;render()});
+}
+// 覆寫 7_gear.js 嘅 showPop：桌面版據點頁改為填右邊狀態欄
+function showPop(){
+  const p=$('#pop');if(!p)return;
+  if(VIEW==='base'&&innerWidth>900){p.hidden=true;if(SEL)INFO=SEL;sideBase();return}
+  const u=SEL&&uOf(SEL),a=u&&document.querySelector(`[data-tok="${SEL}"]`);
+  if(!u||!a||VIEW!=='base'){p.hidden=true;return}
+  p.innerHTML=popHTML(u);p.hidden=false;placePop();
+  $('#popx').onclick=e=>{e.stopPropagation();SEL=null;render()};
+  $('#popmore').onclick=e=>{e.stopPropagation();const id=SEL;SEL=null;render();openUnit(id)};
+}
 function fitPlan(){
   const p=document.querySelector('.planwrap .plan');if(!p||innerWidth<=900||VIEW!=='base')return;
   p.style.minHeight='';
@@ -3355,7 +3398,7 @@ function openEquip(id,sl){
       equip(u,sl,o.k);save();openUnit(id)});
   });
 }
-/* ================= 倖存者頁：港灣市大地圖（據點＋分部），後備名單喺右邊，全部人可以拖放 ================= */
+/* ================= 倖存者頁：三國志式大地圖（只顯示地點標記）；撳地點喺右邊睇詳情同人；後備名單喺地圖下面 ================= */
 const MAPPOS={store:[22,26],mall:[46,18],tenement:[14,52],market:[66,24],estate:[58,62],hardware:[34,74],clinic:[80,52],police:[10,14],metro:[42,44],school:[86,16],barracks:[88,84],lab:[10,86],train:[26,42],bunker:[66,88],prison:[92,38],hospital:[76,72],fortress:[50,86],museum:[30,8],dungeon:[56,46]};
 function tokRing(u){return u.inf?'var(--bile)':u.crit||u.inj?'var(--blood)':u.mut?'#b07ad8':'transparent'}
 function crewTok(u){
@@ -3363,85 +3406,130 @@ function crewTok(u){
   const ring=tokRing(u);
   return `<button class="ctok" data-ctok="${u.id}" title="${esc(c.n)} · ${esc(c.job)}${u.act?' · '+JOBS[u.job].n:''}">${typeof isCap==='function'&&isCap(u)?'<i class="crown" title="隊長">♛</i>':''}<span class="chead r-${c.g}" style="--ring:${ring}">${fig(u,null,true)}</span><small class="rn ${c.g}">${esc(c.n.split(' ')[0])}</small></button>`;
 }
+let SELLOC='base';
+// 地點分類：main 主據點、op 分部、sq 游擊隊、cand 已清場可設分部、uncl 未清空、site 搜括點、fog 未探索
+function locKind(k){
+  if(k==='squad')return 'sq';if(k==='base'||k===G.base)return 'main';if(G.outposts[k])return 'op';
+  if(opCands(G).includes(k))return 'cand';
+  const l=LOCS.find(x=>x.id===k);if(!l||l.ch>G.ch)return 'fog';
+  return BASES[k]?'uncl':'site';
+}
+const loyCol=v=>v<35?'var(--blood)':v<60?'var(--sodium)':'var(--calm)';
+function mkHTML(k,x,y,fx){
+  const K=locKind(k),key=K==='main'?'base':k,id=K==='main'?G.base:k,l=LOCS.find(z=>z.id===id);
+  const name=K==='sq'?'游擊隊':K==='main'?BS(G).n:BASES[id]?BASES[id].n:l?l.n:id;
+  let ic='◆',badge=0,warn=false,dz='',sty='',tip=name;
+  if(K==='main'){ic='★';badge=act(G).length;dz='base';tip+=' · 主據點'}
+  else if(K==='op'){const o=G.outposts[k],M=opMembers(G,k);ic='⚑';badge=M.length;dz='op:'+k;sty=`--lc:${loyCol(o.loy)}`;warn=M.filter(u=>!isAnimal(u)).length<opNeed(k)||M.some(u=>u.inf||u.crit);tip+=` · 分部 · 忠誠 ${o.loy}`}
+  else if(K==='sq'){ic='⚔';badge=opMembers(G,'squad').length;dz='squad'}
+  else if(K==='cand'){ic='＋';dz='new:'+k;warn=!!(G.idle||{})[k];tip+=' · 已清場，拖人入嚟設立分部'}
+  else if(K==='uncl'){ic=Math.round(G.clear[k]||0);tip+=` · 未清空（${ic}%）`}
+  else if(K==='fog'){ic='？';tip=l?`未探索 · 第${CNUM[l.ch-1]}章解鎖`:'未探索'}
+  return `<div class="mnode mk ${K} ${SELLOC===key?'on':''}" ${dz?`data-dz="${dz}"`:''} ${K==='main'||K==='op'||K==='sq'?`data-key="${key}"`:''} data-sel="${key}" data-loc="${id}" data-fixed="${fx}" style="left:${x}%;top:${y}%;${sty}" title="${esc(tip)}"><span class="mk-i">${ic}${badge?`<em class="mk-b">${badge}</em>`:''}${warn?'<em class="mk-w">!</em>':''}</span><span class="mk-n">${esc(name)}</span></div>`;
+}
+// 右邊：揀咗嘅地點嘅詳情同駐守嘅人（成個框都可以放人）
+function locSide(k){
+  const K=locKind(k),id=K==='main'?G.base:k,l=LOCS.find(z=>z.id===id),b=BASES[id];
+  const dz=K==='main'?'base':K==='op'?'op:'+k:K==='sq'?'squad':K==='cand'?'new:'+k:'';
+  const toks=M=>`<div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">由下面後備名單拖人入嚟</span>'}</div>`;
+  const head=(n,chip,extra='')=>`<div class="ls-h"><h3>${esc(n)}</h3>${chip}${extra}</div>`;
+  let h='';
+  if(K==='main'){
+    h=head(BS(G).n,'<span class="chip good">主據點</span>',`<span class="muted type">${beds(G)}/${bedCap(G)} 床</span>`)+`<div class="muted" style="font-size:11px">${esc(BS(G).pd)}</div>
+      <div class="row" style="gap:4px">${capBtn('base')}${linkBtn('base')}</div>${nodeChips('base')}${linksRow('base')}${toks(act(G))}
+      <p class="muted" style="margin:0;font-size:11px">拖後備落某人身上係換位</p><button class="btn sm" data-go="base">去據點頁調工</button>`;
+  }else if(K==='op'){
+    const o=G.outposts[k],M=opMembers(G,k);
+    h=head(b.n,'<span class="chip">分部</span>',`<span class="muted type">${M.filter(u=>!isAnimal(u)).length}/${b.beds} 床</span>`)+`
+      <div class="row" style="gap:4px;font-size:11px"><span class="muted">忠誠</span><span class="minibar" style="width:70px"><i style="width:${o.loy}%;background:${loyCol(o.loy)}"></i></span><span class="type">${o.loy}</span>${hops(G,k).base===undefined?'<span class="chip bad" title="冇補給線連返主據點：唔夠嘢冇人接濟，剩嘅物資只會存喺分部">未連主據點</span>':''}</div>
+      <div class="row" style="gap:4px">${capBtn(k)}${linkBtn(k)}</div>${nodeChips(k)}${linksRow(k)}${toks(M)}
+      ${o.last?`<div class="mn-l" title="${esc(o.last)}">昨日：${esc(o.last)}</div>`:''}<button class="btn sm" data-opclose="${k}">撤銷分部</button>`;
+  }else if(K==='sq'){
+    const M=opMembers(G,'squad'),ops=Object.keys(G.outposts);
+    h=head('游擊隊','<span class="chip bad">機動</span>',`<span class="muted type">${M.length}/${SQMAX}</span>`)+`
+      <select class="sqsel" id="sqsel" title="游擊隊今晚去邊度協防"><option value="auto" ${G.sqT==='auto'?'selected':''}>自動：去最危險嘅據點</option><option value="base" ${G.sqT==='base'?'selected':''}>守 ${esc(BS(G).n)}</option>${ops.map(id=>`<option value="${id}" ${G.sqT===id?'selected':''}>守 ${esc(BASES[id].n)}</option>`).join('')}</select>
+      <div class="row" style="gap:4px">${capBtn('squad')}</div>${toks(M)}
+      ${G.sqLast&&M.length?`<div class="mn-l" title="${esc(G.sqLast)}">昨晚：${esc(G.sqLast)}</div>`:''}<p class="muted" style="margin:0;font-size:11px">每晚出去協防，食主據點嘅糧。最多 ${SQMAX} 人。</p>`;
+  }else if(K==='cand'){
+    const s=suitFa(id),idle=(G.idle||{})[k];
+    h=head(b.n,'<span class="chip good">已清場</span>',`<span class="muted type">${b.beds} 床</span>`)+`<div class="muted" style="font-size:11px">${esc(b.pd)}</div>
+      ${s.length?`<div><span class="chip" title="呢類陣形嘅人喺度工作效率 +15%、意志每日 +1">宜：${s.map(f=>FA[f]).join('、')}</span></div>`:''}
+      ${idle?`<span class="idlew">無人駐守 ${idle}/${IDLE_LOST} 日，夠鐘會被重新佔據</span>`:''}
+      <div class="ls-drop">＋ 拖人入嚟設立分部<small>要 ${opNeed(k)} 人先守得住</small></div>`;
+  }else if(K==='uncl'||K==='site'){
+    const loot=Object.keys(l.loot).sort((a,c)=>l.loot[c]-l.loot[a]).map(r=>RES[r].n).join('、'),can=allLocs(G).some(z=>z.id===k);
+    h=head(l.n,K==='uncl'?`<span class="chip warn">未清空 ${Math.round(G.clear[k]||0)}%</span>`:'<span class="chip">搜括點</span>')+`
+      <div class="muted" style="font-size:12px">危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[k]??1)*100)}%</div>
+      <div style="font-size:12px">主要物資：${loot}</div>${b?`<div class="muted" style="font-size:11px">清場到 100% 就可以設分部或者搬過去（${b.beds} 床）</div>`:''}
+      ${can?`<button class="btn sm pri" id="scavhere">派搜括隊去呢度</button>`:''}`;
+  }else h=head('未探索','<span class="chip">？</span>')+`<p class="muted" style="margin:0;font-size:12px">${l?`第${CNUM[l.ch-1]}章解鎖`:'仲未有人去過'}</p>`;
+  return `<div class="sidein ls" ${dz?`data-dz="${dz}"`:''}>${h}</div>`;
+}
 function rCrew(){
   G.outposts=G.outposts||{};netInit(G);
-  const A=act(G),Rs=reserveFree(G),D=Object.keys(G.gone),ops=Object.keys(G.outposts),cand=opCands(G);
-  const used={};G.units.forEach(u=>{if(u.eq)for(const sl in u.eq){const k=u.eq[sl];if(k&&!isBound(k))(used[k]=used[k]||[]).push(nm(u))}});
-  const keys=Object.keys(ITEMS).filter(k=>!ITEMS[k].bind&&(G.inv[k]||used[k]));
-  const shown=new Set([G.base,...ops,...cand]);
-  const dots=Object.keys(MAPPOS).filter(k=>!shown.has(k)&&(LOCS.find(l=>l.id===k)||{ch:99}).ch<=G.ch).map(k=>{const l=LOCS.find(x=>x.id===k);const [x,y]=MAPPOS[k];return `<div class="mdot" style="left:${x}%;top:${y}%"><i></i><span>${esc(l.n)}${BASES[k]?` · 清場 ${Math.round(G.clear[k]||0)}%`:''}</span></div>`}).join('');
-  G.mapPos=G.mapPos||{};const pos=k=>G.mapPos[k]||MAPPOS[k]||[50,50];if(!G.mapFix){G.mapFix={};Object.keys(G.mapPos).forEach(k=>G.mapFix[k]=1)}const fx=k=>G.mapFix[k]?'1':'';
-  const main=(()=>{const [x,y]=pos(G.base);return ` <div class="mnode main" data-dz="base" data-key="base" data-loc="${G.base}" data-fixed="${fx(G.base)}" style="left:${x}%;top:${y}%">
-      <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(BS(G).n)}</b><span class="chip good">主據點</span><span class="muted type">${beds(G)}/${bedCap(G)} 床</span>${capBtn('base')}${linkBtn('base')}</div>${nodeChips('base')}${linksRow('base')}
-      <div class="mn-t">${A.map(crewTok).join('')||'<span class="muted">冇人</span>'}</div></div>`})();
-  // 分部預設收起：只顯示重疊頭像同 +N；撳開先見全部人（一次開一個，OPEN_OP）
-  const opn=ops.map(id=>{const o=G.outposts[id],b=BASES[id],M=opMembers(G,id),[x,y]=pos(id),have=M.filter(u=>!isAnimal(u)).length,need=opNeed(id);return `<div class="mnode op" data-dz="op:${id}" data-key="${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%">
-      <div class="mn-h grip"><span class="gr">⠿</span><b>${esc(b.n)}</b><span class="chip">分部</span><span class="muted type">${have}/${b.beds}</span>${linkBtn(id)}<button class="mn-x" data-opclose="${id}" title="撤銷分部">✕</button><button class="mn-tg" data-optg="${id}" title="打開／收起">▾</button></div>
-      <div class="row" style="gap:4px;font-size:10px"><span class="muted">忠誠</span><span class="minibar" style="width:60px"><i style="width:${o.loy}%;background:${o.loy<35?'var(--blood)':o.loy<60?'var(--sodium)':'var(--calm)'}"></i></span><span class="type">${o.loy}</span>${capBtn(id)}${hops(G,id).base===undefined?'<span class="chip bad" title="冇補給線連返主據點：唔夠嘢冇人接濟，剩嘅物資只會存喺分部">未連主據點</span>':''}</div>
-      <div class="mn-sum" data-optg="${id}">${opStack(M)}${have<need?`<span class="chip bad" title="人手唔夠：今晚屍群壓力大增，有機會淪陷">人手 ${have}/${need}</span>`:''}</div>
-      <div class="mn-full">${nodeChips(id)}${linksRow(id)}
-      <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟駐守</span>'}</div>
-      ${o.last?`<div class="mn-l" title="${esc(o.last)}">昨日：${esc(o.last)}</div>`:''}</div></div>`}).join('');
-  const cn=cand.map(id=>{const b=BASES[id],[x,y]=pos(id);return `<div class="mnode cand" data-dz="new:${id}" data-loc="${id}" data-fixed="${fx(id)}" style="left:${x}%;top:${y}%" title="拖人入嚟設立分部 · ${b.beds} 床 · 要 ${opNeed(id)} 人先守得住"><b class="grip"><span class="gr">⠿</span>＋ ${esc(b.n)}</b><span class="muted type">${b.beds}床</span>${(G.idle||{})[id]?`<span class="idlew" title="無人駐守 ${G.idle[id]}/${IDLE_LOST} 日，夠鐘會被重新佔據">無人 ${G.idle[id]}/${IDLE_LOST}</span>`:''}</div>`}).join('');
-  const mob=innerWidth<=760;
+  // 舊存檔嘅方塊位置係為大方塊排嘅，改用地圖標記後還原一次
+  if(!G.mapV2){G.mapPos={};G.mapFix={};G.mapV2=1}
+  if(SELLOC===G.base)SELLOC='base';
+  const Rs=reserveFree(G),D=Object.keys(G.gone),nInv=Object.keys(ITEMS).filter(k=>!ITEMS[k].bind&&(G.inv[k]||G.units.some(u=>u.eq&&Object.values(u.eq).includes(k)))).length;
+  G.mapPos=G.mapPos||{};G.mapFix=G.mapFix||{};const pos=k=>G.mapPos[k]||MAPPOS[k]||[50,50];
+  const keys=[...new Set([...Object.keys(MAPPOS).filter(k=>k!=='squad'&&(LOCS.some(l=>l.id===k)||BASES[k])),G.base])];
+  const marks=keys.map(k=>{const [x,y]=pos(k);return mkHTML(k,x,y,G.mapFix[k]?'1':'')}).join('')+(()=>{const [x,y]=pos('squad');return mkHTML('squad',x,y,G.mapFix.squad?'1':'')})();
   $('#main').innerHTML=`
-  <div class="crewgrid" style="--resw:${RESW}px">
+  <div class="crewgrid" style="--sidew:${SIDEW}px">
     <section class="panel citywrap">
-      <div class="row" style="justify-content:space-between"><h2>港灣市</h2><span class="muted" style="font-size:12px">拖人去據點、分部、游擊隊或者後備；拖落主據點某人身上係換位；拖 ⛓ 去另一個據點拉補給線（撳線中間 ✕ 拆走）；撳 ♛ 揀隊長；拖 ⠿ 搬方塊</span><span class="row" style="gap:6px"><button class="btn sm pri" id="bulkjoin">一鍵分配／加入…</button><button class="btn sm" id="allres">全部放去後備</button><button class="btn sm" id="maplayout" title="主據點放中間，分部、游擊隊同候選地點排喺四邊">調整位置</button></span></div>
-      <div class="city"><svg class="netsvg" aria-hidden="true"></svg><div class="netx"></div>${mob?`${main}${sqNode()}${opn}${cand.length?`<details class="candgrp" ${CAND_OPEN?'open':''}><summary>可設立分部（${cand.length}）</summary><div class="candl">${cn}</div></details>`:''}`:`${dots}${cn}${opn}${sqNode()}${main}`}</div>
+      <div class="row cw-h"><h2>港灣市</h2><span class="muted cw-tip">撳地點睇詳情；拖人去地圖標記或者右邊；拖 ⛓ 去另一個據點拉補給線（撳線中間 ✕ 拆走）；拖標記搬位</span>
+        <span class="row" style="gap:6px"><button class="btn sm pri" id="bulkjoin">一鍵分配／加入…</button><button class="btn sm" id="allres">全部放去後備</button><button class="btn sm" id="maplayout" title="將地點放返地圖原本位置">還原位置</button><button class="btn sm" id="invbtn">裝備背包 ${nInv}</button>${D.length?`<button class="btn sm" id="gonebtn">離開咗嘅人 ${D.length}</button>`:''}</span></div>
+      <div class="city"><svg class="netsvg" aria-hidden="true"></svg><div class="netx"></div>${marks}</div>
+      <div class="mklegend"><span><i class="lg main">★</i>主據點</span><span><i class="lg op">⚑</i>分部</span><span><i class="lg sq">⚔</i>游擊隊</span><span><i class="lg cand">＋</i>已清場</span><span><i class="lg uncl">%</i>未清空</span><span><i class="lg site">◆</i>搜括點</span><span><i class="lg fog">？</i>未探索</span></div>
     </section>
-    <div class="reszr" title="左右拖嚟調整地圖同後備名單闊度；雙擊還原"></div>
-    <aside class="panel reservep" data-dz="reserve">
-      <div class="row" style="justify-content:space-between"><h3>後備名單</h3><span class="muted type">${Rs.length} 人</span></div>
-      <p class="muted" style="margin:0;font-size:11px">唔使食糧。拖去地圖上嘅據點或者分部。</p>
+    <div class="reszr" title="左右拖嚟調整地圖同右邊詳情闊度；雙擊還原"></div>
+    <aside class="panel crewside">${locSide(SELLOC)}</aside>
+    <section class="panel reservep" data-dz="reserve">
+      <div class="row" style="gap:8px"><h3>後備名單</h3><span class="muted type">${Rs.length} 人</span><span class="muted" style="font-size:11px">唔使食糧。拖去地圖標記或者右邊嘅地點。</span></div>
       <div class="mn-t">${Rs.map(crewTok).join('')||'<span class="muted" style="font-size:12px">冇人</span>'}</div>
-    </aside>
-  </div>
-  <details class="panel" style="margin-top:12px"><summary><b>裝備背包</b> <span class="muted">${keys.length} 款</span></summary>
-    <div class="row" style="margin:8px 0"><button class="btn sm" id="aeq">按工作自動配裝</button></div>
-    <div class="inv">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="eqico" style="--rc:${RCOL[it.r]}">${itemIcon(it.k,RCOL[it.r])}</span><b>${rk(it.r)} ${esc(it.n)}</b></span><span class="chip">${SLOTS[it.slot]}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.gun?' · 需要槍械精通':''}</div></div>`}).join('')||'<span class="muted">背包空空。</span>'}</div>
-  </details>
-  ${D.length?`<details class="panel" style="margin-top:8px"><summary><b>離開咗嘅人</b> <span class="muted">${D.length}</span></summary><div class="cards" style="margin-top:8px">${D.map(id=>tag(id,true)).join('')}</div></details>`:''}`;
-  fitNodes();if(OPEN_OP&&!G.outposts[OPEN_OP])OPEN_OP=null;if(OPEN_OP)opOpen(OPEN_OP);drawNet();bindNet();
-  document.querySelectorAll('.grip').forEach(g=>g.onpointerdown=e=>nodeDrag(e,g.closest('.mnode')));
-  document.querySelectorAll('[data-optg]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;toggleOp(b.dataset.optg)});
-  const cg=document.querySelector('.candgrp');if(cg)cg.ontoggle=()=>CAND_OPEN=cg.open;
-  const rz=$('.reszr');if(rz){rz.onpointerdown=resDrag;rz.ondblclick=()=>{RESW=200;try{localStorage.removeItem('zomibee_resw')}catch(e){}render()}}
-  const ml=$('#maplayout');if(ml)ml.onclick=()=>{arrangeMap();save();render();toast('已經調整好位置：主據點喺中間，其他據點排喺四邊')};
+    </section>
+  </div>`;
+  fitCrew();fitNodes();fitNodes();drawNet();bindNet();  // 第二次排位：第一次推開之後可能撞到第三個標記
+  document.querySelectorAll('.mk').forEach(n=>n.onpointerdown=e=>nodeDrag(e,n));
+  const rz=$('.reszr');if(rz){rz.onpointerdown=resDrag;rz.ondblclick=()=>{SIDEW=300;try{localStorage.removeItem('zomibee_sidew')}catch(e){}render()}}
+  const ml=$('#maplayout');if(ml)ml.onclick=()=>{arrangeMap();save();render();toast('已經將地點放返地圖原本位置')};
+  $('#invbtn').onclick=openInv;const gb=$('#gonebtn');if(gb)gb.onclick=openGone;
+  const sh=$('#scavhere');if(sh)sh.onclick=()=>{G.loc=SELLOC;save();go('base');toast(`搜括隊目標改咗去${LOCS.find(l=>l.id===G.loc).n}`)};
+  document.querySelectorAll('.crewside [data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   document.querySelectorAll('[data-ctok]').forEach(b=>{
     b.onclick=e=>{e.stopPropagation();if(DRAGGED){DRAGGED=false;return}openUnit(b.dataset.ctok)};
     b.onpointerdown=e=>crewDrag(e,b);
   });
-  $('#aeq').onclick=()=>{const n=autoEquip();save();render();toast(n?`已重新配裝：${n} 人有變動`:'而家已經係最好配搭')};
-  document.querySelectorAll('[data-opclose]').forEach(b=>{let armed=false;b.onclick=e=>{e.stopPropagation();if(!armed){armed=true;b.textContent='確認？';b.classList.add('armed');return}opMembers(G,b.dataset.opclose).forEach(u=>u.op=null);delete G.outposts[b.dataset.opclose];save();render();toast('分部已撤銷，人員返回後備名單')}});
+  document.querySelectorAll('[data-opclose]').forEach(b=>{let armed=false;b.onclick=e=>{e.stopPropagation();if(!armed){armed=true;b.textContent='再撳一次確認撤銷';b.classList.add('danger');return}opMembers(G,b.dataset.opclose).forEach(u=>u.op=null);delete G.outposts[b.dataset.opclose];save();render();toast('分部已撤銷，人員返回後備名單')}});
 }
-let OPEN_OP=null,CAND_OPEN=false;
-// 後備名單闊度：拖中間條分隔線調整，記喺呢部機（唔入存檔）
-let RESW=(()=>{try{return +localStorage.getItem('zomibee_resw')||200}catch(e){return 200}})();
+// 桌面版：成頁一版睇晒，地圖同後備名單嘅高度跟視窗
+function fitCrew(){
+  const g=document.querySelector('.crewgrid');if(!g)return;
+  if(innerWidth<=760){g.style.height='';return}
+  g.style.height=Math.max(480,innerHeight-g.getBoundingClientRect().top-scrollY-10)+'px';
+}
+function openInv(){
+  const used={};G.units.forEach(u=>{if(u.eq)for(const sl in u.eq){const k=u.eq[sl];if(k&&!isBound(k))(used[k]=used[k]||[]).push(nm(u))}});
+  const keys=Object.keys(ITEMS).filter(k=>!ITEMS[k].bind&&(G.inv[k]||used[k]));
+  modal(`<div class="modal dismiss" style="width:min(760px,100%)"><div class="row" style="justify-content:space-between"><div class="eyebrow">裝備背包 · ${keys.length} 款</div><span class="row" style="gap:6px"><button class="btn sm" id="aeq">按工作自動配裝</button><button class="btn pri sm" id="cx">關閉</button></span></div>
+    <div class="inv" style="max-height:66vh;overflow:auto">${keys.map(k=>{const it=ITEMS[k];return `<div class="invi"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="eqico" style="--rc:${RCOL[it.r]}">${itemIcon(it.k,RCOL[it.r])}</span><b>${rk(it.r)} ${esc(it.n)}</b></span><span class="chip">${SLOTS[it.slot]}</span></div><div style="font-size:12px">${esc(itemFx(null,it)||'')}</div><div class="muted" style="font-size:11px">背包 ${G.inv[k]||0}${used[k]?` · 用緊：${esc(used[k].join('、'))}`:''}${it.gun?' · 需要槍械精通':''}</div></div>`}).join('')||'<span class="muted">背包空空。</span>'}</div></div>`,()=>{
+    $('#cx').onclick=closeOv;
+    $('#aeq').onclick=()=>{const n=autoEquip();save();toast(n?`已重新配裝：${n} 人有變動`:'而家已經係最好配搭');closeOv()};
+  });
+}
+function openGone(){
+  const D=Object.keys(G.gone);
+  modal(`<div class="modal dismiss" style="width:min(760px,100%)"><div class="row" style="justify-content:space-between"><div class="eyebrow">離開咗嘅人 · ${D.length}</div><button class="btn pri sm" id="cx">關閉</button></div>
+    <div class="cards" style="max-height:66vh;overflow:auto">${D.map(id=>tag(id,true)).join('')}</div></div>`,()=>{$('#cx').onclick=closeOv});
+}
+// 右邊詳情闊度：拖中間條分隔線調整，記喺呢部機（唔入存檔）
+let SIDEW=(()=>{try{return +localStorage.getItem('zomibee_sidew')||300}catch(e){return 300}})();
 function resDrag(e){
   if(e.button>0)return;e.preventDefault();
-  const g=document.querySelector('.crewgrid'),x0=e.clientX,w0=RESW;g.classList.add('resizing');
-  const move=ev=>{RESW=Math.round(Math.min(Math.max(w0-(ev.clientX-x0),110),460));g.style.setProperty('--resw',RESW+'px')};
-  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);g.classList.remove('resizing');if(RESW===w0)return;try{localStorage.setItem('zomibee_resw',RESW)}catch(e){}render()};
+  const g=document.querySelector('.crewgrid'),x0=e.clientX,w0=SIDEW;g.classList.add('resizing');
+  const move=ev=>{SIDEW=Math.round(Math.min(Math.max(w0-(ev.clientX-x0),220),560));g.style.setProperty('--sidew',SIDEW+'px')};
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);g.classList.remove('resizing');if(SIDEW===w0)return;try{localStorage.setItem('zomibee_sidew',SIDEW)}catch(e){}render()};
   addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
-}
-// 收起時嘅重疊頭像：有傷、感染、變種嘅排前，等佢哋嘅色圈一眼睇到
-function opStack(M){
-  if(!M.length)return '<span class="muted" style="font-size:11px">拖人入嚟駐守</span>';
-  const S=[...M].sort((a,b)=>(tokRing(b)!=='transparent')-(tokRing(a)!=='transparent')),k=5;
-  return `<span class="stk" title="${esc(M.map(nm).join('、'))}">${S.slice(0,k).map(u=>`<span class="chead r-${CH[u.id].g}" style="--ring:${tokRing(u)}">${fig(u,null,true)}</span>`).join('')}${M.length>k?`<em>+${M.length-k}</em>`:''}</span>`;
-}
-// 打開分部：記低原本位置，推返入地圖範圍；收起時放返原位
-function opOpen(id){
-  const city=document.querySelector('.city'),n=city&&city.querySelector(`.mnode.op[data-key="${id}"]`);if(!n)return;
-  n.classList.add('open');if(innerWidth<=760)return;
-  n.dataset.ox=n.style.left;n.dataset.oy=n.style.top;
-  const W=city.clientWidth,H=city.clientHeight,w=n.offsetWidth,h=n.offsetHeight;
-  n.style.left=Math.min(Math.max(parseFloat(n.style.left),w/2+6),W-w/2-6)+'px';n.style.top=Math.min(Math.max(parseFloat(n.style.top),h/2+6),H-h/2-6)+'px';
-}
-function toggleOp(id){
-  document.querySelectorAll('.mnode.op.open').forEach(n=>{n.classList.remove('open');if(n.dataset.ox){n.style.left=n.dataset.ox;n.style.top=n.dataset.oy;delete n.dataset.ox;delete n.dataset.oy}});
-  OPEN_OP=OPEN_OP===id?null:id;if(OPEN_OP)opOpen(OPEN_OP);drawNet();
 }
 function crewMove(u,dz,onTok){
   const name=nm(u);
@@ -3488,12 +3576,13 @@ function crewDrag(e,b){
 }
 
 function fitNodes(){
-  const city=document.querySelector('.city');if(!city||innerWidth<=760)return;
+  const city=document.querySelector('.city');if(!city)return;
   const W=city.clientWidth,H=city.clientHeight,pad=6;
   const nodes=[...city.querySelectorAll('.mnode')];
   nodes.forEach(n=>{
     const w=n.offsetWidth,h=n.offsetHeight;
-    let x=parseFloat(n.style.left)/100*W,y=parseFloat(n.style.top)/100*H;
+    const px=(v,S)=>v.endsWith('%')?parseFloat(v)/100*S:parseFloat(v);  // 第二次排位時已經係 px
+    let x=px(n.style.left,W),y=px(n.style.top,H);
     x=Math.min(Math.max(x,w/2+pad),W-w/2-pad);y=Math.min(Math.max(y,h/2+pad),H-h/2-pad);
     n.style.left=x+'px';n.style.top=y+'px';
   });
@@ -3532,7 +3621,7 @@ function nodeDrag(e,n){
     const w=n.offsetWidth,h=n.offsetHeight;
     n.style.left=Math.min(Math.max(x0+dx,w/2+4),cr.width-w/2-4)+'px';n.style.top=Math.min(Math.max(y0+dy,h/2+4),cr.height-h/2-4)+'px';drawNet()};
   const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);n.classList.remove('moving');
-    if(!moved){if(n.classList.contains('op')&&!LINKFROM)toggleOp(n.dataset.key);return}G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];G.mapFix=G.mapFix||{};G.mapFix[n.dataset.loc]=1;n.dataset.fixed='1';save();drawNet()};
+    if(!moved){if(!LINKFROM){SELLOC=n.dataset.sel;render()}return}G.mapPos=G.mapPos||{};G.mapPos[n.dataset.loc]=[parseFloat(n.style.left)/cr.width*100,parseFloat(n.style.top)/cr.height*100];G.mapFix=G.mapFix||{};G.mapFix[n.dataset.loc]=1;n.dataset.fixed='1';save();drawNet()};
   addEventListener('pointermove',move,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
 }
 /* ---------- 新角色 / 新裝備：3D 旋轉登場 ---------- */
@@ -3858,18 +3947,9 @@ function nodeChips(k){
   const isOp=k!=='base'&&G.outposts[k],need=isOp?opNeed(k):0,have=isOp?M.filter(u=>!isAnimal(u)).length:0,idle=(G.idle||{})[k];
   return `<div class="mn-c">${isOp?`<span class="chip ${have<need?'bad':''}" title="${have<need?'人手唔夠：今晚屍群壓力大增，有機會淪陷':'人手足夠'}">人手 ${have}/${need}</span>`:''}${idle?`<span class="chip bad" title="冇人駐守，${IDLE_LOST} 日會被喪屍重新佔據">無人 ${idle}/${IDLE_LOST} 日</span>`:''}${s.length?`<span class="chip" title="呢類陣形嘅人喺度工作效率 +15%、意志每日 +1">宜：${s.map(f=>FA[f]).join('、')}${fit?` · ${fit}人`:''}</span>`:''}${co.pairs?`<span class="chip good" title="同陣形嘅人一齊：少啲嗌交、意志每日 +1；分部更忠誠、難叛變">友好 ${co.pairs} 對</span>`:''}</div>`;
 }
-function sqNode(){
-  const M=opMembers(G,'squad'),pos=G.mapPos.squad||MAPPOS.squad,ops=Object.keys(G.outposts);
-  return `<div class="mnode sq" data-dz="squad" data-key="squad" data-loc="squad" data-fixed="${(G.mapFix||{}).squad?'1':''}" style="left:${pos[0]}%;top:${pos[1]}%">
-    <div class="mn-h grip"><span class="gr">⠿</span><b>游擊隊</b><span class="muted type">${M.length}/${SQMAX}</span>${capBtn('squad')}</div>
-    <select class="sqsel" id="sqsel" title="游擊隊今晚去邊度協防"><option value="auto" ${G.sqT==='auto'?'selected':''}>自動：去最危險嘅據點</option><option value="base" ${G.sqT==='base'?'selected':''}>守 ${esc(BS(G).n)}</option>${ops.map(id=>`<option value="${id}" ${G.sqT===id?'selected':''}>守 ${esc(BASES[id].n)}</option>`).join('')}</select>
-    <div class="mn-t">${M.map(crewTok).join('')||'<span class="muted" style="font-size:11px">拖人入嚟組成游擊隊，每晚出去協防</span>'}</div>
-    ${G.sqLast&&M.length?`<div class="mn-l" title="${esc(G.sqLast)}">昨晚：${esc(G.sqLast)}</div>`:''}</div>`;
-}
-function nodeCenter(city,k){const n=city.querySelector(`.mnode[data-key="${k}"]`);if(!n)return null;const r=n.getBoundingClientRect(),c=city.getBoundingClientRect();return [r.left+r.width/2-c.left,r.top+r.height/2-c.top]}
+function nodeCenter(city,k){const m=city.querySelector(`.mnode[data-key="${k}"]`);if(!m)return null;const n=m.querySelector('.mk-i')||m,r=n.getBoundingClientRect(),c=city.getBoundingClientRect();return [r.left+r.width/2-c.left,r.top+r.height/2-c.top]}
 function drawNet(){
   const city=document.querySelector('.city');if(!city)return;const svg=city.querySelector('.netsvg'),xl=city.querySelector('.netx');if(!svg)return;
-  if(innerWidth<=760){svg.innerHTML='';xl.innerHTML='';return}
   const W=city.clientWidth,H=city.clientHeight;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   let h='',x='';
   (G.lines||[]).forEach(l=>{const [a,b]=l.split('|'),p=nodeCenter(city,a),q=nodeCenter(city,b);if(!p||!q)return;
@@ -3894,7 +3974,7 @@ function bindNet(){
     const from=LINKFROM;LINKFROM=null;
     if(n&&n.dataset.key!==from)toggleLine(from,n.dataset.key);else render();
   },true);
-  city.querySelectorAll('[data-link]').forEach(b=>b.onpointerdown=e=>{
+  document.querySelectorAll('[data-link]').forEach(b=>b.onpointerdown=e=>{
     if(e.button>0)return;e.stopPropagation();e.preventDefault();
     const from=b.dataset.link;if(LINKFROM){LINKFROM=null;render();return}
     const p=nodeCenter(city,from),cr=city.getBoundingClientRect(),tl=city.querySelector('#lntmp');let moved=false,hov=null;
@@ -3909,7 +3989,7 @@ function bindNet(){
       LINKFROM=from;render();toast('撳另一個據點連接（或者拆走）補給線；再撳 ⛓ 取消')};
     addEventListener('pointermove',mv,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
   });
-  city.querySelectorAll('[data-cap]').forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;openCap(b.dataset.cap)}});
+  document.querySelectorAll('[data-cap]').forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();if(LINKFROM)return;openCap(b.dataset.cap)}});
   const ss=$('#sqsel');if(ss){ss.onpointerdown=e=>e.stopPropagation();ss.onchange=()=>{G.sqT=ss.value;save();toast(ss.value==='auto'?'游擊隊每晚自動去最危險嘅據點':`游擊隊今晚起駐守 ${nodeName(ss.value)}`)}}
   const ra=$('#allres');if(ra){let armed=false;ra.onclick=()=>{if(!armed){armed=true;ra.textContent='再撳一次確認';ra.classList.add('danger');return}releaseAll()}}
   const ja=$('#bulkjoin');if(ja)ja.onclick=()=>openBulk();
@@ -3994,13 +4074,9 @@ function siteDecay(g,L){
 function opCands(g){return Object.keys(BASES).filter(k=>k!==g.base&&!(g.outposts||{})[k]&&(g.clear[k]||0)>=100)}
 {const _rel=relocate;relocate=function(id){const prev=G.base;const r=_rel(id);G.clear[prev]=Math.max(G.clear[prev]||0,100);return r}}
 
-/* ================= 調整位置：主據點中間，其他排四邊 ================= */
+/* ================= 還原位置：全部地點放返地圖原本位置 ================= */
 function arrangeMap(){
-  netInit(G);
-  const slots=[[16,16],[84,16],[16,84],[84,84],[50,10],[50,90],[10,50],[90,50],[33,10],[67,10],[33,90],[67,90],[10,30],[90,30],[10,70],[90,70]];
-  const keys=[...Object.keys(G.outposts),'squad',...opCands(G)];
-  G.mapPos={[G.base]:[50,50]};G.mapFix={};
-  keys.forEach((k,i)=>{G.mapPos[k]=slots[i%slots.length]});
+  netInit(G);G.mapPos={};G.mapFix={};
 }
 /* ================= 一鍵分配全部人 ================= */
 const DIST={
