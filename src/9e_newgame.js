@@ -58,30 +58,38 @@ function openNewGame(){
   const ANY=Object.keys(CH).filter(id=>!CH[id].tr.includes('animal')&&gacha(id));
   const URS=BY_G.UR.filter(id=>!CH[id].tr.includes('animal'));
   const FAS=Object.keys(FA).filter(f=>facPool(f).length>=3);
+  const BASE3=['c_chan','c_keung','c_cheung'];
+  const MODES=[['normal','普通開局','三個街坊'],['ur','傳奇助陣','街坊 + 揀一個 UR'],['trio','同陣形開局','同一陣形揀三個人'],['rand','隨機三人','全部角色隨機抽'],['pets','毛孩樂園','陳太同全部貓狗 · 難'],['lone','天崩開局','韋恩中校同阿灰 · 極難']];
   let st='normal',shuffle=won,ur=pick(URS),fa=FAS[0],trio=shuf(facPool(fa)).slice(0,3),rnd=shuf([...ANY]).slice(0,3),diff='normal',rich=false;
-  const nmL=ids=>ids.map(id=>`<span class="rn ${CH[id].g}">${esc(CH[id].n)}</span>`).join('、');
+  const crew=()=>st==='normal'?BASE3:st==='ur'?[...BASE3,ur]:st==='trio'?trio:st==='rand'?rnd:st==='pets'?['c_chan',...PETS]:[LONE,LONEDOG];
+  const info=id=>{const c=CH[id];return `<b class="rn ${c.g}">${esc(c.n)}</b> <span class="rk ${c.g}">${c.g}</span> ${esc(c.job)}　<span class="muted">專長【${esc(c.sk.n)}】${esc(c.sk.d)}</span>`};
+  const avB=(id,on,attr='')=>{const c=CH[id];return `<button class="ngav ${on?'on':''}" data-info="${id}" ${attr}><span class="chead r-${c.g}">${fig({id},null,true)}</span><b class="rn ${c.g}">${esc(c.n.split(' ')[0])}</b><small>${c.g}</small></button>`};
   const draw=()=>{
-    const opt=(k,t,d,extra='',lock=k!=='normal'&&!won)=>`<button class="distb ngopt ${st===k?'on':''}" data-st="${k}" ${lock?'disabled':''}><b>${t}</b><span>${d}</span>${lock?'<em class="nglock">贏一局解鎖</em>':extra}</button>`;
-    modal(`<div class="modal dismiss ngmodal" style="width:min(680px,100%)"><div class="eyebrow">開新一局</div>
+    const lock=st!=='normal'&&!won,C=crew(),ok=!lock&&(st!=='trio'||trio.length===3);
+    let pickH='';
+    if(st==='ur')pickH=`<div class="nghd">揀一個 UR 傳奇<button class="btn sm" data-rr="ur">隨機</button></div><div class="ngpool">${URS.map(id=>avB(id,id===ur,`data-ur="${id}"`)).join('')}</div>`;
+    else if(st==='trio')pickH=`<div class="nghd">揀陣形</div><div class="ngfas">${FAS.map(f=>`<button class="chip ${f===fa?'pk':''}" data-fa="${f}">${FA[f]} <small>${facPool(f).length}</small></button>`).join('')}</div>
+      <div class="nghd">喺「${FA[fa]}」揀三個人（已揀 ${trio.length}/3）<button class="btn sm" data-rr="trio">隨機</button></div><div class="ngpool">${facPool(fa).map(id=>avB(id,trio.includes(id),`data-tr="${id}"`)).join('')}</div>`;
+    else if(st==='rand')pickH=`<div class="nghd">隨機抽到嘅三個人<button class="btn sm" data-rr="rand">再抽</button></div>`;
+    modal(`<div class="modal dismiss ngmodal" style="width:min(780px,100%)"><div class="eyebrow">開新一局</div>
       <p class="muted" style="margin:0;font-size:12px">${m.wins?`已經通關 ${m.wins} 次。`:won?'已用兌換碼解鎖全部開局玩法。':'撐過第十三章「末日堡壘」嘅屍潮之夜就算贏一局，會解鎖特別開局同亂數劇本。'}獎章永久保留（已攞過 ${nAch}/${ACH.length} 個），新一局達成都會再攞獎勵。${G&&!G.over&&G.day>1?'<br><b style="color:var(--blood)">會清走而家第 '+G.day+' 日嘅進度。</b>':''}</p>
-      <div class="distg">
-        ${opt('normal','普通開局','陳太、強哥、阿祥三個街坊，喺街口便利店落腳')}
-        ${opt('ur','傳奇助陣','三個街坊之外，一開波送一個 UR 傳奇',`<em class="ngpick">${nmL([ur])} <a class="linkbtn" data-re="ur">換一個</a></em>`)}
-        ${opt('trio','同陣形開局','揀一個陣形，由同一陣形嘅三個人開局',`<em class="ngpick"><select class="sel" id="ngfa">${FAS.map(f=>`<option value="${f}" ${f===fa?'selected':''}>${FA[f]}</option>`).join('')}</select>${nmL(trio)} <a class="linkbtn" data-re="trio">換過</a></em>`)}
-        ${opt('rand','隨機三人','由全部角色入面隨機抽三個人開局，乜等級都有可能',`<em class="ngpick">${nmL(rnd)} <a class="linkbtn" data-re="rand">換過</a></em>`)}
-        ${opt('pets','毛孩樂園',`陳太同全部 ${PETS.length} 隻貓狗開局。動物唔識煮飯、維修、醫療，要靠陳太一個撐住`,'<em class="ngpick">難 · 要快啲抽人</em>')}
-        ${opt('lone','天崩開局','全城只剩你一個：韋恩中校（UR）同一隻受咗傷嘅德國牧羊犬阿灰','<em class="ngpick">極難 · 致敬經典末日電影</em>')}
-      </div>
+      <div class="ngmodes" role="radiogroup" aria-label="開局方式">${MODES.map(([k,t,d])=>`<button class="ngmode ${st===k?'on':''}" role="radio" aria-checked="${st===k}" data-st="${k}"><b>${t}</b><small>${d}${k!=='normal'&&!won?' · 未解鎖':''}</small></button>`).join('')}</div>
+      <div class="ngcrew"><div class="nghd">開局成員（${C.length} 個）${st==='lone'?'<small>阿灰開局受咗傷</small>':''}</div><div class="ngpool">${C.map(id=>avB(id,false)).join('')}</div>${pickH}
+        <div class="nginfo" id="nginfo">${info(C[C.length-1])}</div></div>
       <div class="ngmods ${won?'':'off'}"><span class="lbl">難度</span>${Object.keys(DIFF).map(k=>`<button class="chip ${diff===k?'pk':''}" data-diff="${k}" ${won||k==='normal'?'':'disabled'}>${DIFF[k].n}${DIFF[k].d?` <small>${DIFF[k].d}</small>`:''}</button>`).join('')}
         <span class="lbl" style="margin-left:10px">開局物資</span><button class="chip ${rich?'':'pk'}" data-rich="0">正常</button><button class="chip ${rich?'pk':''}" data-rich="1" ${won?'':'disabled'}>富足 <small>物資 ×2–3、電池 +3000</small></button></div>
       <label class="ngshuf ${won?'':'off'}"><input type="checkbox" id="ngshuf" ${shuffle?'checked':''} ${won?'':'disabled'}><span>章節同致敬劇本亂數<small>第一章同最後兩章固定，中間十章同六個致敬劇本嘅解鎖次序打亂${won?'':'（贏一局解鎖）'}</small></span></label>
-      <div class="row"><button class="btn sm" id="cx">取消</button><button class="btn pri" id="ngo" style="margin-left:auto">開始新一局</button></div></div>`,()=>{
+      <div class="row"><button class="btn sm" id="cx">取消</button>${lock?'<span class="muted" style="font-size:12px;margin-left:auto">贏一局或者用兌換碼解鎖呢個開局</span>':''}<button class="btn pri" id="ngo" style="margin-left:${lock?'8px':'auto'}" ${ok?'':'disabled'}>開始新一局</button></div></div>`,()=>{
       $('#cx').onclick=closeOv;
-      document.querySelectorAll('[data-st]').forEach(b=>b.onclick=e=>{if(e.target.closest('select,a'))return;st=b.dataset.st;draw()});
-      document.querySelectorAll('[data-re]').forEach(a=>a.onclick=e=>{e.stopPropagation();if(a.dataset.re==='ur')ur=pick(URS.filter(x=>x!==ur));else if(a.dataset.re==='rand')rnd=shuf([...ANY]).slice(0,3);else trio=shuf(facPool(fa)).slice(0,3);st=a.dataset.re;draw()});
+      const ni=$('#nginfo');
+      document.querySelectorAll('[data-info]').forEach(b=>{b.onmouseenter=()=>ni.innerHTML=info(b.dataset.info);b.onfocus=b.onmouseenter});
+      document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{st=b.dataset.st;draw()});
+      document.querySelectorAll('[data-ur]').forEach(b=>b.onclick=()=>{ur=b.dataset.ur;draw()});
+      document.querySelectorAll('[data-fa]').forEach(b=>b.onclick=()=>{fa=b.dataset.fa;trio=shuf(facPool(fa)).slice(0,3);draw()});
+      document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{const id=b.dataset.tr;trio=trio.includes(id)?trio.filter(x=>x!==id):trio.length<3?[...trio,id]:[...trio.slice(1),id];draw()});
+      document.querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>{const k=b.dataset.rr;if(k==='ur')ur=pick(URS.filter(x=>x!==ur));else if(k==='rand')rnd=shuf([...ANY]).slice(0,3);else trio=shuf(facPool(fa)).slice(0,3);draw()});
       document.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{diff=b.dataset.diff;draw()});
       document.querySelectorAll('[data-rich]').forEach(b=>b.onclick=()=>{rich=b.dataset.rich==='1';draw()});
-      const sf=$('#ngfa');if(sf){sf.onclick=e=>e.stopPropagation();sf.onchange=()=>{fa=sf.value;trio=shuf(facPool(fa)).slice(0,3);st='trio';draw()}}
       const sh=$('#ngshuf');if(sh)sh.onchange=()=>shuffle=sh.checked;
       $('#ngo').onclick=()=>{fresh({start:st,ur,ids:st==='rand'?rnd:trio,shuffle:won&&shuffle,diff:won?diff:'normal',rich:won&&rich});save();$('#ovroot').innerHTML='';go('base');showQueue()};
     });

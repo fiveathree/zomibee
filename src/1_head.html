@@ -584,6 +584,18 @@ button.cell:hover{border-color:var(--sodium)}
 .ngmodal{max-height:calc(100vh - 24px);overflow:auto}.ngshuf input{flex:none;margin-top:3px}
 .ngmods{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}.ngmods .chip{cursor:pointer}.ngmods .chip small{color:inherit;opacity:.75;font-size:10px}.ngmods .chip[disabled]{opacity:.4;cursor:not-allowed}.ngmods.off .lbl{opacity:.5}
 @media (max-width:560px){.distg .ngopt{padding:8px 10px}}
+.ngmodes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ngmode{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;padding:7px 10px;border-radius:8px;border:1px solid var(--line2);background:#1d1813;color:var(--bone);cursor:pointer}
+.ngmode b{font-family:var(--f-disp);font-size:15px;color:var(--sodium2)}.ngmode small{font-size:11px;color:var(--dust)}.ngmode:hover{border-color:var(--sodium)}
+.ngmode.on{border-color:var(--sodium);background:#2a2219;box-shadow:0 0 0 1px var(--sodium)}
+.ngcrew{display:flex;flex-direction:column;gap:6px;background:var(--slab2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.nghd{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sodium2)}.nghd small{color:var(--dust)}.nghd .btn{margin-left:auto}
+.ngpool{display:flex;flex-wrap:wrap;gap:4px;max-height:180px;overflow:auto}.ngfas{display:flex;flex-wrap:wrap;gap:4px}.ngfas .chip{cursor:pointer}.ngfas small{opacity:.7;font-size:10px}
+.ngav{display:flex;flex-direction:column;align-items:center;gap:1px;width:58px;padding:4px 2px;border-radius:6px;border:1px solid transparent;background:none;color:var(--bone);cursor:pointer}
+.ngav .chead{width:40px;height:40px}.ngav b{font-size:11px;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ngav small{font-size:9px;color:var(--dust)}
+.ngav:hover{border-color:var(--line2);background:#1d1813}.ngav.on{border-color:var(--sodium);background:#2a2219}.ngav.on .chead{box-shadow:0 0 0 2px var(--sodium)}
+.nginfo{font-size:12px;min-height:2.6em;line-height:1.4;border-top:1px solid var(--line);padding-top:6px}
+@media (max-width:560px){.ngmodes{grid-template-columns:repeat(2,minmax(0,1fr))}.ngav{width:52px}.ngav .chead{width:34px;height:34px}}
 </style>
 
 <header>
