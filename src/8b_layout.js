@@ -161,3 +161,22 @@ function fitPlan(){
 }
 {const _r=render;render=function(){_r();fitPlan()}}
 addEventListener('resize',()=>{if(VIEW==='base')fitPlan()});
+
+/* 結束一日出錯時唔好靜雞雞冇反應：彈出錯誤，俾玩家複製錯誤同存檔回報 */
+function showErr(e,what){
+  const msg=String(e&&e.message||e),st=String(e&&e.stack||'').split('\n').slice(0,6).join('\n');
+  modal(`<div class="modal dismiss"><div class="eyebrow">出錯咗</div><h2 style="margin:0">${esc(what)}失敗</h2>
+    <p class="muted" style="margin:0;font-size:12px">遊戲撞到一個錯誤，呢一日未結算。撳下面個掣複製錯誤同存檔，貼返俾開發者就可以搵到原因。</p>
+    <pre class="errbox">${esc(msg)}\n${esc(st)}</pre>
+    <div class="row"><button class="btn sm" id="errcp">複製錯誤同存檔</button><button class="btn pri sm" id="cx" style="margin-left:auto">關閉</button></div></div>`,()=>{
+    $('#cx').onclick=closeOv;
+    $('#errcp').onclick=()=>{let sv='';try{sv=localStorage.getItem('zomibee_v1')||''}catch(x){}
+      const t=`【屍城日誌錯誤】${what}\n${msg}\n${st}\n\n【存檔】\n${sv}`;
+      const ok=()=>toast('已複製，可以貼返俾開發者'),fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(x){toast('複製唔到')}a.remove()};
+      if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,fb);else fb()};
+  });
+}
+{const _d=doEnd;doEnd=function(){
+  if(G.over){toast(G.over==='dead'?'全滅咗，請開新一局':'呢一局已經完成，請開新一局');return}
+  try{return _d.apply(this,arguments)}catch(e){console.error(e);showErr(e,`結束第 ${G.day} 日`)}
+}}
