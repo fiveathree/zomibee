@@ -41,7 +41,7 @@ README.md       ← 玩家介紹
 | `9b_crew.js` | 倖存者頁 `rCrew`：三國志式大地圖，只有地點標記（`.mnode.mk`，`mkHTML`，種類由 `locKind` 判斷：main／op／sq／cand／uncl／site／fog）。撳標記揀地點（`SELLOC`），右邊 `locSide` 顯示詳情同駐守嘅人；後備名單喺地圖下面。拖人 `crewDrag`/`crewMove`、標記排位 `fitNodes`（行兩次）、拖標記 `nodeDrag`、成頁高度 `fitCrew`、右邊闊度 `SIDEW`（`resDrag`）。裝備背包同離開咗嘅人用 `openInv`／`openGone` 彈窗 |
 | `9c_reveal.js` | 抽到新角色或新裝備時嘅 3D 旋轉登場 `reveal()` |
 | `9d_net.js` | 據點網絡，見下面「據點網絡」 |
-| `9e_newgame.js` | 多周目：永久記錄 `meta()`（localStorage `zomibee_meta`：`ach` 永久獎章、`wins` 通關次數，`save` 時 `syncMeta` 同步）；`openNewGame` 開局畫面；`fresh(o)` 支援 `o.start`（`normal`／`ur`／`trio`／`lone`）同 `o.shuffle`；天崩開局專屬角色 `LONE`／`LONEDOG`（唔入抽卡池）；過場畫面 `chapCard`（`ch_card` 同 `script_open` 喺 `showQueue` 前攔截） |
+| `9e_newgame.js` | 多周目：永久記錄 `meta()`（localStorage `zomibee_meta`：`ach` 永久獎章、`wins` 通關次數，`save` 時 `syncMeta` 同步）；`openNewGame` 開局畫面；`fresh(o)` 支援 `o.start`（`normal`／`ur`／`trio`／`rand`／`pets`／`lone`）、`o.shuffle`、`o.diff`（`DIFF`，寫入 `G.hmul` 乘屍潮）、`o.rich`；`meta().unlock`（兌換碼 `ZOMIPLAY`）等同通關咁解鎖全部開局玩法；兌換碼 `ZOMI86` 補返用家舊局獎章；天崩開局專屬角色 `LONE`／`LONEDOG`（唔入抽卡池）；過場畫面 `chapCard`（`ch_card` 同 `script_open` 喺 `showQueue` 前攔截） |
 | `9_boot.js` | 啟動同舊存檔 migrate（**一定要最後**） |
 
 ### 覆寫模式（重要）
