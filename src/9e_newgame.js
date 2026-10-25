@@ -22,6 +22,9 @@ function syncMeta(){
   if(ch)try{localStorage.setItem(MKEY,JSON.stringify(m))}catch(e){}
 }
 {const _sv=save;save=function(){syncMeta();_sv()}}
+/* 補返舊局獎章：用家第 86 日存檔（更新嗰陣未同步就開咗新局） */
+const RESTORE86=['k100','k1000','d8','d30','safe15','p10','p20','move','fac','faction4','sjob','food200','hunters','cure','dun1','ur1','dex40','gear20','d60','wall5','ur4'];
+function restoreAch(ids){const m=meta();m.ach=m.ach||{};let n=0;ids.forEach(k=>{if(ACHBY[k]&&!m.ach[k]){m.ach[k]=1;n++}});try{localStorage.setItem(MKEY,JSON.stringify(m))}catch(e){}return n}
 /* 獎章解鎖邊個致敬劇本：亂數局用 G.scrMap */
 const achUnl=a=>a.unlock&&((G.scrMap&&G.scrMap[a.id])||a.unlock);
 
@@ -30,7 +33,8 @@ const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i
 const gacha=id=>BY_G[CH[id].g]&&BY_G[CH[id].g].includes(id);
 const facPool=f=>Object.keys(CH).filter(id=>(CH[id].fa||[]).includes(f)&&!CH[id].tr.includes('animal')&&gacha(id));
 {const _f=fresh;fresh=function(o){
-  o=o||{};_f();const g=G;
+  o=o||{};syncMeta();_f();  // 開新局前先記低舊局嘅獎章
+const g=G;
   if(o.shuffle){
     g.order=[1,...shuf([2,3,4,5,6,7,8,9,10,11]),12,13];
     const ul=ACH.filter(a=>a.unlock),ids=shuf(ul.map(a=>a.unlock));g.scrMap={};ul.forEach((a,i)=>g.scrMap[a.id]=ids[i]);

@@ -284,6 +284,7 @@ function rMenu(){
   $('#redeem').onclick=()=>{const c=$('#code').value.trim().toUpperCase();let m='代碼無效';
     if(c==='BRAINS'&&!G.flags.c1){G.flags.c1=1;addRes({bat:1000});m='電池 +1000'}
     else if(c==='ZOMIBEE'&&!G.flags.c2){G.flags.c2=1;addRes({food:20,water:20,med:10,parts:20,ammo:20});m='物資大禮包已到'}
+    else if(c==='ZOMI86'){const n=restoreAch(RESTORE86);m=n?`補返 ${n} 個舊局獎章（永久記錄，唔會再攞獎勵）`:'舊局獎章已經全部補返'}
     else if(['BRAINS','ZOMIBEE'].includes(c))m='呢個代碼已經用過';
     save();renderHead();$('#cmsg').textContent=m};
   $('#reset').onclick=openNewGame;
