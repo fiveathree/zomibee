@@ -9,7 +9,11 @@ function opRoles(M){
   // 電腦按能力分工：每人揀自己最叻嘅；冇人守夜就派最大力嗰個
   const r=M.map(u=>{let b='scav',v=-1;OPJOB.forEach(j=>{if(!canWork({...u,crit:0,iso:0},j))return;const a=apt(u,j)*(fxOf(u).job[j]||1);if(a>v){v=a;b=j}});return{u,j:b}});
   if(r.length>=2&&!r.some(x=>x.j==='guard')){const g=r.reduce((a,b)=>apt(b.u,'guard')>apt(a.u,'guard')?b:a);g.j='guard'}
-  if(r.length>=3&&!r.some(x=>x.j==='cook')){const c=r.filter(x=>x.j!=='guard').reduce((a,b)=>apt(b.u,'cook')>apt(a.u,'cook')?b:a);c.j='cook'}
+  // 全部人都揀咗守夜時，留最識守夜嗰個，其餘人入面揀一個煮飯（之前喺度 reduce 空陣列令結束一日出錯）
+  if(r.length>=3&&!r.some(x=>x.j==='cook')){
+    const best=r.reduce((a,b)=>apt(b.u,'guard')>apt(a.u,'guard')?b:a),pool=r.some(x=>x.j!=='guard')?r.filter(x=>x.j!=='guard'):r.filter(x=>x!==best);
+    pool.reduce((a,b)=>apt(b.u,'cook')>apt(a.u,'cook')?b:a).j='cook';
+  }
   return r;
 }
 function simOutposts(g,H,L){

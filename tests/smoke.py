@@ -50,6 +50,9 @@ with sync_playwright() as p:
             ov = pg.evaluate("""(()=>{const n=[...document.querySelectorAll('.mnode')].map(n=>n.getBoundingClientRect());let c=0;
               for(let i=0;i<n.length;i++)for(let j=i+1;j<n.length;j++){const a=n[i],b=n[j];if(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom)c++}return c})()""")
             check(f'[{vw}] 地圖方塊冇重疊', ov == 0, ov)
+        # 分部全部人最叻都係守夜（用家第 86 日撞到 reduce 空陣列，結束一日冇反應）
+        r = pg.evaluate("""()=>{const _a=apt;apt=(u,j)=>j==='guard'?50:1;try{return opRoles(G.units.slice(0,4)).map(x=>x.j).join(',')}catch(e){return 'ERROR '+e.message}finally{apt=_a}}""")
+        check(f'[{vw}] 分部全部守夜都分到工', 'ERROR' not in r and 'cook' in r, r)
         # 模擬 60 日
         pg.evaluate("""()=>{for(let d=0;d<60;d++){G.queue=[];if(G.over)break;autoAssign();endDay()}}""")
         check(f'[{vw}] 模擬 60 日', pg.evaluate('G.day') > 30, pg.evaluate('G.day'))
