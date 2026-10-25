@@ -229,7 +229,7 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
 
 「第九日。佢哋好似識得記住邊度有人。我哋要搬。如果有人睇到呢本日記——唔好去中央車站。」`,opts:[{l:'收好',fx:()=>addRes({bat:30})}]},
  secret:{w:4,ch:3,t:'穿煲',pre:()=>G.flags.hid&&!G.flags.secretOut?{}:null,txt:()=>'有人喺收音機旁邊搵到你寫低嘅筆記：「列車屍變，安全區失聯。」\n\n大家望住你。',opts:[{l:'承認',fx:()=>{G.flags.secretOut=1;allSan(-12);return '「點解唔講？」冇人再相信你講嘅消息。\n全隊意志 -12'}}]},
- schoolRetry:{w:5,ch:3,t:'天台仲有反光',pre:()=>G.ch>=3&&!G.flags.rescued&&!G.flags.schoolGone?{}:null,txt:()=>'對面中學天台嘅反光仲喺度，但慢咗好多。',opts:[
+ schoolRetry:{w:5,ch:3,t:'天台仲有反光',pre:()=>reached(G,3)&&!G.flags.rescued&&!G.flags.schoolGone?{}:null,txt:()=>'對面中學天台嘅反光仲喺度，但慢咗好多。',opts:[
   {l:'再救一次',req:()=>able().length>=2,fx:()=>rescueSchool()},
   {l:'放棄',fx:()=>{G.flags.schoolGone=1;allSan(-6);return '之後再冇反光。\n全隊意志 -6'}}]},
  generator:{w:2,t:'發電機壞咗',txt:()=>'據點唯一一部發電機冒煙，燈全部熄晒。',opts:[
@@ -244,7 +244,7 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
 };
 function randomEvent(){
   const pool=[];
-  for(const id in EV){const e=EV[id];if(!e.w)continue;if(e.ch&&G.ch<e.ch)continue;let c={};if(e.pre){c=e.pre({});if(!c)continue}pool.push({id,c,w:e.w})}
+  for(const id in EV){const e=EV[id];if(!e.w)continue;if(e.ch&&!reached(G,e.ch))continue;let c={};if(e.pre){c=e.pre({});if(!c)continue}pool.push({id,c,w:e.w})}
   if(!pool.length)return;
   let r=R()*pool.reduce((s,p)=>s+p.w,0);for(const p of pool){r-=p.w;if(r<=0){G.queue.push({id:p.id,c:p.c});return}}
 }

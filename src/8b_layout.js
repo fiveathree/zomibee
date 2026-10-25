@@ -1,7 +1,7 @@
 /* ================= 據點頁新版面：平面圖做主角、資料放右邊、可拖放 ================= */
 let DRAGGED=false;
 function rBase(){
-  const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act&&!u.op),opn=G.units.filter(u=>!u.act&&u.op).length;
+  const c=curChap(G),P=G.ch,fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act&&!u.op),opn=G.units.filter(u=>!u.act&&u.op).length;
   const avail=allLocs(G);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
   const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
   const done=!!G.obj[c.n];
@@ -11,10 +11,10 @@ function rBase(){
   $('#main').innerHTML=`
   <div class="toprow">
     <section class="chap">
-      <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
+      <div class="chl"><span class="no">CH${P}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
         <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
-        <span class="nxt">${c.n<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${CNUM[c.n]}章`:`完成目標解鎖第${CNUM[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
-        <details class="chd"><summary>劇情（已解鎖 ${c.n}/${CHAPS.length} 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${CNUM[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
+        <span class="nxt">${P<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[P]||1)+MINCH)} 日開始第${CNUM[P]}章`:`完成目標解鎖第${CNUM[P]}章 · 最遲第 ${(G.chDay[P]||1)+MAXCH} 日`):''}</span>
+        <details class="chd"><summary>劇情（已解鎖 ${P}/${CHAPS.length} 章${G.order?' · 亂數':''}）</summary>${Array.from({length:P},(_,i)=>[i+1,CHAPS[stN(G,i+1)-1]]).reverse().map(([p,x])=>`<p><b>第${CNUM[p-1]}章 ${esc(x.t)}</b>${p<P?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
       </div>
       ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
     </section>
@@ -40,7 +40,7 @@ function rBase(){
   $('#proj').onchange=e=>{G.proj=e.target.value;save();render()};
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   bindPlan();
-  const ng=$('#newgame');if(ng)ng.onclick=()=>{fresh();save();go('base');showQueue()};
+  const ng=$('#newgame');if(ng)ng.onclick=openNewGame;
 }
 function planHTML(A,res){
   const b=BS(G),loc=allLocs(G).find(l=>l.id===G.loc);

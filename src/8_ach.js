@@ -34,7 +34,7 @@ SCRIPTS.forEach(d=>{d.ch=0;d.dun=1;d.script=1;DUNS.push(d);DUNBYID[d.id]=d});
   if(c.s===1){const it=pick(d.items);addItem(it);return `搵到：${ITEMS[it].r} 裝備「${ITEMS[it].n}」`}
   addItem(d.prize);addLog(`完成劇本「${d.n}」。`);checkAch();return `劇本完成！\n${ITEMS[d.prize].r} 裝備「${ITEMS[d.prize].n}」\n${addRes({bat:400,core:3})}`};
  const t0=ds.txt;ds.txt=c=>{const d=DUNBYID[c.d];return d.script?`【${d.n}】（${d.genre}）${['第一幕','第二幕','終幕'][c.s]}\n\n${d.st[c.s]}`:t0(c)};}
-EV.script_open={story:1,t:'新劇本',pre:c=>DUNBYID[c.d]?c:null,txt:c=>{const d=DUNBYID[c.d];return `解鎖獎章「${ACHBY[c.a].n}」，收到一段奇怪嘅無線電：
+EV.script_open={story:1,t:'新劇本',pre:c=>DUNBYID[c.d]?c:null,txt:c=>{const d=DUNBYID[c.d];return `解鎖獎章「${ACHBY[c.m].n}」，收到一段奇怪嘅無線電：
 
 「${d.n.replace('劇本 · ','')}」——${d.genre}。
 
@@ -81,18 +81,18 @@ function checkAch(){
     if(G.ach[a.id]||!a.ok(G))return;
     G.ach[a.id]=G.day;let t=addRes(a.r);
     if(a.gear){const it=rollItem(a.gear);addItem(it);t+=(t?'、':'')+`${a.gear} 裝備「${ITEMS[it].n}」`}
-    if(a.unlock&&!G.dun[a.unlock]){G.dun[a.unlock]=1;G.queue.push({id:'script_open',c:{d:a.unlock,a:a.id}});t+=`、解鎖「${DUNBYID[a.unlock].n}」`}
+    {const s=achUnl(a);if(s&&!G.dun[s]){G.dun[s]=1;G.queue.push({id:'script_open',c:{d:s,m:a.id}});t+=`、解鎖「${DUNBYID[s].n}」`}}
     addLog(`獲得獎章「${a.n}」：${t}`);got.push(a.n);
   });
   if(got.length)toast(`獲得獎章：${got.join('、')}`);
 }
 function rAch(){
-  G.ach=G.ach||{};const n=ACH.filter(a=>G.ach[a.id]).length;
-  $('#main').innerHTML=`<div class="secth"><h2>成就獎章</h2><span class="muted type">${n}/${ACH.length}</span></div>
+  G.ach=G.ach||{};const n=ACH.filter(a=>G.ach[a.id]).length,M=meta(),nm2=ACH.filter(a=>G.ach[a.id]||(M.ach||{})[a.id]).length;
+  $('#main').innerHTML=`<div class="secth"><h2>成就獎章</h2><span class="muted type">今局 ${n}/${ACH.length} · 永久 ${nm2}/${ACH.length}${M.wins?` · 通關 ${M.wins} 次`:''}</span></div>
   <p class="muted" style="margin:0 0 12px;max-width:62ch">達成條件就會自動頒發獎章同獎勵。部分獎章會解鎖致敬經典遊戲同電影風格嘅原創劇本。完成每一章都會額外送 900 電池（一次十連）。</p>
-  <div class="achs">${ACH.map(a=>{const d=G.ach[a.id];const rw=[Object.keys(a.r).map(k=>`${RES[k].n} ${a.r[k]}`).join('、'),a.gear?`${a.gear} 裝備`:'',a.unlock?`劇本「${DUNBYID[a.unlock].n.replace('劇本 · ','')}」`:''].filter(Boolean).join('、');
-    return `<div class="ach ${d?'got':''}"><div class="medal">${d?'★':'☆'}</div><div style="min-width:0"><b>${esc(a.n)}</b><div class="muted" style="font-size:12px">${esc(a.d)}</div><div style="font-size:11px;color:var(--sodium2)">${d?`第 ${d} 日獲得 · `:''}獎勵：${esc(rw)}</div></div></div>`}).join('')}</div>
+  <div class="achs">${ACH.map(a=>{const d=G.ach[a.id];const rw=[Object.keys(a.r).map(k=>`${RES[k].n} ${a.r[k]}`).join('、'),a.gear?`${a.gear} 裝備`:'',a.unlock?`劇本「${G.scrMap?'亂數':DUNBYID[achUnl(a)].n.replace('劇本 · ','')}」`:''].filter(Boolean).join('、');
+    const old=!d&&M.ach&&M.ach[a.id];return `<div class="ach ${d?'got':old?'old':''}"><div class="medal">${d||old?'★':'☆'}</div><div style="min-width:0"><b>${esc(a.n)}</b><div class="muted" style="font-size:12px">${esc(a.d)}</div><div style="font-size:11px;color:var(--sodium2)">${d?`第 ${d} 日獲得 · `:old?'以前攞過，今局達成會再攞獎勵 · ':''}獎勵：${esc(rw)}</div></div></div>`}).join('')}</div>
   <div class="secth"><h2>致敬劇本</h2></div>
-  <div class="inv">${SCRIPTS.map(d=>{const on=G.dun[d.id];const a=ACH.find(x=>x.unlock===d.id);return `<div class="invi ${on?'':'off'}"><div class="row" style="justify-content:space-between"><b>${esc(d.n)}</b><span class="chip">${esc(d.genre)}</span></div><div style="font-size:12px">${on?`${(G.clear[d.id]||0)>=100?'✓ 已完成':'進度 '+Math.round(G.clear[d.id]||0)+'%'} · 加成：${d.bonus.map(f=>FA[f]).join('、')}`:`解鎖條件：獎章「${esc(a.n)}」（${esc(a.d)}）`}</div></div>`}).join('')}</div>`;
+  <div class="inv">${SCRIPTS.map(d=>{const on=G.dun[d.id];const a=ACH.find(x=>achUnl(x)===d.id);return `<div class="invi ${on?'':'off'}"><div class="row" style="justify-content:space-between"><b>${esc(d.n)}</b><span class="chip">${esc(d.genre)}</span></div><div style="font-size:12px">${on?`${(G.clear[d.id]||0)>=100?'✓ 已完成':'進度 '+Math.round(G.clear[d.id]||0)+'%'} · 加成：${d.bonus.map(f=>FA[f]).join('、')}`:`解鎖條件：獎章「${esc(a.n)}」（${esc(a.d)}）`}</div></div>`}).join('')}</div>`;
 }
 function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,menu:rMenu,ach:rAch})[VIEW]();showPop()}

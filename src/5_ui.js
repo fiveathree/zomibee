@@ -31,7 +31,7 @@ function statusChips(u){
   return c.join('');
 }
 function renderHead(){
-  const c=CHAPS[G.ch-1];
+  const c=curChap(G);
   $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${CNUM[G.ch-1]}章 ${c.t} · ${BS(G).n}`;
   const fc=forecast(G);
   const low={food:G.res.food<fc.food*2,water:G.res.water<fc.water*2,med:G.res.med<2,ammo:G.res.ammo<2};
@@ -151,7 +151,7 @@ function showQueue(){
     showEvent(q.id,c);return;
   }
   save();render();
-  if(G.over&&!G.flags.overShown){G.flags.overShown=1;save();if(G.over==='dead')modal(`<div class="modal paper"><div class="eyebrow">GAME OVER</div><h2>全滅</h2><div class="story">捲閘外面嘅聲音，終於冇再停過。\n\n你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。</div><button class="btn pri" id="ng">開新一局</button></div>`,()=>{$('#ng').onclick=()=>{fresh();save();closeOv();go('base');showQueue()}})}
+  if(G.over&&!G.flags.overShown){G.flags.overShown=1;save();if(G.over==='dead')modal(`<div class="modal paper"><div class="eyebrow">GAME OVER</div><h2>全滅</h2><div class="story">捲閘外面嘅聲音，終於冇再停過。\n\n你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。</div><button class="btn pri" id="ng">開新一局</button></div>`,()=>{$('#ng').onclick=openNewGame})}
 }
 function showEvent(id,c){
   const e=EV[id];
@@ -279,14 +279,14 @@ function rMenu(){
       <p style="margin:0" class="muted">跟住十三章劇情行：港產、韓式、日式、朝鮮古疫、國產網文、美式，到後期大陸末日文嘅列車、地洞、監獄、醫院、地宮同堡壘。撐過最後嘅屍潮之夜就係結局。傳奇角色好強，但據點都要有人煮飯、巡邏、維修，否則一樣會死。</p>
     </div>
     <div class="panel stack"><h3>兌換碼</h3><div class="row"><input class="sel" id="code" style="flex:1;min-width:0" placeholder="輸入兌換碼" autocomplete="off"><button class="btn" id="redeem">兌換</button></div><span class="muted" id="cmsg"></span></div>
-    <div class="panel stack"><h3>重新開始</h3><p class="muted" style="margin:0">清走而家嘅進度，由第 1 日再嚟。</p><div><button class="btn" id="reset">開新一局</button></div></div>
+    <div class="panel stack"><h3>重新開始</h3><p class="muted" style="margin:0">清走而家嘅進度，由第 1 日再嚟。贏過一局可以揀特別開局同亂數劇本；獎章永久保留。</p><div><button class="btn" id="reset">開新一局</button></div></div>
   </div>`;
   $('#redeem').onclick=()=>{const c=$('#code').value.trim().toUpperCase();let m='代碼無效';
     if(c==='BRAINS'&&!G.flags.c1){G.flags.c1=1;addRes({bat:1000});m='電池 +1000'}
     else if(c==='ZOMIBEE'&&!G.flags.c2){G.flags.c2=1;addRes({food:20,water:20,med:10,parts:20,ammo:20});m='物資大禮包已到'}
     else if(['BRAINS','ZOMIBEE'].includes(c))m='呢個代碼已經用過';
     save();renderHead();$('#cmsg').textContent=m};
-  $('#reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認';e.target.classList.add('danger');return}fresh();save();go('base');showQueue()};
+  $('#reset').onclick=openNewGame;
 }
 
 /* ---------- 平面圖 ---------- */
@@ -334,7 +334,7 @@ function openMove(){
   modal(`<div class="modal dismiss">
     <div class="eyebrow">搬據點</div><h2>而家：${esc(BS(G).n)}</h2>
     <p class="muted" style="margin:0">床位 ${bedCap(G)}、圍牆上限 ${fortMax(G)}。搬走會留低約四分一食物、水同零件，所有設施各跌 1 級。去搜括一個地點就會累積清場進度。</p>
-    <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=l.ch>G.ch;
+    <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=!reached(G,l.ch);
       return `<div class="panel row" style="background:var(--slab2);justify-content:space-between">
         <div style="min-width:0;flex:1"><b>${lock?'？？？':esc(b.n)}</b> <span class="muted" style="font-size:12px">${lock?`第${CNUM[l.ch-1]}章解鎖`:`${b.beds} 床 · 圍牆 ${b.wall}`}</span>
         ${lock?'':`<div class="muted" style="font-size:12px">${esc(b.d)} ${esc(b.pd)}</div>`}</div>

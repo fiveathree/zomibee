@@ -120,7 +120,7 @@ const DUNS=[
   st:['米蘭一間修道院嘅地下，牆上畫住《最後的晚餐》嘅草稿，旁邊係一部未完成嘅機器。','密室入面全部都係機關，齒輪轉動嘅聲音引嚟咗屍群。','你哋喺最後一個房搵到手稿：飛行器、裝甲車同一張解剖圖，旁邊寫住「人體嘅結構可以修補」。']}
 ];
 const DUNBYID={};DUNS.forEach(d=>{d.ch=0;d.dun=1;DUNBYID[d.id]=d});
-function allLocs(g){return LOCS.filter(l=>l.ch<=g.ch&&l.id!==g.base).concat(DUNS.filter(d=>g.dun&&g.dun[d.id]))}
+function allLocs(g){return LOCS.filter(l=>reached(g,l.ch)&&l.id!==g.base).concat(DUNS.filter(d=>g.dun&&g.dun[d.id]))}
 function onRecruit(g,id){
   if(!g.dun)g.dun={};
   CH[id].fa.forEach(f=>{const d=DUNS.find(x=>x.key===f);if(d&&!g.dun[d.id]){g.dun[d.id]=1;g.queue.push({id:'dun_open',c:{d:d.id,by:id}})}});

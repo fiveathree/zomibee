@@ -24,6 +24,9 @@ with sync_playwright() as p:
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto(URL); pg.wait_for_timeout(300)
         pg.evaluate("localStorage.clear()"); pg.reload(); pg.wait_for_timeout(300)
+        # 開局先播第一章過場畫面
+        check(f'[{vw}] 第一章過場畫面', pg.locator('.chcard').count() == 1)
+        pg.click('.chcard'); pg.wait_for_timeout(150)
         pg.click('.opt >> nth=0'); pg.click('#nx'); pg.wait_for_timeout(200)
         # 抽卡：真係撳掣（試過撞名令掣冇反應）
         pg.evaluate("G.res.bat+=20000;go('radio')"); pg.wait_for_timeout(150)
@@ -65,6 +68,11 @@ with sync_playwright() as p:
                 pg.evaluate(f"go('{v}')"); pg.wait_for_timeout(150)
                 h = pg.evaluate("document.documentElement.scrollHeight")
                 check(f'[{vw}] {v} 一版睇晒（滿床）', h <= vh, h)
+        # 多周目：天崩開局 + 章節亂數，行最多 30 日（之後還原原本嗰局）
+        r = pg.evaluate("""()=>{const keep=JSON.stringify(G);fresh({start:'lone',shuffle:true});G.queue=[];
+          for(let d=0;d<30;d++){G.queue=[];if(G.over)break;autoAssign();endDay()}
+          const out={day:G.day,ch:G.ch,order:!!G.order,lone:G.units.some(u=>u.id===LONE)};G=JSON.parse(keep);return out}""")
+        check(f'[{vw}] 天崩開局 + 亂數章節', r['day'] >= 10 and r['order'], r)  # 自動跳過事件冇人加入，一個人會死，屬正常難度
         check(f'[{vw}] 冇 JS 錯誤', not errs, errs[:3])
         pg.close()
     b.close()

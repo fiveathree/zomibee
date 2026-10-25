@@ -11,7 +11,7 @@ let SELLOC='base';
 function locKind(k){
   if(k==='squad')return 'sq';if(k==='base'||k===G.base)return 'main';if(G.outposts[k])return 'op';
   if(opCands(G).includes(k))return 'cand';
-  const l=LOCS.find(x=>x.id===k);if(!l||l.ch>G.ch)return 'fog';
+  const l=LOCS.find(x=>x.id===k);if(!l||!reached(G,l.ch))return 'fog';
   return BASES[k]?'uncl':'site';
 }
 const loyCol=v=>v<35?'var(--blood)':v<60?'var(--sodium)':'var(--calm)';
@@ -24,7 +24,7 @@ function mkHTML(k,x,y,fx){
   else if(K==='sq'){ic='⚔';badge=opMembers(G,'squad').length;dz='squad'}
   else if(K==='cand'){ic='＋';dz='new:'+k;warn=!!(G.idle||{})[k];tip+=' · 已清場，拖人入嚟設立分部'}
   else if(K==='uncl'){ic=Math.round(G.clear[k]||0);tip+=` · 未清空（${ic}%）`}
-  else if(K==='fog'){ic='？';tip=l?`未探索 · 第${CNUM[l.ch-1]}章解鎖`:'未探索'}
+  else if(K==='fog'){ic='？';tip=l?`未探索 · ${G.order?'之後嘅章節':`第${CNUM[l.ch-1]}章`}解鎖`:'未探索'}
   return `<div class="mnode mk ${K} ${SELLOC===key?'on':''}" ${dz?`data-dz="${dz}"`:''} ${K==='main'||K==='op'||K==='sq'?`data-key="${key}"`:''} data-sel="${key}" data-loc="${id}" data-fixed="${fx}" style="left:${x}%;top:${y}%;${sty}" title="${esc(tip)}"><span class="mk-i">${ic}${badge?`<em class="mk-b">${badge}</em>`:''}${warn?'<em class="mk-w">!</em>':''}</span><span class="mk-n">${esc(name)}</span></div>`;
 }
 // 右邊：揀咗嘅地點嘅詳情同駐守嘅人（成個框都可以放人）
@@ -62,7 +62,7 @@ function locSide(k){
       <div class="muted" style="font-size:12px">危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[k]??1)*100)}%</div>
       <div style="font-size:12px">主要物資：${loot}</div>${b?`<div class="muted" style="font-size:11px">清場到 100% 就可以設分部或者搬過去（${b.beds} 床）</div>`:''}
       ${can?`<button class="btn sm pri" id="scavhere">派搜括隊去呢度</button>`:''}`;
-  }else h=head('未探索','<span class="chip">？</span>')+`<p class="muted" style="margin:0;font-size:12px">${l?`第${CNUM[l.ch-1]}章解鎖`:'仲未有人去過'}</p>`;
+  }else h=head('未探索','<span class="chip">？</span>')+`<p class="muted" style="margin:0;font-size:12px">${l?`${G.order?'之後嘅章節':`第${CNUM[l.ch-1]}章`}解鎖`:'仲未有人去過'}</p>`;
   return `<div class="sidein ls" ${dz?`data-dz="${dz}"`:''}>${h}</div>`;
 }
 function rCrew(){

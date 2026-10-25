@@ -225,7 +225,7 @@ function endDay(){
     let heal=Math.round(M*2);const hl=[...A].sort((a,b)=>a.hp/maxHp(a)-b.hp/maxHp(b));
     for(const u of hl){if(heal<=0)break;const n=Math.min(heal,maxHp(u)-u.hp);u.hp+=n;heal-=n}
     L(`${by.medic.map(nm).join('、')} 照顧傷者：${done.length?done.join('；'):'冇乜大傷，幫大家換藥補血'}${g.res.med<=0?'（藥品用晒！）':''}`,g.res.med<=0?'b':'g');
-    if(g.ch>=7){
+    if(reached(g,7)){
       const rm=teamFx(g,'research','max')*(BS(g).research||1);
       const medOk=g.res.med>0;if(medOk)g.res.med--;
       const add=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*.7*(g.flags.codex?1:.5)*rm*(medOk?1:.5)*(g.flags.labData?1.25:1);
@@ -265,13 +265,13 @@ function endDay(){
   const used=g.res.ammo-ammo;g.res.ammo=ammo;
   const def=Math.round((g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0))*(1+teamAdd('defPct')+(typeof capFx==='function'?capFx('base','def'):0))+opDef);
   const night={horde,def,raid,used};
-  if(g.ch>=5)L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
+  if(reached(g,5))L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
   if(raid)L(raid.txt,'b');
   if(!by.guard.length)L('今晚冇人守夜……','b');
   if(def>=horde){
     const dmg=Math.round(horde*rf(.05,.15));g.fort=Math.max(0,g.fort-dmg);g.kills+=horde;
     const bat=10+Math.floor(g.day*.8);const extra={bat};
-    if(g.ch>=5){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0)+(teamAdd('coreNight')?1:0);if(c)extra.core=c}
+    if(reached(g,5)){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0)+(teamAdd('coreNight')?1:0);if(c)extra.core=c}
     L(`守住咗！擊退 ${horde} 隻（${used?`用咗 ${used} 發彈藥，`:''}圍牆 -${dmg}）。天光後喺屍堆搵到 ${addRes(extra)}`,'g');
     night.ok=true;allSan(1);
     if(raid){g.flags[raid.win]=1;L(`擊退${raid.n}！戰利品：${addRes(raid.spoil)}`,'g');addLog(`擊退咗${raid.n}。`)}
@@ -344,12 +344,12 @@ function endDay(){
   {const tr=act(g).find(u=>fxOf(u).traitor&&u.san<40&&!teamFx(g,'tameLubu','any'));if(tr&&R()<.12)g.queue.push({id:'betray',c:{u:tr.id}})}
   {const cd=teamAdd('cureDaily');if(cd){const inf=act(g).find(u=>u.inf>0);if(inf){inf.inf=0;inf.iso=0;addLog(`冰心訣化解咗 ${nm(inf)} 嘅屍毒。`)}}}
   const since=g.day-(g.chDay[g.ch]||1);
-  if(g.ch<CHAPS.length&&((g.obj[g.ch]&&since>=MINCH)||since>=MAXCH||(g.ch===3&&g.flags.schoolGone&&since>=MINCH))){
-    if(!g.obj[g.ch])addLog(`時間唔等人，「${CHAPS[g.ch-1].goal}」未完成，劇情繼續推進。`);
-    g.ch++;g.chDay[g.ch]=g.day;addLog(`第${CNUM[g.ch-1]}章「${CHAPS[g.ch-1].t}」開始。`);
-    g.queue.push({id:CHEV[g.ch]});sd=true;
+  if(g.ch<CHAPS.length&&((g.obj[stN(g,g.ch)]&&since>=MINCH)||since>=MAXCH||(stN(g,g.ch)===3&&g.flags.schoolGone&&since>=MINCH))){
+    if(!g.obj[stN(g,g.ch)])addLog(`時間唔等人，「${curChap(g).goal}」未完成，劇情繼續推進。`);
+    g.ch++;g.chDay[g.ch]=g.day;addLog(`第${CNUM[g.ch-1]}章「${curChap(g).t}」開始。`);
+    g.queue.push({id:'ch_card',c:{pos:g.ch}});g.queue.push({id:CHEV[stN(g,g.ch)]});sd=true;
   }
-  BEATS.forEach(b=>{if(g.ch===b.ch&&g.day-(g.chDay[b.ch]||1)===b.off){g.queue.push({id:b.id});sd=true}});
+  BEATS.forEach(b=>{if(stN(g,g.ch)===b.ch&&g.day-(g.chDay[b.ch]||1)===b.off){g.queue.push({id:b.id});sd=true}});
   {const rd=raidTonight(g);if(rd){g.queue.push({id:'s_raidwarn',c:{n:rd.n}});sd=true}}
   if(g.research>=100&&!g.flags.cured){g.flags.cured=1;g.queue.push({id:'s_cured'})}
   if(g.obj[CHAPS.length]&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_fortress'})}
@@ -361,8 +361,13 @@ function endDay(){
   return{rep,night};
 }
 const MINCH=4,MAXCH=12;
+/* 章節次序：贏過一局可以亂數（g.order）。g.ch 係第幾章（日數同難度跟佢），stN 係嗰一章講緊邊個故事（CHAPS 編號） */
+function stN(g,pos){return g.order?g.order[pos-1]:pos}
+function curChap(g){return CHAPS[stN(g,g.ch)-1]}
+function posOf(g,n){return g.order?g.order.indexOf(n)+1:n}
+function reached(g,n){if(!g.order||!n||n<=1)return (n||0)<=g.ch;const i=g.order.indexOf(n);return i<0?n<=g.ch:i<g.ch}
 function checkObj(){
-  CHAPS.forEach(c=>{if(c.n<=G.ch&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;let t=addRes({...c.r,bat:(c.r.bat||0)+900});if(c.gear){const it=rollItem(c.gear);addItem(it);t+=`、${c.gear} 裝備「${ITEMS[it].n}」`}addLog(`完成第${CNUM[c.n-1]}章目標「${c.goal}」：${t}（包括十連抽禮物 900 電池）`);toast(`第${CNUM[c.n-1]}章完成！送你十連抽電池 900　${t}`)}});
+  CHAPS.forEach(c=>{if(reached(G,c.n)&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;let t=addRes({...c.r,bat:(c.r.bat||0)+900});if(c.gear){const it=rollItem(c.gear);addItem(it);t+=`、${c.gear} 裝備「${ITEMS[it].n}」`}addLog(`完成第${CNUM[posOf(G,c.n)-1]}章目標「${c.goal}」：${t}（包括十連抽禮物 900 電池）`);toast(`第${CNUM[posOf(G,c.n)-1]}章完成！送你十連抽電池 900　${t}`)}});
   checkAch();
 }
 
@@ -373,8 +378,8 @@ function autoAssign(){
   const hurtN=act(G).filter(u=>u.inj||u.crit||u.sick||u.hp<maxHp(u)*.7).length;
   const fortLow=G.fort<fortMax(G)*.5;
   if(A.length>=3)take('cook');
-  if(hurtN||G.ch>=7)take('medic');
-  if(G.ch>=7&&A.length>=6)take('medic');
+  if(hurtN||reached(G,7))take('medic');
+  if(reached(G,7)&&A.length>=6)take('medic');
   take('guard');
   if(fortLow)take('repair');
   take('scav');
@@ -387,7 +392,7 @@ function autoAssign(){
   act(G).forEach(u=>{if(u.sta<25&&!u.inf)u.job='rest'});
 }
 
-function canMove(g){return Object.keys(BASES).filter(k=>k!==g.base&&!BASES[k].start&&(g.clear[k]||0)>=100&&LOCS.find(l=>l.id===k).ch<=g.ch)}
+function canMove(g){return Object.keys(BASES).filter(k=>k!==g.base&&!BASES[k].start&&(g.clear[k]||0)>=100&&reached(g,LOCS.find(l=>l.id===k).ch))}
 function relocate(id){
   const g=G,old=BS(g),b=BASES[id],prev=g.base;
   const lost={food:-Math.floor(g.res.food*.25),water:-Math.floor(g.res.water*.25),parts:-Math.floor(g.res.parts*.25)};

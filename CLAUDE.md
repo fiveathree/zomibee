@@ -41,6 +41,7 @@ README.md       ← 玩家介紹
 | `9b_crew.js` | 倖存者頁 `rCrew`：三國志式大地圖，只有地點標記（`.mnode.mk`，`mkHTML`，種類由 `locKind` 判斷：main／op／sq／cand／uncl／site／fog）。撳標記揀地點（`SELLOC`），右邊 `locSide` 顯示詳情同駐守嘅人；後備名單喺地圖下面。拖人 `crewDrag`/`crewMove`、標記排位 `fitNodes`（行兩次）、拖標記 `nodeDrag`、成頁高度 `fitCrew`、右邊闊度 `SIDEW`（`resDrag`）。裝備背包同離開咗嘅人用 `openInv`／`openGone` 彈窗 |
 | `9c_reveal.js` | 抽到新角色或新裝備時嘅 3D 旋轉登場 `reveal()` |
 | `9d_net.js` | 據點網絡，見下面「據點網絡」 |
+| `9e_newgame.js` | 多周目：永久記錄 `meta()`（localStorage `zomibee_meta`：`ach` 永久獎章、`wins` 通關次數，`save` 時 `syncMeta` 同步）；`openNewGame` 開局畫面；`fresh(o)` 支援 `o.start`（`normal`／`ur`／`trio`／`lone`）同 `o.shuffle`；天崩開局專屬角色 `LONE`／`LONEDOG`（唔入抽卡池）；過場畫面 `chapCard`（`ch_card` 同 `script_open` 喺 `showQueue` 前攔截） |
 | `9_boot.js` | 啟動同舊存檔 migrate（**一定要最後**） |
 
 ### 覆寫模式（重要）
@@ -62,7 +63,8 @@ README.md       ← 玩家介紹
 
 | 欄位 | 內容 |
 |---|---|
-| `day`、`ch` | 日數同章節。`chDay` 記每章開始日 |
+| `day`、`ch` | 日數同第幾章（難度、日數跟佢）。`chDay` 記每章開始日。亂數局有 `order`（第幾章 → 講邊個故事），一律用 `stN(g,pos)`、`curChap(g)`、`reached(g,n)`、`posOf(g,n)`，唔好直接用 `CHAPS[g.ch-1]` 或者 `l.ch<=g.ch` |
+| `scrMap`、`mode` | 亂數局：獎章 → 解鎖邊個致敬劇本（用 `achUnl(a)`）；特別開局種類 |
 | `res` | food、water、med、parts、ammo、bat（電池＝抽卡貨幣）、core（晶核）、serum |
 | `fort`、`fac` | 圍牆值同設施等級 |
 | `base` | 主據點 id |
@@ -128,7 +130,7 @@ README.md       ← 玩家介紹
   - `MAPPOS`（地圖位置 %）
   - `BASE_FA`（適合陣營）
   - `LOCITEM`（可以搵到嘅裝備）
-- **新事件**：`EV.xxx={w,t,pre,txt,opts}`。
+- **新事件**：`EV.xxx={w,t,pre,txt,opts}`。事件 `c` 入面唔好用 `u`、`a`、`b` 做非角色嘅 key，`showQueue` 會當佢係角色 id，搵唔到就剔走個事件。
 - **新特質效果 key**：喺 `fxOf` 嘅結果讀。乘數類嘅 key 要加入 `MULK`。
 
 ## 測試

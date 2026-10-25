@@ -571,6 +571,21 @@ button.cell:hover{border-color:var(--sodium)}
 .planwrap .plan.fit{min-height:0!important;grid-auto-rows:minmax(0,auto)!important}.plan.fit .zone{min-height:0;overflow:hidden auto}
 .plan.fit .toks{gap:2px 4px}
 .errbox{background:#0d0a08;border:1px solid var(--line2);border-radius:6px;padding:8px;font-size:11px;white-space:pre-wrap;max-height:30vh;overflow:auto;margin:0;color:#ff9a8a}
+/* 開新一局、過場畫面 */
+.ngopt.on{border-color:var(--sodium);background:#2a2219;box-shadow:0 0 0 1px var(--sodium)}.ngopt[disabled]{opacity:.45;cursor:not-allowed}
+.ngopt em{font-style:normal;font-size:11px;color:var(--bone)}.ngopt .nglock{color:var(--dust)}.ngpick{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}.ngpick .sel{width:auto;padding:1px 4px;font-size:11px}
+.ngshuf{display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer}.ngshuf small{display:block;color:var(--dust);font-size:11px}.ngshuf.off{opacity:.5;cursor:not-allowed}
+.ach.old{opacity:.85;border-style:dashed}.ach.old .medal{color:#c9a23a;border-color:#7a5a20}
+.chcard{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px;cursor:pointer;background:radial-gradient(ellipse at center,#2a1d12 0%,#0b0907 72%);animation:ccfade .5s ease both}
+.cc-in{max-width:640px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.cc-no{font-family:var(--f-type);letter-spacing:.5em;color:var(--sodium);font-size:14px;animation:ccup .6s .2s both}
+.cc-t{font-family:var(--f-disp);font-size:clamp(40px,9vw,88px);line-height:1.1;margin:0;color:var(--bone);letter-spacing:.08em;text-shadow:0 0 30px rgba(242,197,82,.35);animation:ccup .8s .4s both}
+.cc-src{border:1px solid var(--sodium2);color:var(--sodium2);border-radius:20px;padding:2px 14px;font-size:12px;animation:ccup .6s .7s both}
+.cc-p{color:var(--bone);opacity:.88;line-height:1.8;font-size:15px;margin:6px 0 0;animation:ccup .8s .9s both}
+.cc-goal{color:var(--sodium2);font-size:13px;border-top:1px solid var(--line2);padding-top:10px;animation:ccup .6s 1.2s both}
+.cc-tap{margin-top:14px;font-size:11px;color:var(--dust);animation:ccblink 1.6s 1.6s infinite both}
+@keyframes ccfade{from{opacity:0}to{opacity:1}}@keyframes ccup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@keyframes ccblink{0%,100%{opacity:.3}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.chcard,.chcard *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -894,7 +909,7 @@ const DUNS=[
   st:['米蘭一間修道院嘅地下，牆上畫住《最後的晚餐》嘅草稿，旁邊係一部未完成嘅機器。','密室入面全部都係機關，齒輪轉動嘅聲音引嚟咗屍群。','你哋喺最後一個房搵到手稿：飛行器、裝甲車同一張解剖圖，旁邊寫住「人體嘅結構可以修補」。']}
 ];
 const DUNBYID={};DUNS.forEach(d=>{d.ch=0;d.dun=1;DUNBYID[d.id]=d});
-function allLocs(g){return LOCS.filter(l=>l.ch<=g.ch&&l.id!==g.base).concat(DUNS.filter(d=>g.dun&&g.dun[d.id]))}
+function allLocs(g){return LOCS.filter(l=>reached(g,l.ch)&&l.id!==g.base).concat(DUNS.filter(d=>g.dun&&g.dun[d.id]))}
 function onRecruit(g,id){
   if(!g.dun)g.dun={};
   CH[id].fa.forEach(f=>{const d=DUNS.find(x=>x.key===f);if(d&&!g.dun[d.id]){g.dun[d.id]=1;g.queue.push({id:'dun_open',c:{d:d.id,by:id}})}});
@@ -1180,7 +1195,7 @@ function endDay(){
     let heal=Math.round(M*2);const hl=[...A].sort((a,b)=>a.hp/maxHp(a)-b.hp/maxHp(b));
     for(const u of hl){if(heal<=0)break;const n=Math.min(heal,maxHp(u)-u.hp);u.hp+=n;heal-=n}
     L(`${by.medic.map(nm).join('、')} 照顧傷者：${done.length?done.join('；'):'冇乜大傷，幫大家換藥補血'}${g.res.med<=0?'（藥品用晒！）':''}`,g.res.med<=0?'b':'g');
-    if(g.ch>=7){
+    if(reached(g,7)){
       const rm=teamFx(g,'research','max')*(BS(g).research||1);
       const medOk=g.res.med>0;if(medOk)g.res.med--;
       const add=by.medic.reduce((s,u)=>s+eff(u,'medic'),0)*.7*(g.flags.codex?1:.5)*rm*(medOk?1:.5)*(g.flags.labData?1.25:1);
@@ -1220,13 +1235,13 @@ function endDay(){
   const used=g.res.ammo-ammo;g.res.ammo=ammo;
   const def=Math.round((g.fort*.4+gp+(BS(g).def||0)+teamFx(g,'def','sum')+A.filter(u=>!u.crit).reduce((s,u)=>s+stat(u,'str')*.15,0))*(1+teamAdd('defPct')+(typeof capFx==='function'?capFx('base','def'):0))+opDef);
   const night={horde,def,raid,used};
-  if(g.ch>=5)L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
+  if(reached(g,5))L(pick(['屍群入面有幾隻跑屍，速度快到似人。','一隻兩米高嘅巨屍撞住捲閘。','有隻喪屍不停尖叫，引埋成條街嘅同類過嚟。','啲變異體識得爬牆。']),'y');
   if(raid)L(raid.txt,'b');
   if(!by.guard.length)L('今晚冇人守夜……','b');
   if(def>=horde){
     const dmg=Math.round(horde*rf(.05,.15));g.fort=Math.max(0,g.fort-dmg);g.kills+=horde;
     const bat=10+Math.floor(g.day*.8);const extra={bat};
-    if(g.ch>=5){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0)+(teamAdd('coreNight')?1:0);if(c)extra.core=c}
+    if(reached(g,5)){const c=(R()<horde/90?1:0)+(horde>=60&&R()<.5?1:0)+(teamAdd('coreNight')?1:0);if(c)extra.core=c}
     L(`守住咗！擊退 ${horde} 隻（${used?`用咗 ${used} 發彈藥，`:''}圍牆 -${dmg}）。天光後喺屍堆搵到 ${addRes(extra)}`,'g');
     night.ok=true;allSan(1);
     if(raid){g.flags[raid.win]=1;L(`擊退${raid.n}！戰利品：${addRes(raid.spoil)}`,'g');addLog(`擊退咗${raid.n}。`)}
@@ -1299,12 +1314,12 @@ function endDay(){
   {const tr=act(g).find(u=>fxOf(u).traitor&&u.san<40&&!teamFx(g,'tameLubu','any'));if(tr&&R()<.12)g.queue.push({id:'betray',c:{u:tr.id}})}
   {const cd=teamAdd('cureDaily');if(cd){const inf=act(g).find(u=>u.inf>0);if(inf){inf.inf=0;inf.iso=0;addLog(`冰心訣化解咗 ${nm(inf)} 嘅屍毒。`)}}}
   const since=g.day-(g.chDay[g.ch]||1);
-  if(g.ch<CHAPS.length&&((g.obj[g.ch]&&since>=MINCH)||since>=MAXCH||(g.ch===3&&g.flags.schoolGone&&since>=MINCH))){
-    if(!g.obj[g.ch])addLog(`時間唔等人，「${CHAPS[g.ch-1].goal}」未完成，劇情繼續推進。`);
-    g.ch++;g.chDay[g.ch]=g.day;addLog(`第${CNUM[g.ch-1]}章「${CHAPS[g.ch-1].t}」開始。`);
-    g.queue.push({id:CHEV[g.ch]});sd=true;
+  if(g.ch<CHAPS.length&&((g.obj[stN(g,g.ch)]&&since>=MINCH)||since>=MAXCH||(stN(g,g.ch)===3&&g.flags.schoolGone&&since>=MINCH))){
+    if(!g.obj[stN(g,g.ch)])addLog(`時間唔等人，「${curChap(g).goal}」未完成，劇情繼續推進。`);
+    g.ch++;g.chDay[g.ch]=g.day;addLog(`第${CNUM[g.ch-1]}章「${curChap(g).t}」開始。`);
+    g.queue.push({id:'ch_card',c:{pos:g.ch}});g.queue.push({id:CHEV[stN(g,g.ch)]});sd=true;
   }
-  BEATS.forEach(b=>{if(g.ch===b.ch&&g.day-(g.chDay[b.ch]||1)===b.off){g.queue.push({id:b.id});sd=true}});
+  BEATS.forEach(b=>{if(stN(g,g.ch)===b.ch&&g.day-(g.chDay[b.ch]||1)===b.off){g.queue.push({id:b.id});sd=true}});
   {const rd=raidTonight(g);if(rd){g.queue.push({id:'s_raidwarn',c:{n:rd.n}});sd=true}}
   if(g.research>=100&&!g.flags.cured){g.flags.cured=1;g.queue.push({id:'s_cured'})}
   if(g.obj[CHAPS.length]&&!g.flags.ended){g.flags.ended=1;g.queue.push({id:'end_fortress'})}
@@ -1316,8 +1331,13 @@ function endDay(){
   return{rep,night};
 }
 const MINCH=4,MAXCH=12;
+/* 章節次序：贏過一局可以亂數（g.order）。g.ch 係第幾章（日數同難度跟佢），stN 係嗰一章講緊邊個故事（CHAPS 編號） */
+function stN(g,pos){return g.order?g.order[pos-1]:pos}
+function curChap(g){return CHAPS[stN(g,g.ch)-1]}
+function posOf(g,n){return g.order?g.order.indexOf(n)+1:n}
+function reached(g,n){if(!g.order||!n||n<=1)return (n||0)<=g.ch;const i=g.order.indexOf(n);return i<0?n<=g.ch:i<g.ch}
 function checkObj(){
-  CHAPS.forEach(c=>{if(c.n<=G.ch&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;let t=addRes({...c.r,bat:(c.r.bat||0)+900});if(c.gear){const it=rollItem(c.gear);addItem(it);t+=`、${c.gear} 裝備「${ITEMS[it].n}」`}addLog(`完成第${CNUM[c.n-1]}章目標「${c.goal}」：${t}（包括十連抽禮物 900 電池）`);toast(`第${CNUM[c.n-1]}章完成！送你十連抽電池 900　${t}`)}});
+  CHAPS.forEach(c=>{if(reached(G,c.n)&&!G.obj[c.n]&&c.ok(G)){G.obj[c.n]=1;let t=addRes({...c.r,bat:(c.r.bat||0)+900});if(c.gear){const it=rollItem(c.gear);addItem(it);t+=`、${c.gear} 裝備「${ITEMS[it].n}」`}addLog(`完成第${CNUM[posOf(G,c.n)-1]}章目標「${c.goal}」：${t}（包括十連抽禮物 900 電池）`);toast(`第${CNUM[posOf(G,c.n)-1]}章完成！送你十連抽電池 900　${t}`)}});
   checkAch();
 }
 
@@ -1328,8 +1348,8 @@ function autoAssign(){
   const hurtN=act(G).filter(u=>u.inj||u.crit||u.sick||u.hp<maxHp(u)*.7).length;
   const fortLow=G.fort<fortMax(G)*.5;
   if(A.length>=3)take('cook');
-  if(hurtN||G.ch>=7)take('medic');
-  if(G.ch>=7&&A.length>=6)take('medic');
+  if(hurtN||reached(G,7))take('medic');
+  if(reached(G,7)&&A.length>=6)take('medic');
   take('guard');
   if(fortLow)take('repair');
   take('scav');
@@ -1342,7 +1362,7 @@ function autoAssign(){
   act(G).forEach(u=>{if(u.sta<25&&!u.inf)u.job='rest'});
 }
 
-function canMove(g){return Object.keys(BASES).filter(k=>k!==g.base&&!BASES[k].start&&(g.clear[k]||0)>=100&&LOCS.find(l=>l.id===k).ch<=g.ch)}
+function canMove(g){return Object.keys(BASES).filter(k=>k!==g.base&&!BASES[k].start&&(g.clear[k]||0)>=100&&reached(g,LOCS.find(l=>l.id===k).ch))}
 function relocate(id){
   const g=G,old=BS(g),b=BASES[id],prev=g.base;
   const lost={food:-Math.floor(g.res.food*.25),water:-Math.floor(g.res.water*.25),parts:-Math.floor(g.res.parts*.25)};
@@ -1591,7 +1611,7 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
 
 「第九日。佢哋好似識得記住邊度有人。我哋要搬。如果有人睇到呢本日記——唔好去中央車站。」`,opts:[{l:'收好',fx:()=>addRes({bat:30})}]},
  secret:{w:4,ch:3,t:'穿煲',pre:()=>G.flags.hid&&!G.flags.secretOut?{}:null,txt:()=>'有人喺收音機旁邊搵到你寫低嘅筆記：「列車屍變，安全區失聯。」\n\n大家望住你。',opts:[{l:'承認',fx:()=>{G.flags.secretOut=1;allSan(-12);return '「點解唔講？」冇人再相信你講嘅消息。\n全隊意志 -12'}}]},
- schoolRetry:{w:5,ch:3,t:'天台仲有反光',pre:()=>G.ch>=3&&!G.flags.rescued&&!G.flags.schoolGone?{}:null,txt:()=>'對面中學天台嘅反光仲喺度，但慢咗好多。',opts:[
+ schoolRetry:{w:5,ch:3,t:'天台仲有反光',pre:()=>reached(G,3)&&!G.flags.rescued&&!G.flags.schoolGone?{}:null,txt:()=>'對面中學天台嘅反光仲喺度，但慢咗好多。',opts:[
   {l:'再救一次',req:()=>able().length>=2,fx:()=>rescueSchool()},
   {l:'放棄',fx:()=>{G.flags.schoolGone=1;allSan(-6);return '之後再冇反光。\n全隊意志 -6'}}]},
  generator:{w:2,t:'發電機壞咗',txt:()=>'據點唯一一部發電機冒煙，燈全部熄晒。',opts:[
@@ -1606,7 +1626,7 @@ ${teamFx(G,'deal','any')?'你哋隊入面有人識講價，條件好咗。':''}`
 };
 function randomEvent(){
   const pool=[];
-  for(const id in EV){const e=EV[id];if(!e.w)continue;if(e.ch&&G.ch<e.ch)continue;let c={};if(e.pre){c=e.pre({});if(!c)continue}pool.push({id,c,w:e.w})}
+  for(const id in EV){const e=EV[id];if(!e.w)continue;if(e.ch&&!reached(G,e.ch))continue;let c={};if(e.pre){c=e.pre({});if(!c)continue}pool.push({id,c,w:e.w})}
   if(!pool.length)return;
   let r=R()*pool.reduce((s,p)=>s+p.w,0);for(const p of pool){r-=p.w;if(r<=0){G.queue.push({id:p.id,c:p.c});return}}
 }
@@ -1743,7 +1763,7 @@ function statusChips(u){
   return c.join('');
 }
 function renderHead(){
-  const c=CHAPS[G.ch-1];
+  const c=curChap(G);
   $('#daystamp').innerHTML=`第 <b>${G.day}</b> 日 · ${CNUM[G.ch-1]}章 ${c.t} · ${BS(G).n}`;
   const fc=forecast(G);
   const low={food:G.res.food<fc.food*2,water:G.res.water<fc.water*2,med:G.res.med<2,ammo:G.res.ammo<2};
@@ -1863,7 +1883,7 @@ function showQueue(){
     showEvent(q.id,c);return;
   }
   save();render();
-  if(G.over&&!G.flags.overShown){G.flags.overShown=1;save();if(G.over==='dead')modal(`<div class="modal paper"><div class="eyebrow">GAME OVER</div><h2>全滅</h2><div class="story">捲閘外面嘅聲音，終於冇再停過。\n\n你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。</div><button class="btn pri" id="ng">開新一局</button></div>`,()=>{$('#ng').onclick=()=>{fresh();save();closeOv();go('base');showQueue()}})}
+  if(G.over&&!G.flags.overShown){G.flags.overShown=1;save();if(G.over==='dead')modal(`<div class="modal paper"><div class="eyebrow">GAME OVER</div><h2>全滅</h2><div class="story">捲閘外面嘅聲音，終於冇再停過。\n\n你哋撐咗 ${G.day-1} 日，擊退咗 ${G.kills} 隻喪屍。</div><button class="btn pri" id="ng">開新一局</button></div>`,()=>{$('#ng').onclick=openNewGame})}
 }
 function showEvent(id,c){
   const e=EV[id];
@@ -1991,14 +2011,14 @@ function rMenu(){
       <p style="margin:0" class="muted">跟住十三章劇情行：港產、韓式、日式、朝鮮古疫、國產網文、美式，到後期大陸末日文嘅列車、地洞、監獄、醫院、地宮同堡壘。撐過最後嘅屍潮之夜就係結局。傳奇角色好強，但據點都要有人煮飯、巡邏、維修，否則一樣會死。</p>
     </div>
     <div class="panel stack"><h3>兌換碼</h3><div class="row"><input class="sel" id="code" style="flex:1;min-width:0" placeholder="輸入兌換碼" autocomplete="off"><button class="btn" id="redeem">兌換</button></div><span class="muted" id="cmsg"></span></div>
-    <div class="panel stack"><h3>重新開始</h3><p class="muted" style="margin:0">清走而家嘅進度，由第 1 日再嚟。</p><div><button class="btn" id="reset">開新一局</button></div></div>
+    <div class="panel stack"><h3>重新開始</h3><p class="muted" style="margin:0">清走而家嘅進度，由第 1 日再嚟。贏過一局可以揀特別開局同亂數劇本；獎章永久保留。</p><div><button class="btn" id="reset">開新一局</button></div></div>
   </div>`;
   $('#redeem').onclick=()=>{const c=$('#code').value.trim().toUpperCase();let m='代碼無效';
     if(c==='BRAINS'&&!G.flags.c1){G.flags.c1=1;addRes({bat:1000});m='電池 +1000'}
     else if(c==='ZOMIBEE'&&!G.flags.c2){G.flags.c2=1;addRes({food:20,water:20,med:10,parts:20,ammo:20});m='物資大禮包已到'}
     else if(['BRAINS','ZOMIBEE'].includes(c))m='呢個代碼已經用過';
     save();renderHead();$('#cmsg').textContent=m};
-  $('#reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='再撳一次確認';e.target.classList.add('danger');return}fresh();save();go('base');showQueue()};
+  $('#reset').onclick=openNewGame;
 }
 
 /* ---------- 平面圖 ---------- */
@@ -2046,7 +2066,7 @@ function openMove(){
   modal(`<div class="modal dismiss">
     <div class="eyebrow">搬據點</div><h2>而家：${esc(BS(G).n)}</h2>
     <p class="muted" style="margin:0">床位 ${bedCap(G)}、圍牆上限 ${fortMax(G)}。搬走會留低約四分一食物、水同零件，所有設施各跌 1 級。去搜括一個地點就會累積清場進度。</p>
-    <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=l.ch>G.ch;
+    <div class="stack" style="gap:8px">${all.map(k=>{const b=BASES[k],l=LOCS.find(x=>x.id===k),ok=mv.includes(k),cp=Math.round(G.clear[k]||0),lock=!reached(G,l.ch);
       return `<div class="panel row" style="background:var(--slab2);justify-content:space-between">
         <div style="min-width:0;flex:1"><b>${lock?'？？？':esc(b.n)}</b> <span class="muted" style="font-size:12px">${lock?`第${CNUM[l.ch-1]}章解鎖`:`${b.beds} 床 · 圍牆 ${b.wall}`}</span>
         ${lock?'':`<div class="muted" style="font-size:12px">${esc(b.d)} ${esc(b.pd)}</div>`}</div>
@@ -2812,7 +2832,7 @@ SCRIPTS.forEach(d=>{d.ch=0;d.dun=1;d.script=1;DUNS.push(d);DUNBYID[d.id]=d});
   if(c.s===1){const it=pick(d.items);addItem(it);return `搵到：${ITEMS[it].r} 裝備「${ITEMS[it].n}」`}
   addItem(d.prize);addLog(`完成劇本「${d.n}」。`);checkAch();return `劇本完成！\n${ITEMS[d.prize].r} 裝備「${ITEMS[d.prize].n}」\n${addRes({bat:400,core:3})}`};
  const t0=ds.txt;ds.txt=c=>{const d=DUNBYID[c.d];return d.script?`【${d.n}】（${d.genre}）${['第一幕','第二幕','終幕'][c.s]}\n\n${d.st[c.s]}`:t0(c)};}
-EV.script_open={story:1,t:'新劇本',pre:c=>DUNBYID[c.d]?c:null,txt:c=>{const d=DUNBYID[c.d];return `解鎖獎章「${ACHBY[c.a].n}」，收到一段奇怪嘅無線電：
+EV.script_open={story:1,t:'新劇本',pre:c=>DUNBYID[c.d]?c:null,txt:c=>{const d=DUNBYID[c.d];return `解鎖獎章「${ACHBY[c.m].n}」，收到一段奇怪嘅無線電：
 
 「${d.n.replace('劇本 · ','')}」——${d.genre}。
 
@@ -2859,25 +2879,25 @@ function checkAch(){
     if(G.ach[a.id]||!a.ok(G))return;
     G.ach[a.id]=G.day;let t=addRes(a.r);
     if(a.gear){const it=rollItem(a.gear);addItem(it);t+=(t?'、':'')+`${a.gear} 裝備「${ITEMS[it].n}」`}
-    if(a.unlock&&!G.dun[a.unlock]){G.dun[a.unlock]=1;G.queue.push({id:'script_open',c:{d:a.unlock,a:a.id}});t+=`、解鎖「${DUNBYID[a.unlock].n}」`}
+    {const s=achUnl(a);if(s&&!G.dun[s]){G.dun[s]=1;G.queue.push({id:'script_open',c:{d:s,m:a.id}});t+=`、解鎖「${DUNBYID[s].n}」`}}
     addLog(`獲得獎章「${a.n}」：${t}`);got.push(a.n);
   });
   if(got.length)toast(`獲得獎章：${got.join('、')}`);
 }
 function rAch(){
-  G.ach=G.ach||{};const n=ACH.filter(a=>G.ach[a.id]).length;
-  $('#main').innerHTML=`<div class="secth"><h2>成就獎章</h2><span class="muted type">${n}/${ACH.length}</span></div>
+  G.ach=G.ach||{};const n=ACH.filter(a=>G.ach[a.id]).length,M=meta(),nm2=ACH.filter(a=>G.ach[a.id]||(M.ach||{})[a.id]).length;
+  $('#main').innerHTML=`<div class="secth"><h2>成就獎章</h2><span class="muted type">今局 ${n}/${ACH.length} · 永久 ${nm2}/${ACH.length}${M.wins?` · 通關 ${M.wins} 次`:''}</span></div>
   <p class="muted" style="margin:0 0 12px;max-width:62ch">達成條件就會自動頒發獎章同獎勵。部分獎章會解鎖致敬經典遊戲同電影風格嘅原創劇本。完成每一章都會額外送 900 電池（一次十連）。</p>
-  <div class="achs">${ACH.map(a=>{const d=G.ach[a.id];const rw=[Object.keys(a.r).map(k=>`${RES[k].n} ${a.r[k]}`).join('、'),a.gear?`${a.gear} 裝備`:'',a.unlock?`劇本「${DUNBYID[a.unlock].n.replace('劇本 · ','')}」`:''].filter(Boolean).join('、');
-    return `<div class="ach ${d?'got':''}"><div class="medal">${d?'★':'☆'}</div><div style="min-width:0"><b>${esc(a.n)}</b><div class="muted" style="font-size:12px">${esc(a.d)}</div><div style="font-size:11px;color:var(--sodium2)">${d?`第 ${d} 日獲得 · `:''}獎勵：${esc(rw)}</div></div></div>`}).join('')}</div>
+  <div class="achs">${ACH.map(a=>{const d=G.ach[a.id];const rw=[Object.keys(a.r).map(k=>`${RES[k].n} ${a.r[k]}`).join('、'),a.gear?`${a.gear} 裝備`:'',a.unlock?`劇本「${G.scrMap?'亂數':DUNBYID[achUnl(a)].n.replace('劇本 · ','')}」`:''].filter(Boolean).join('、');
+    const old=!d&&M.ach&&M.ach[a.id];return `<div class="ach ${d?'got':old?'old':''}"><div class="medal">${d||old?'★':'☆'}</div><div style="min-width:0"><b>${esc(a.n)}</b><div class="muted" style="font-size:12px">${esc(a.d)}</div><div style="font-size:11px;color:var(--sodium2)">${d?`第 ${d} 日獲得 · `:old?'以前攞過，今局達成會再攞獎勵 · ':''}獎勵：${esc(rw)}</div></div></div>`}).join('')}</div>
   <div class="secth"><h2>致敬劇本</h2></div>
-  <div class="inv">${SCRIPTS.map(d=>{const on=G.dun[d.id];const a=ACH.find(x=>x.unlock===d.id);return `<div class="invi ${on?'':'off'}"><div class="row" style="justify-content:space-between"><b>${esc(d.n)}</b><span class="chip">${esc(d.genre)}</span></div><div style="font-size:12px">${on?`${(G.clear[d.id]||0)>=100?'✓ 已完成':'進度 '+Math.round(G.clear[d.id]||0)+'%'} · 加成：${d.bonus.map(f=>FA[f]).join('、')}`:`解鎖條件：獎章「${esc(a.n)}」（${esc(a.d)}）`}</div></div>`}).join('')}</div>`;
+  <div class="inv">${SCRIPTS.map(d=>{const on=G.dun[d.id];const a=ACH.find(x=>achUnl(x)===d.id);return `<div class="invi ${on?'':'off'}"><div class="row" style="justify-content:space-between"><b>${esc(d.n)}</b><span class="chip">${esc(d.genre)}</span></div><div style="font-size:12px">${on?`${(G.clear[d.id]||0)>=100?'✓ 已完成':'進度 '+Math.round(G.clear[d.id]||0)+'%'} · 加成：${d.bonus.map(f=>FA[f]).join('、')}`:`解鎖條件：獎章「${esc(a.n)}」（${esc(a.d)}）`}</div></div>`}).join('')}</div>`;
 }
 function render(){renderHead();({base:rBase,crew:rCrew,radio:rRadio,log:rLog,menu:rMenu,ach:rAch})[VIEW]();showPop()}
 /* ================= 據點頁新版面：平面圖做主角、資料放右邊、可拖放 ================= */
 let DRAGGED=false;
 function rBase(){
-  const c=CHAPS[G.ch-1],fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act&&!u.op),opn=G.units.filter(u=>!u.act&&u.op).length;
+  const c=curChap(G),P=G.ch,fc=forecast(G),A=act(G),res=G.units.filter(u=>!u.act&&!u.op),opn=G.units.filter(u=>!u.act&&u.op).length;
   const avail=allLocs(G);if(!avail.some(l=>l.id===G.loc))G.loc=avail[0].id;
   const danger=fc.def<fc.lo?'bad':fc.def>=fc.hi?'ok':'';
   const done=!!G.obj[c.n];
@@ -2887,10 +2907,10 @@ function rBase(){
   $('#main').innerHTML=`
   <div class="toprow">
     <section class="chap">
-      <div class="chl"><span class="no">CH${c.n}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
+      <div class="chl"><span class="no">CH${P}</span><h2>${esc(c.t)}</h2><span class="src">${esc(c.src)}</span>
         <div class="goal ${done?'done':''}"><span class="chk">${done?'✓':''}</span><span>${esc(c.goal)}${c.n===7?`（研究 ${G.research.toFixed(0)}%）`:''}</span></div>
-        <span class="nxt">${c.n<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[c.n]||1)+MINCH)} 日開始第${CNUM[c.n]}章`:`完成目標解鎖第${CNUM[c.n]}章 · 最遲第 ${(G.chDay[c.n]||1)+MAXCH} 日`):''}</span>
-        <details class="chd"><summary>劇情（已解鎖 ${c.n}/${CHAPS.length} 章）</summary>${CHAPS.slice(0,c.n).reverse().map(x=>`<p><b>第${CNUM[x.n-1]}章 ${esc(x.t)}</b>${x.n<c.n?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
+        <span class="nxt">${P<CHAPS.length?(done?`✓ 第 ${Math.max(G.day,(G.chDay[P]||1)+MINCH)} 日開始第${CNUM[P]}章`:`完成目標解鎖第${CNUM[P]}章 · 最遲第 ${(G.chDay[P]||1)+MAXCH} 日`):''}</span>
+        <details class="chd"><summary>劇情（已解鎖 ${P}/${CHAPS.length} 章${G.order?' · 亂數':''}）</summary>${Array.from({length:P},(_,i)=>[i+1,CHAPS[stN(G,i+1)-1]]).reverse().map(([p,x])=>`<p><b>第${CNUM[p-1]}章 ${esc(x.t)}</b>${p<P?(G.obj[x.n]?' ✓':' ✗'):''}<br>${esc(x.p)}</p>`).join('')}</details>
       </div>
       ${G.over?`<div class="row" style="margin-top:8px"><b style="color:var(--sodium)">${G.over==='dead'?'全滅。':'你已經完成咗呢一局。'}</b><button class="btn pri sm" id="newgame">開新一局</button></div>`:''}
     </section>
@@ -2916,7 +2936,7 @@ function rBase(){
   $('#proj').onchange=e=>{G.proj=e.target.value;save();render()};
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   bindPlan();
-  const ng=$('#newgame');if(ng)ng.onclick=()=>{fresh();save();go('base');showQueue()};
+  const ng=$('#newgame');if(ng)ng.onclick=openNewGame;
 }
 function planHTML(A,res){
   const b=BS(G),loc=allLocs(G).find(l=>l.id===G.loc);
@@ -3448,7 +3468,7 @@ let SELLOC='base';
 function locKind(k){
   if(k==='squad')return 'sq';if(k==='base'||k===G.base)return 'main';if(G.outposts[k])return 'op';
   if(opCands(G).includes(k))return 'cand';
-  const l=LOCS.find(x=>x.id===k);if(!l||l.ch>G.ch)return 'fog';
+  const l=LOCS.find(x=>x.id===k);if(!l||!reached(G,l.ch))return 'fog';
   return BASES[k]?'uncl':'site';
 }
 const loyCol=v=>v<35?'var(--blood)':v<60?'var(--sodium)':'var(--calm)';
@@ -3461,7 +3481,7 @@ function mkHTML(k,x,y,fx){
   else if(K==='sq'){ic='⚔';badge=opMembers(G,'squad').length;dz='squad'}
   else if(K==='cand'){ic='＋';dz='new:'+k;warn=!!(G.idle||{})[k];tip+=' · 已清場，拖人入嚟設立分部'}
   else if(K==='uncl'){ic=Math.round(G.clear[k]||0);tip+=` · 未清空（${ic}%）`}
-  else if(K==='fog'){ic='？';tip=l?`未探索 · 第${CNUM[l.ch-1]}章解鎖`:'未探索'}
+  else if(K==='fog'){ic='？';tip=l?`未探索 · ${G.order?'之後嘅章節':`第${CNUM[l.ch-1]}章`}解鎖`:'未探索'}
   return `<div class="mnode mk ${K} ${SELLOC===key?'on':''}" ${dz?`data-dz="${dz}"`:''} ${K==='main'||K==='op'||K==='sq'?`data-key="${key}"`:''} data-sel="${key}" data-loc="${id}" data-fixed="${fx}" style="left:${x}%;top:${y}%;${sty}" title="${esc(tip)}"><span class="mk-i">${ic}${badge?`<em class="mk-b">${badge}</em>`:''}${warn?'<em class="mk-w">!</em>':''}</span><span class="mk-n">${esc(name)}</span></div>`;
 }
 // 右邊：揀咗嘅地點嘅詳情同駐守嘅人（成個框都可以放人）
@@ -3499,7 +3519,7 @@ function locSide(k){
       <div class="muted" style="font-size:12px">危險 ${'▮'.repeat(Math.ceil(l.dg*10))} · 存貨 ${Math.round((G.dep[k]??1)*100)}%</div>
       <div style="font-size:12px">主要物資：${loot}</div>${b?`<div class="muted" style="font-size:11px">清場到 100% 就可以設分部或者搬過去（${b.beds} 床）</div>`:''}
       ${can?`<button class="btn sm pri" id="scavhere">派搜括隊去呢度</button>`:''}`;
-  }else h=head('未探索','<span class="chip">？</span>')+`<p class="muted" style="margin:0;font-size:12px">${l?`第${CNUM[l.ch-1]}章解鎖`:'仲未有人去過'}</p>`;
+  }else h=head('未探索','<span class="chip">？</span>')+`<p class="muted" style="margin:0;font-size:12px">${l?`${G.order?'之後嘅章節':`第${CNUM[l.ch-1]}章`}解鎖`:'仲未有人去過'}</p>`;
   return `<div class="sidein ls" ${dz?`data-dz="${dz}"`:''}>${h}</div>`;
 }
 function rCrew(){
@@ -4179,6 +4199,98 @@ EV.water_trade={w:3,t:'水車商人',pre:()=>G.res.water<Math.max(10,act(G).leng
   {l:'40 食物 → 32 水',req:()=>G.res.food>=40,fx:()=>addRes({food:-40,water:32})},
   {l:'10 零件 → 12 水',req:()=>G.res.parts>=10,fx:()=>addRes({parts:-10,water:12})},
   {l:'唔換',fx:()=>'水車開走咗，揚起一陣塵。'}]};
+/* ================= 多周目：永久獎章、通關記錄、特別開局、章節同劇本亂數、過場畫面 ================= */
+/* 天崩開局專屬角色（致敬經典末日電影，原創名字）：唔入抽卡池，亦唔計圖鑑 */
+const LONE='q_lone',LONEDOG='q_dog';
+CH[LONE]={id:LONE,n:'韋恩中校',g:'UR',o:'紐約',job:'軍方病毒學家 · 孤城最後一人',s:[18,15,16,14,22,9,22],tr:['legend','loner'],
+  sk:{n:'孤城研究',d:'醫療 ×1.6、保安 +30%，解藥研究 ×2，幾乎唔會被咬'},fx:{job:{medic:1.6,guard:1.3},research:2,bite:.2},
+  bio:'全城感染之後，佢係唯一一個免疫嘅人。每日中午佢喺碼頭用收音機廣播：「我仲喺度，如果有人聽到……」三年嚟，回應佢嘅只有佢隻狗。',av:'韋',fa:['西','軍','醫']};
+CH[LONEDOG]={id:LONEDOG,n:'阿灰',g:'SR',o:'紐約',job:'德國牧羊犬',s:[14,16,18,0,0,0,14],tr:['animal'],
+  sk:{n:'忠犬',d:'巡邏 +50%，夜間防禦 +6'},fx:{job:{patrol:1.5},def:6},
+  bio:'韋恩中校嘅狗，陪佢喺空城行咗三年。佢比任何人都早知道黑暗入面有咩。',av:'灰',fa:['寵']};
+LOOK[LONE]='crop,#3a2a1a,#4a5a3a,T,vest';
+PETC[LONEDOG]=['#5a4030','#c89a5a',1];
+EV.s_lone={story:1,t:'第一章 · 孤城',txt:()=>`港灣市淪陷第三年。\n\n全城得返你一個人，同埋阿灰。佢上個禮拜為咗保護你，同一隻夜行屍咬咗一場，條腳到而家仲跛。\n\n今朝收音機第一次有人回應：「我哋喺南邊……仲有人……」\n\n天黑之前，你要決定繼續一個人守，定係開門。`,
+  opts:[{l:'開門，搵其他人',fx:()=>`你將捲閘拉起一半。\n${addRes({bat:300})}`},{l:'鎖好門，自己守',fx:()=>{G.fort+=15;return '你加多兩條鐵鏈，圍牆 +15'}}]};
+
+/* ---------- 永久記錄（同存檔分開，開新一局都唔會清） ---------- */
+const MKEY='zomibee_meta';
+function meta(){try{return JSON.parse(localStorage.getItem(MKEY))||{}}catch(e){return {}}}
+function syncMeta(){
+  if(!G)return;const m=meta();m.ach=m.ach||{};let ch=false;
+  for(const k in G.ach||{})if(!m.ach[k]){m.ach[k]=1;ch=true}
+  if(G.flags&&G.flags.finalWon&&!G.flags.winRec){G.flags.winRec=1;m.wins=(m.wins||0)+1;ch=true}
+  if(ch)try{localStorage.setItem(MKEY,JSON.stringify(m))}catch(e){}
+}
+{const _sv=save;save=function(){syncMeta();_sv()}}
+/* 獎章解鎖邊個致敬劇本：亂數局用 G.scrMap */
+const achUnl=a=>a.unlock&&((G.scrMap&&G.scrMap[a.id])||a.unlock);
+
+/* ---------- 開新一局 ---------- */
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const gacha=id=>BY_G[CH[id].g]&&BY_G[CH[id].g].includes(id);
+const facPool=f=>Object.keys(CH).filter(id=>(CH[id].fa||[]).includes(f)&&!CH[id].tr.includes('animal')&&gacha(id));
+{const _f=fresh;fresh=function(o){
+  o=o||{};_f();const g=G;
+  if(o.shuffle){
+    g.order=[1,...shuf([2,3,4,5,6,7,8,9,10,11]),12,13];
+    const ul=ACH.filter(a=>a.unlock),ids=shuf(ul.map(a=>a.unlock));g.scrMap={};ul.forEach((a,i)=>g.scrMap[a.id]=ids[i]);
+  }
+  const ids=o.start==='ur'?['c_chan','c_keung','c_cheung',o.ur]:o.start==='trio'?o.ids:o.start==='lone'?[LONE,LONEDOG]:null;
+  if(ids){
+    g.units=[];g.dex={};ids.forEach(id=>addUnit(g,id));g.units.forEach(u=>u.job=bestJob(u));g.mode=o.start;
+    if(o.start==='lone'){const d=g.units.find(u=>u.id===LONEDOG);d.inj=1;d.hp=Math.round(maxHp(d)*.45);d.job='rest';
+      g.queue=g.queue.map(q=>q.id==='s_intro'?{id:'s_lone'}:q)}
+  }
+  g.queue.unshift({id:'ch_card',c:{pos:1}});
+  return g;
+}}
+function openNewGame(){
+  const m=meta(),won=(m.wins||0)>0,nAch=Object.keys(m.ach||{}).length;
+  const URS=BY_G.UR.filter(id=>!CH[id].tr.includes('animal'));
+  const FAS=Object.keys(FA).filter(f=>facPool(f).length>=3);
+  let st='normal',shuffle=won,ur=pick(URS),fa=FAS[0],trio=shuf(facPool(fa)).slice(0,3);
+  const nmL=ids=>ids.map(id=>`<span class="rn ${CH[id].g}">${esc(CH[id].n)}</span>`).join('、');
+  const draw=()=>{
+    const opt=(k,t,d,extra='',lock=k!=='normal'&&!won)=>`<button class="distb ngopt ${st===k?'on':''}" data-st="${k}" ${lock?'disabled':''}><b>${t}</b><span>${d}</span>${lock?'<em class="nglock">贏一局解鎖</em>':extra}</button>`;
+    modal(`<div class="modal dismiss" style="width:min(680px,100%)"><div class="eyebrow">開新一局</div>
+      <p class="muted" style="margin:0;font-size:12px">${won?`已經通關 ${m.wins} 次。`:'撐過第十三章「末日堡壘」嘅屍潮之夜就算贏一局，會解鎖特別開局同亂數劇本。'}獎章永久保留（已攞過 ${nAch}/${ACH.length} 個），新一局達成都會再攞獎勵。${G&&!G.over&&G.day>1?'<br><b style="color:var(--blood)">會清走而家第 '+G.day+' 日嘅進度。</b>':''}</p>
+      <div class="distg">
+        ${opt('normal','普通開局','陳太、強哥、阿祥三個街坊，喺街口便利店落腳')}
+        ${opt('ur','傳奇助陣','三個街坊之外，一開波送一個 UR 傳奇',`<em class="ngpick">${nmL([ur])} <a class="linkbtn" data-re="ur">換一個</a></em>`)}
+        ${opt('trio','同陣形開局','揀一個陣形，由同一陣形嘅三個人開局',`<em class="ngpick"><select class="sel" id="ngfa">${FAS.map(f=>`<option value="${f}" ${f===fa?'selected':''}>${FA[f]}</option>`).join('')}</select>${nmL(trio)} <a class="linkbtn" data-re="trio">換過</a></em>`)}
+        ${opt('lone','天崩開局','全城只剩你一個：韋恩中校（UR）同一隻受咗傷嘅德國牧羊犬阿灰','<em class="ngpick">極難 · 致敬經典末日電影</em>')}
+      </div>
+      <label class="ngshuf ${won?'':'off'}"><input type="checkbox" id="ngshuf" ${shuffle?'checked':''} ${won?'':'disabled'}> 章節同致敬劇本亂數<small>第一章同最後兩章固定，中間十章同六個致敬劇本嘅解鎖次序打亂${won?'':'（贏一局解鎖）'}</small></label>
+      <div class="row"><button class="btn sm" id="cx">取消</button><button class="btn pri" id="ngo" style="margin-left:auto">開始新一局</button></div></div>`,()=>{
+      $('#cx').onclick=closeOv;
+      document.querySelectorAll('[data-st]').forEach(b=>b.onclick=e=>{if(e.target.closest('select,a'))return;st=b.dataset.st;draw()});
+      document.querySelectorAll('[data-re]').forEach(a=>a.onclick=e=>{e.stopPropagation();if(a.dataset.re==='ur')ur=pick(URS.filter(x=>x!==ur));else trio=shuf(facPool(fa)).slice(0,3);st=a.dataset.re;draw()});
+      const sf=$('#ngfa');if(sf){sf.onclick=e=>e.stopPropagation();sf.onchange=()=>{fa=sf.value;trio=shuf(facPool(fa)).slice(0,3);st='trio';draw()}}
+      const sh=$('#ngshuf');if(sh)sh.onchange=()=>shuffle=sh.checked;
+      $('#ngo').onclick=()=>{fresh({start:st,ur,ids:trio,shuffle:won&&shuffle});save();$('#ovroot').innerHTML='';go('base');showQueue()};
+    });
+  };
+  draw();
+}
+
+/* ---------- 過場畫面：每一章、每個致敬劇本開始時播 ---------- */
+function chapCard(c,next){
+  let h;
+  if(c.d){const d=DUNBYID[c.d];h={no:'致敬劇本',t:d.n.replace('劇本 · ',''),src:d.genre,p:d.st[0],goal:`完成可以攞「${ITEMS[d.prize].n}」`}}
+  else{const x=CHAPS[stN(G,c.pos)-1];h={no:`第${CNUM[c.pos-1]}章${G.order?' · 亂數':''}`,t:x.t,src:x.src,p:x.p,goal:'目標：'+x.goal}}
+  $('#ovroot').innerHTML=`<div class="chcard" role="dialog" aria-modal="true" tabindex="-1"><div class="cc-in"><div class="cc-no">${esc(h.no)}</div><h1 class="cc-t">${esc(h.t)}</h1><div class="cc-src">${esc(h.src)}</div><p class="cc-p">${esc(h.p)}</p><div class="cc-goal">${esc(h.goal)}</div><div class="cc-tap">撳任何地方繼續</div></div></div>`;
+  const el=$('#ovroot .chcard'),done=()=>{$('#ovroot').innerHTML='';next()};
+  el.onclick=done;el.onkeydown=e=>{if(['Enter',' ','Escape'].includes(e.key)){e.preventDefault();done()}};el.focus();
+}
+{const _q=showQueue;showQueue=function(){
+  const q=G.queue[0];
+  if(q&&q.id==='ch_card'){G.queue.shift();save();return chapCard(q.c,showQueue)}
+  if(q&&q.id==='script_open'&&q.c&&!q.c.carded&&DUNBYID[q.c.d]){q.c.carded=1;save();return chapCard({d:q.c.d},showQueue)}
+  _q();
+  if(!G.queue.length&&G.flags.finalWon&&!G.flags.winShown&&!$('#ovroot').innerHTML){G.flags.winShown=1;save();
+    modal(`<div class="modal paper"><div class="eyebrow">通關</div><h2>你贏咗呢一局</h2><div class="story">已經通關 ${meta().wins||1} 次。\n\n解鎖咗：特別開局（傳奇助陣、同陣形開局、天崩開局）同章節、致敬劇本亂數。獎章會永久保留。</div><div class="row"><button class="btn sm" id="cx">繼續睇吓</button><button class="btn pri" id="ngw" style="margin-left:auto">開新一局</button></div></div>`,()=>{$('#cx').onclick=closeOv;$('#ngw').onclick=openNewGame})}
+}}
 /* ================= 啟動 ================= */
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 G=load();
